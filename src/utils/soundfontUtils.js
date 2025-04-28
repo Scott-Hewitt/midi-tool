@@ -1,40 +1,109 @@
 // SoundFont-Player integration for realistic instrument sounds
 import Soundfont from 'soundfont-player';
 
+/**
+ * Custom error class for SoundFont-related errors
+ */
+export class SoundFontError extends Error {
+  constructor(message, originalError = null) {
+    super(message);
+    this.name = 'SoundFontError';
+    this.originalError = originalError;
+  }
+}
+
 // Cache for loaded instruments
 const instrumentCache = {};
+
+/**
+ * Check if Web Audio API is supported in the current browser
+ * @returns {boolean} - Whether Web Audio API is supported
+ */
+export const isWebAudioSupported = () => {
+  return typeof window !== 'undefined' && 
+         (typeof window.AudioContext !== 'undefined' || 
+          typeof window.webkitAudioContext !== 'undefined');
+};
+
+/**
+ * Create an audio context with error handling
+ * @returns {Object} - Audio context or null if not supported
+ */
+export const createAudioContext = () => {
+  if (!isWebAudioSupported()) {
+    console.error('Web Audio API is not supported in this browser');
+    return null;
+  }
+
+  try {
+    return new (window.AudioContext || window.webkitAudioContext)();
+  } catch (error) {
+    console.error('Failed to create audio context:', error);
+    return null;
+  }
+};
 
 /**
  * Load a SoundFont instrument
  * @param {string} instrumentName - Name of the instrument to load
  * @param {AudioContext} audioContext - Web Audio API context
+ * @param {boolean} tryFallback - Whether to try loading a fallback instrument if the requested one fails
  * @returns {Promise<Object>} - SoundFont instrument player
+ * @throws {SoundFontError} - If instrument loading fails and no fallback is available
  */
-export const loadInstrument = async (instrumentName = 'acoustic_grand_piano', audioContext) => {
+export const loadInstrument = async (
+  instrumentName = 'acoustic_grand_piano', 
+  audioContext = null,
+  tryFallback = true
+) => {
+  // Check if Web Audio API is supported
+  if (!isWebAudioSupported()) {
+    throw new SoundFontError('Web Audio API is not supported in this browser');
+  }
+
   // Create audio context if not provided
-  const ctx = audioContext || new (window.AudioContext || window.webkitAudioContext)();
-  
+  const ctx = audioContext || createAudioContext();
+
+  if (!ctx) {
+    throw new SoundFontError('Failed to create audio context');
+  }
+
   // Check if instrument is already loaded
   const cacheKey = `${instrumentName}_${ctx.id}`;
   if (instrumentCache[cacheKey]) {
     return instrumentCache[cacheKey];
   }
-  
+
   try {
+    // Resume audio context if it's suspended (autoplay policy)
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
+
     // Load the instrument
     const instrument = await Soundfont.instrument(ctx, instrumentName, {
       format: 'mp3',
       soundfont: 'MusyngKite',
       gain: 3.0 // Adjust volume
     });
-    
+
     // Cache the loaded instrument
     instrumentCache[cacheKey] = instrument;
-    
+
     return instrument;
   } catch (error) {
     console.error(`Error loading instrument ${instrumentName}:`, error);
-    throw error;
+
+    // Try loading a fallback instrument if requested
+    if (tryFallback && instrumentName !== 'acoustic_grand_piano') {
+      console.warn(`Falling back to piano for failed instrument: ${instrumentName}`);
+      return loadInstrument('acoustic_grand_piano', ctx, false);
+    }
+
+    throw new SoundFontError(
+      `Failed to load instrument: ${instrumentName}`, 
+      error
+    );
   }
 };
 
@@ -202,7 +271,7 @@ export const midiProgramToInstrumentName = (program) => {
     126: 'applause',
     127: 'gunshot'
   };
-  
+
   return instrumentMap[program] || 'acoustic_grand_piano';
 };
 
@@ -212,26 +281,57 @@ export const midiProgramToInstrumentName = (program) => {
  * @param {Array} notes - Array of note objects with pitch, duration, velocity, startTime
  * @param {number} tempo - Tempo in BPM
  * @returns {Promise<void>}
+ * @throws {SoundFontError} - If playback fails
  */
 export const playMelodyWithSoundFont = async (instrument, notes, tempo = 120) => {
-  if (!instrument || !notes || notes.length === 0) {
-    return;
+  // Validate parameters
+  if (!instrument) {
+    throw new SoundFontError('No instrument provided for playback');
   }
-  
-  const secondsPerBeat = 60 / tempo;
-  const now = instrument.context.currentTime;
-  
-  // Schedule all notes
-  const scheduledNotes = notes.map(note => {
-    const startTime = now + (note.startTime * secondsPerBeat);
-    const duration = note.duration * secondsPerBeat;
-    const velocity = note.velocity || 1.0;
-    
-    return instrument.play(note.pitch, startTime, { duration, gain: velocity });
-  });
-  
-  // Return a promise that resolves when all notes have finished playing
-  return Promise.all(scheduledNotes);
+
+  if (!notes || !Array.isArray(notes) || notes.length === 0) {
+    console.warn('No notes provided for playback');
+    return Promise.resolve(); // Return resolved promise for empty playback
+  }
+
+  if (!instrument.context) {
+    throw new SoundFontError('Invalid instrument: missing audio context');
+  }
+
+  try {
+    // Resume audio context if it's suspended (autoplay policy)
+    if (instrument.context.state === 'suspended') {
+      await instrument.context.resume();
+    }
+
+    const secondsPerBeat = 60 / Math.max(1, tempo); // Ensure tempo is at least 1 BPM
+    const now = instrument.context.currentTime;
+
+    // Schedule all notes with error handling for each note
+    const scheduledNotes = notes.map(note => {
+      try {
+        if (!note || !note.pitch) {
+          console.warn('Invalid note skipped during playback:', note);
+          return Promise.resolve(); // Skip invalid notes
+        }
+
+        const startTime = now + ((note.startTime || 0) * secondsPerBeat);
+        const duration = (note.duration || 1) * secondsPerBeat;
+        const velocity = note.velocity || 1.0;
+
+        return instrument.play(note.pitch, startTime, { duration, gain: velocity });
+      } catch (noteError) {
+        console.error('Error scheduling note:', noteError, note);
+        return Promise.resolve(); // Continue with other notes
+      }
+    });
+
+    // Return a promise that resolves when all notes have finished playing
+    return Promise.all(scheduledNotes);
+  } catch (error) {
+    console.error('Error during melody playback:', error);
+    throw new SoundFontError('Failed to play melody', error);
+  }
 };
 
 /**
@@ -240,36 +340,103 @@ export const playMelodyWithSoundFont = async (instrument, notes, tempo = 120) =>
  * @param {Array} chords - Array of chord objects with notes, duration, position
  * @param {number} tempo - Tempo in BPM
  * @returns {Promise<void>}
+ * @throws {SoundFontError} - If playback fails
  */
 export const playChordProgressionWithSoundFont = async (instrument, chords, tempo = 120) => {
-  if (!instrument || !chords || chords.length === 0) {
-    return;
+  // Validate parameters
+  if (!instrument) {
+    throw new SoundFontError('No instrument provided for chord playback');
   }
-  
-  const secondsPerBeat = 60 / tempo;
-  const now = instrument.context.currentTime;
-  
-  // Schedule all chords
-  const scheduledChords = chords.flatMap(chord => {
-    const startTime = now + (chord.position * 4 * secondsPerBeat); // 4 beats per bar
-    const duration = chord.duration * 4 * secondsPerBeat;
-    
-    // Play each note in the chord
-    return chord.notes.map(note => {
-      return instrument.play(note, startTime, { duration, gain: 0.8 });
-    });
-  });
-  
-  // Return a promise that resolves when all chords have finished playing
-  return Promise.all(scheduledChords);
+
+  if (!chords || !Array.isArray(chords) || chords.length === 0) {
+    console.warn('No chords provided for playback');
+    return Promise.resolve(); // Return resolved promise for empty playback
+  }
+
+  if (!instrument.context) {
+    throw new SoundFontError('Invalid instrument: missing audio context');
+  }
+
+  try {
+    // Resume audio context if it's suspended (autoplay policy)
+    if (instrument.context.state === 'suspended') {
+      await instrument.context.resume();
+    }
+
+    const secondsPerBeat = 60 / Math.max(1, tempo); // Ensure tempo is at least 1 BPM
+    const now = instrument.context.currentTime;
+
+    // Schedule all chords with error handling
+    const scheduledChords = [];
+
+    for (const chord of chords) {
+      try {
+        if (!chord || !chord.notes || !Array.isArray(chord.notes) || chord.notes.length === 0) {
+          console.warn('Invalid chord skipped during playback:', chord);
+          continue; // Skip invalid chords
+        }
+
+        const startTime = now + ((chord.position || 0) * 4 * secondsPerBeat); // 4 beats per bar
+        const duration = (chord.duration || 1) * 4 * secondsPerBeat;
+
+        // Play each note in the chord
+        for (const note of chord.notes) {
+          try {
+            if (!note) {
+              console.warn('Invalid note in chord skipped during playback');
+              continue; // Skip invalid notes
+            }
+
+            scheduledChords.push(
+              instrument.play(note, startTime, { duration, gain: 0.8 })
+            );
+          } catch (noteError) {
+            console.error('Error scheduling chord note:', noteError, note);
+            // Continue with other notes
+          }
+        }
+      } catch (chordError) {
+        console.error('Error scheduling chord:', chordError, chord);
+        // Continue with other chords
+      }
+    }
+
+    // Return a promise that resolves when all chords have finished playing
+    return Promise.all(scheduledChords);
+  } catch (error) {
+    console.error('Error during chord progression playback:', error);
+    throw new SoundFontError('Failed to play chord progression', error);
+  }
 };
 
 /**
  * Stop all currently playing sounds
  * @param {Object} instrument - SoundFont instrument player
+ * @returns {boolean} - Whether the stop operation was successful
  */
 export const stopAllSounds = (instrument) => {
-  if (instrument && typeof instrument.stop === 'function') {
-    instrument.stop();
+  if (!instrument) {
+    console.warn('No instrument provided to stop sounds');
+    return false;
   }
+
+  try {
+    if (typeof instrument.stop === 'function') {
+      instrument.stop();
+      return true;
+    } else {
+      console.warn('Instrument does not have a stop method');
+
+      // Try alternative stopping method if available
+      if (instrument.context && typeof instrument.context.suspend === 'function') {
+        instrument.context.suspend();
+        console.info('Used audio context suspend as fallback for stopping sounds');
+        return true;
+      }
+    }
+  } catch (error) {
+    console.error('Error stopping sounds:', error);
+  }
+
+  return false;
 };

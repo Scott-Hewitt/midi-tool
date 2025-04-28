@@ -4,6 +4,7 @@ import MelodyGenerator from './components/MelodyGenerator'
 import ChordGenerator from './components/ChordGenerator'
 import Visualization from './components/Visualization'
 import MIDIExport from './components/MIDIExport'
+import ErrorBoundary from './components/ErrorBoundary'
 
 function App() {
   const [activeTab, setActiveTab] = useState('melody');
@@ -44,43 +45,57 @@ function App() {
         </button>
       </div>
 
-      <main className="app-content">
-        <div className={`tab-content ${activeTab === 'melody' ? 'active' : ''}`}>
-          <div className="generator-section">
-            <MelodyGenerator onMelodyGenerated={handleMelodyGenerated} />
+      <ErrorBoundary>
+        <main className="app-content">
+          <div className={`tab-content ${activeTab === 'melody' ? 'active' : ''}`}>
+            <div className="generator-section">
+              <ErrorBoundary fallback={<div className="error-fallback">Melody Generator is currently unavailable. Please try again later.</div>}>
+                <MelodyGenerator onMelodyGenerated={handleMelodyGenerated} />
+              </ErrorBoundary>
+            </div>
+
+            {melodyData && (
+              <>
+                <div className="visualization-section">
+                  <ErrorBoundary fallback={<div className="error-fallback">Visualization is currently unavailable. Your melody has been generated successfully.</div>}>
+                    <Visualization data={melodyData} type="melody" />
+                  </ErrorBoundary>
+                </div>
+
+                <div className="export-section">
+                  <ErrorBoundary fallback={<div className="error-fallback">MIDI Export is currently unavailable. Please try again later.</div>}>
+                    <MIDIExport data={melodyData} type="melody" />
+                  </ErrorBoundary>
+                </div>
+              </>
+            )}
           </div>
 
-          {melodyData && (
-            <>
-              <div className="visualization-section">
-                <Visualization data={melodyData} type="melody" />
-              </div>
+          <div className={`tab-content ${activeTab === 'chord' ? 'active' : ''}`}>
+            <div className="generator-section">
+              <ErrorBoundary fallback={<div className="error-fallback">Chord Generator is currently unavailable. Please try again later.</div>}>
+                <ChordGenerator onChordGenerated={handleChordGenerated} />
+              </ErrorBoundary>
+            </div>
 
-              <div className="export-section">
-                <MIDIExport data={melodyData} type="melody" />
-              </div>
-            </>
-          )}
-        </div>
+            {chordData && (
+              <>
+                <div className="visualization-section">
+                  <ErrorBoundary fallback={<div className="error-fallback">Visualization is currently unavailable. Your chord progression has been generated successfully.</div>}>
+                    <Visualization data={chordData} type="chord" />
+                  </ErrorBoundary>
+                </div>
 
-        <div className={`tab-content ${activeTab === 'chord' ? 'active' : ''}`}>
-          <div className="generator-section">
-            <ChordGenerator onChordGenerated={handleChordGenerated} />
+                <div className="export-section">
+                  <ErrorBoundary fallback={<div className="error-fallback">MIDI Export is currently unavailable. Please try again later.</div>}>
+                    <MIDIExport data={chordData} type="chord" />
+                  </ErrorBoundary>
+                </div>
+              </>
+            )}
           </div>
-
-          {chordData && (
-            <>
-              <div className="visualization-section">
-                <Visualization data={chordData} type="chord" />
-              </div>
-
-              <div className="export-section">
-                <MIDIExport data={chordData} type="chord" />
-              </div>
-            </>
-          )}
-        </div>
-      </main>
+        </main>
+      </ErrorBoundary>
 
       <footer className="app-footer">
         <p>MIDI Melody & Chord Generator - MVP Version</p>

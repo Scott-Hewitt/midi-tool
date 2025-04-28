@@ -1,9 +1,11 @@
-import { useState } from 'react';
-import { exportAndDownloadMIDI } from '../utils/jzzMidi';
+import { useState, useEffect } from 'react';
+import { exportAndDownloadMIDI, isMIDISupported as checkMIDISupport, MIDIError } from '../utils/jzzMidi';
 
 function MIDIExport({ data, type }) {
   const [fileName, setFileName] = useState('my-music');
   const [exportStatus, setExportStatus] = useState('');
+  const [statusType, setStatusType] = useState('info'); // 'info', 'success', 'error', 'warning'
+  const [isMIDISupported, setIsMIDISupported] = useState(true); // Assume supported until checked
   const [exportOptions, setExportOptions] = useState({
     includeMelody: true,
     includeChords: true,
@@ -15,6 +17,21 @@ function MIDIExport({ data, type }) {
     humanize: true
   });
 
+  // Check for MIDI support when component mounts
+  useEffect(() => {
+    const checkMIDISupportStatus = () => {
+      const supported = checkMIDISupport();
+      setIsMIDISupported(supported);
+
+      if (!supported) {
+        setExportStatus('MIDI export is not supported in this browser. Try using a modern browser like Chrome, Firefox, or Edge.');
+        setStatusType('warning');
+      }
+    };
+
+    checkMIDISupportStatus();
+  }, []);
+
   // Handle option changes
   const handleOptionChange = (option, value) => {
     setExportOptions({
@@ -23,16 +40,43 @@ function MIDIExport({ data, type }) {
     });
   };
 
+  // Clear status message
+  const clearStatus = (delay = 5000) => {
+    setTimeout(() => {
+      setExportStatus('');
+      setStatusType('info');
+    }, delay);
+  };
+
   // Export MIDI file using JZZ
   const handleExport = async () => {
+    // Check if MIDI is supported
+    if (!isMIDISupported) {
+      setExportStatus('MIDI export is not supported in this browser. Try using a modern browser like Chrome, Firefox, or Edge.');
+      setStatusType('error');
+      return;
+    }
+
     // Determine which data to use
     const melodyData = type === 'melody' ? data : null;
     const chordData = type === 'chord' ? data : null;
 
     if (!melodyData && !chordData) {
-      setExportStatus('No data to export');
+      setExportStatus('No data to export. Please generate a melody or chord progression first.');
+      setStatusType('warning');
       return;
     }
+
+    // Validate file name
+    if (!fileName.trim()) {
+      setExportStatus('Please enter a valid file name.');
+      setStatusType('warning');
+      return;
+    }
+
+    // Show processing status
+    setExportStatus('Preparing MIDI file...');
+    setStatusType('info');
 
     try {
       // Set export options based on data type
@@ -51,167 +95,216 @@ function MIDIExport({ data, type }) {
       );
 
       if (success) {
-        setExportStatus(`${type === 'melody' ? 'Melody' : 'Chord progression'} exported successfully!`);
+        setExportStatus(`${type === 'melody' ? 'Melody' : 'Chord progression'} exported successfully! Check your downloads folder.`);
+        setStatusType('success');
+        clearStatus();
       } else {
-        setExportStatus(`Error exporting ${type}`);
+        setExportStatus(`Failed to export ${type}. Please try again.`);
+        setStatusType('error');
       }
-
-      // Clear the status message after 3 seconds
-      setTimeout(() => {
-        setExportStatus('');
-      }, 3000);
     } catch (error) {
       console.error(`Error exporting ${type}:`, error);
-      setExportStatus(`Error exporting ${type}: ${error.message}`);
+
+      // Handle specific error types
+      if (error instanceof MIDIError) {
+        if (error.message.includes('not supported')) {
+          setExportStatus('MIDI export is not supported in this browser. Try using a modern browser like Chrome, Firefox, or Edge.');
+        } else if (error.message.includes('download')) {
+          setExportStatus('Failed to download the MIDI file. Check if your browser allows downloads or try a different browser.');
+        } else if (error.message.includes('generate')) {
+          setExportStatus('Failed to generate the MIDI file. The music data may be invalid or too complex.');
+        } else {
+          setExportStatus(`MIDI export error: ${error.message}`);
+        }
+      } else {
+        setExportStatus(`Unexpected error during export: ${error.message || 'Unknown error'}`);
+      }
+
+      setStatusType('error');
     }
   };
 
   return (
-    <div className="midi-export">
-      <h2>MIDI Export</h2>
+    <div className="midi-export" role="region" aria-label="MIDI Export">
+      <h2 id="midi-export-title">MIDI Export</h2>
 
-      <div className="export-controls">
+      <form className="export-controls" onSubmit={(e) => e.preventDefault()} aria-labelledby="midi-export-title">
         <div className="control-group">
-          <label>
+          <label htmlFor="file-name-input">
             File Name:
-            <input 
-              type="text" 
-              value={fileName} 
-              onChange={(e) => setFileName(e.target.value)}
-              placeholder="Enter file name"
-            />
           </label>
+          <input 
+            id="file-name-input"
+            type="text" 
+            value={fileName} 
+            onChange={(e) => setFileName(e.target.value)}
+            placeholder="Enter file name"
+            aria-describedby="file-name-description"
+          />
+          <span id="file-name-description" className="sr-only">Name for your exported MIDI file</span>
         </div>
 
-        <div className="advanced-export-options">
-          <h3>Export Options</h3>
+        <fieldset className="advanced-export-options">
+          <legend>Export Options</legend>
 
           {type === 'melody' && (
             <div className="option-group">
-              <label>
+              <label htmlFor="include-melody-checkbox">
                 <input
+                  id="include-melody-checkbox"
                   type="checkbox"
                   checked={exportOptions.includeMelody}
                   onChange={(e) => handleOptionChange('includeMelody', e.target.checked)}
+                  aria-describedby="include-melody-description"
                 />
                 Include Melody Track
               </label>
+              <span id="include-melody-description" className="sr-only">Include the melody notes in the MIDI file</span>
             </div>
           )}
 
           {type === 'chord' && (
             <div className="option-group">
-              <label>
+              <label htmlFor="include-chords-checkbox">
                 <input
+                  id="include-chords-checkbox"
                   type="checkbox"
                   checked={exportOptions.includeChords}
                   onChange={(e) => handleOptionChange('includeChords', e.target.checked)}
+                  aria-describedby="include-chords-description"
                 />
                 Include Chord Track
               </label>
+              <span id="include-chords-description" className="sr-only">Include the chord notes in the MIDI file</span>
             </div>
           )}
 
           <div className="option-group">
-            <label>
+            <label htmlFor="include-bass-checkbox">
               <input
+                id="include-bass-checkbox"
                 type="checkbox"
                 checked={exportOptions.includeBass}
                 onChange={(e) => handleOptionChange('includeBass', e.target.checked)}
+                aria-describedby="include-bass-description"
               />
               Include Bass Track
             </label>
+            <span id="include-bass-description" className="sr-only">Include a bass line using the root notes of chords</span>
           </div>
 
           <div className="option-group">
-            <label>
+            <label htmlFor="melody-instrument-select">
               Melody Instrument:
-              <select
-                value={exportOptions.melodyInstrument}
-                onChange={(e) => handleOptionChange('melodyInstrument', parseInt(e.target.value))}
-              >
-                <option value="0">Piano</option>
-                <option value="4">Electric Piano</option>
-                <option value="24">Acoustic Guitar</option>
-                <option value="73">Flute</option>
-                <option value="66">Saxophone</option>
-                <option value="40">Violin</option>
-              </select>
             </label>
+            <select
+              id="melody-instrument-select"
+              value={exportOptions.melodyInstrument}
+              onChange={(e) => handleOptionChange('melodyInstrument', parseInt(e.target.value))}
+              aria-describedby="melody-instrument-description"
+            >
+              <option value="0">Piano</option>
+              <option value="4">Electric Piano</option>
+              <option value="24">Acoustic Guitar</option>
+              <option value="73">Flute</option>
+              <option value="66">Saxophone</option>
+              <option value="40">Violin</option>
+            </select>
+            <span id="melody-instrument-description" className="sr-only">Select the instrument for the melody track</span>
           </div>
 
           <div className="option-group">
-            <label>
+            <label htmlFor="chord-instrument-select">
               Chord Instrument:
-              <select
-                value={exportOptions.chordInstrument}
-                onChange={(e) => handleOptionChange('chordInstrument', parseInt(e.target.value))}
-              >
-                <option value="0">Piano</option>
-                <option value="4">Electric Piano</option>
-                <option value="24">Acoustic Guitar</option>
-                <option value="48">String Ensemble</option>
-                <option value="19">Church Organ</option>
-                <option value="5">Electric Piano 2</option>
-              </select>
             </label>
+            <select
+              id="chord-instrument-select"
+              value={exportOptions.chordInstrument}
+              onChange={(e) => handleOptionChange('chordInstrument', parseInt(e.target.value))}
+              aria-describedby="chord-instrument-description"
+            >
+              <option value="0">Piano</option>
+              <option value="4">Electric Piano</option>
+              <option value="24">Acoustic Guitar</option>
+              <option value="48">String Ensemble</option>
+              <option value="19">Church Organ</option>
+              <option value="5">Electric Piano 2</option>
+            </select>
+            <span id="chord-instrument-description" className="sr-only">Select the instrument for the chord track</span>
           </div>
 
           <div className="option-group">
-            <label>
+            <label htmlFor="bass-instrument-select">
               Bass Instrument:
-              <select
-                value={exportOptions.bassInstrument}
-                onChange={(e) => handleOptionChange('bassInstrument', parseInt(e.target.value))}
-              >
-                <option value="32">Acoustic Bass</option>
-                <option value="33">Electric Bass</option>
-                <option value="34">Electric Bass (pick)</option>
-                <option value="35">Fretless Bass</option>
-                <option value="36">Slap Bass 1</option>
-                <option value="42">Cello</option>
-              </select>
             </label>
+            <select
+              id="bass-instrument-select"
+              value={exportOptions.bassInstrument}
+              onChange={(e) => handleOptionChange('bassInstrument', parseInt(e.target.value))}
+              aria-describedby="bass-instrument-description"
+            >
+              <option value="32">Acoustic Bass</option>
+              <option value="33">Electric Bass</option>
+              <option value="34">Electric Bass (pick)</option>
+              <option value="35">Fretless Bass</option>
+              <option value="36">Slap Bass 1</option>
+              <option value="42">Cello</option>
+            </select>
+            <span id="bass-instrument-description" className="sr-only">Select the instrument for the bass track</span>
           </div>
 
           <div className="option-group">
-            <label>
+            <label htmlFor="expression-checkbox">
               <input
+                id="expression-checkbox"
                 type="checkbox"
                 checked={exportOptions.applyExpression}
                 onChange={(e) => handleOptionChange('applyExpression', e.target.checked)}
+                aria-describedby="expression-description"
               />
               Apply Expression (dynamics, volume changes)
             </label>
+            <span id="expression-description" className="sr-only">Add volume and expression changes for more musical results</span>
           </div>
 
           <div className="option-group">
-            <label>
+            <label htmlFor="humanize-checkbox">
               <input
+                id="humanize-checkbox"
                 type="checkbox"
                 checked={exportOptions.humanize}
                 onChange={(e) => handleOptionChange('humanize', e.target.checked)}
+                aria-describedby="humanize-description"
               />
               Humanize (slight timing and velocity variations)
             </label>
+            <span id="humanize-description" className="sr-only">Add subtle variations to timing and velocity for a more natural sound</span>
           </div>
-        </div>
+        </fieldset>
 
         <button 
           onClick={handleExport}
           disabled={!data}
+          aria-label="Export as MIDI file with selected options"
+          aria-disabled={!data}
         >
           Export as MIDI
         </button>
-      </div>
+      </form>
 
       {exportStatus && (
-        <div className={`export-status ${exportStatus.includes('Error') ? 'error' : 'success'}`}>
+        <div className={`export-status ${statusType}`} role="status" aria-live="polite">
+          <span className="status-icon" aria-hidden="true">
+            {statusType === 'success' && '✓'}
+            {statusType === 'error' && '✗'}
+            {statusType === 'warning' && '⚠'}
+            {statusType === 'info' && 'ℹ'}
+          </span>
           {exportStatus}
         </div>
       )}
 
-      <div className="export-info">
+      <section className="export-info" aria-label="MIDI Export Information">
         <p>
           Export your {type === 'melody' ? 'melody' : 'chord progression'} as a standard MIDI file 
           that can be imported into any Digital Audio Workstation (DAW) like Ableton Live, 
@@ -221,7 +314,7 @@ function MIDIExport({ data, type }) {
           <strong>Pro Tip:</strong> Customize your export with the options above to create more 
           professional and complete MIDI files with multiple tracks and instruments.
         </p>
-      </div>
+      </section>
     </div>
   );
 }
