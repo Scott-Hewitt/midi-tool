@@ -139,6 +139,19 @@
   width: 100%;
 }
 
+.control-group input[type="checkbox"] {
+  width: auto;
+  margin-left: 0.5rem;
+}
+
+/* Tooltip */
+.tooltip {
+  margin-left: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--secondary-color);
+  font-style: italic;
+}
+
 /* Actions */
 .actions {
   display: flex;

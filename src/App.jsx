@@ -4,6 +4,7 @@ import MelodyGenerator from './components/MelodyGenerator'
 import ChordGenerator from './components/ChordGenerator'
 import Visualization from './components/Visualization'
 import MIDIExport from './components/MIDIExport'
+import DebugPage from './debug'
 
 function App() {
   const [activeTab, setActiveTab] = useState('melody');
@@ -30,17 +31,23 @@ function App() {
       </header>
 
       <div className="tabs">
-        <button 
+        <button
           className={`tab ${activeTab === 'melody' ? 'active' : ''}`}
           onClick={() => setActiveTab('melody')}
         >
           Melody Generator
         </button>
-        <button 
+        <button
           className={`tab ${activeTab === 'chord' ? 'active' : ''}`}
           onClick={() => setActiveTab('chord')}
         >
           Chord Generator
+        </button>
+        <button
+          className={`tab ${activeTab === 'debug' ? 'active' : ''}`}
+          onClick={() => setActiveTab('debug')}
+        >
+          Debug
         </button>
       </div>
 
@@ -79,6 +86,10 @@ function App() {
               </div>
             </>
           )}
+        </div>
+
+        <div className={`tab-content ${activeTab === 'debug' ? 'active' : ''}`}>
+          <DebugPage />
         </div>
       </main>
 

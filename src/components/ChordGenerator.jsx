@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import * as Tone from 'tone';
 
 // Import utility functions from chords.js for backward compatibility
-import { 
+import {
   applyVoiceLeading
 } from '../utils/chords';
 
@@ -43,6 +43,7 @@ function ChordGenerator({ onChordGenerated }) {
   const [useInversions, setUseInversions] = useState(false);
   const [inversion, setInversion] = useState(0);
   const [useExtendedChords, setUseExtendedChords] = useState(false);
+  const [autoRandomize, setAutoRandomize] = useState(true); // Auto-randomize is enabled by default
 
   // State for available progressions
   const [availableProgressions, setAvailableProgressions] = useState({});
@@ -104,6 +105,46 @@ function ChordGenerator({ onChordGenerated }) {
     // Get the progression pattern from available progressions
     const progressionPattern = availableProgressions[selectedProgression] || ['I', 'IV', 'V', 'I'];
 
+    // Reset advanced options before applying new ones
+    const resetOptions = () => {
+      setUseExtendedChords(false);
+      setUseVoiceLeading(false);
+      setUseInversions(false);
+      setInversion(0);
+    };
+
+    // Randomly apply advanced options for variety
+    const randomizeOptions = () => {
+      // Reset options first
+      resetOptions();
+
+      // 50% chance to use extended chords
+      const shouldUseExtendedChords = Math.random() > 0.5;
+      if (shouldUseExtendedChords) {
+        setUseExtendedChords(true);
+      }
+
+      // 40% chance to use voice leading
+      const shouldUseVoiceLeading = Math.random() > 0.6;
+      if (shouldUseVoiceLeading) {
+        setUseVoiceLeading(true);
+      }
+
+      // 30% chance to use inversions
+      const shouldUseInversions = Math.random() > 0.7;
+      if (shouldUseInversions) {
+        setUseInversions(true);
+        // Random inversion level (0-2)
+        const randomInversion = Math.floor(Math.random() * 3);
+        setInversion(randomInversion);
+      }
+    };
+
+    // Apply random options if auto-randomize is enabled
+    if (autoRandomize) {
+      randomizeOptions();
+    }
+
     // Generate the chord progression using Tonal.js
     let chords = generateChordProgression(selectedKey, progressionPattern, useExtendedChords);
 
@@ -124,11 +165,8 @@ function ChordGenerator({ onChordGenerated }) {
       }
 
       return {
-        root: chord.symbol.split('m')[0].split('7')[0].split('maj')[0], // Extract root note
-        type: chord.symbol.includes('maj7') ? 'maj7' : 
-              chord.symbol.includes('m7') ? 'min7' : 
-              chord.symbol.includes('m') ? 'min' : 
-              chord.symbol.includes('7') ? '7' : 'maj',
+        root: chord.root,
+        type: chord.type,
         notes: notes,
         duration: chordDuration,
         position: index * chordDuration,
@@ -232,8 +270,8 @@ function ChordGenerator({ onChordGenerated }) {
         <div className="control-group">
           <label>
             Key:
-            <select 
-              value={selectedKey} 
+            <select
+              value={selectedKey}
               onChange={(e) => setSelectedKey(e.target.value)}
             >
               {keyOptions.map(key => (
@@ -246,8 +284,8 @@ function ChordGenerator({ onChordGenerated }) {
         <div className="control-group">
           <label>
             Progression:
-            <select 
-              value={selectedProgression} 
+            <select
+              value={selectedProgression}
               onChange={(e) => setSelectedProgression(e.target.value)}
             >
               {Object.keys(availableProgressions).map(prog => (
@@ -260,11 +298,11 @@ function ChordGenerator({ onChordGenerated }) {
         <div className="control-group">
           <label>
             Tempo (BPM):
-            <input 
-              type="range" 
-              min="60" 
-              max="180" 
-              value={tempo} 
+            <input
+              type="range"
+              min="60"
+              max="180"
+              value={tempo}
               onChange={(e) => setTempo(parseInt(e.target.value))}
             />
             <span>{tempo} BPM</span>
@@ -274,12 +312,12 @@ function ChordGenerator({ onChordGenerated }) {
         <div className="control-group">
           <label>
             Chord Duration (bars):
-            <input 
-              type="number" 
-              min="0.5" 
-              max="4" 
+            <input
+              type="number"
+              min="0.5"
+              max="4"
               step="0.5"
-              value={chordDuration} 
+              value={chordDuration}
               onChange={(e) => setChordDuration(parseFloat(e.target.value))}
             />
           </label>
@@ -292,9 +330,9 @@ function ChordGenerator({ onChordGenerated }) {
           <div className="control-group">
             <label>
               Use Voice Leading:
-              <input 
-                type="checkbox" 
-                checked={useVoiceLeading} 
+              <input
+                type="checkbox"
+                checked={useVoiceLeading}
                 onChange={(e) => setUseVoiceLeading(e.target.checked)}
               />
             </label>
@@ -303,9 +341,9 @@ function ChordGenerator({ onChordGenerated }) {
           <div className="control-group">
             <label>
               Use Inversions:
-              <input 
-                type="checkbox" 
-                checked={useInversions} 
+              <input
+                type="checkbox"
+                checked={useInversions}
                 onChange={(e) => setUseInversions(e.target.checked)}
               />
             </label>
@@ -315,8 +353,8 @@ function ChordGenerator({ onChordGenerated }) {
             <div className="control-group">
               <label>
                 Inversion:
-                <select 
-                  value={inversion} 
+                <select
+                  value={inversion}
                   onChange={(e) => setInversion(parseInt(e.target.value))}
                 >
                   <option value="0">Root Position</option>
@@ -331,11 +369,23 @@ function ChordGenerator({ onChordGenerated }) {
           <div className="control-group">
             <label>
               Use Extended Chords:
-              <input 
-                type="checkbox" 
-                checked={useExtendedChords} 
+              <input
+                type="checkbox"
+                checked={useExtendedChords}
                 onChange={(e) => setUseExtendedChords(e.target.checked)}
               />
+            </label>
+          </div>
+
+          <div className="control-group">
+            <label>
+              Auto-Randomize Options:
+              <input
+                type="checkbox"
+                checked={autoRandomize}
+                onChange={(e) => setAutoRandomize(e.target.checked)}
+              />
+              <span className="tooltip">(Automatically applies random advanced options for variety)</span>
             </label>
           </div>
 
@@ -344,9 +394,9 @@ function ChordGenerator({ onChordGenerated }) {
           <div className="control-group">
             <label>
               Use Realistic Instrument Sounds:
-              <input 
-                type="checkbox" 
-                checked={useSoundFont} 
+              <input
+                type="checkbox"
+                checked={useSoundFont}
                 onChange={(e) => setUseSoundFont(e.target.checked)}
               />
             </label>
@@ -356,8 +406,8 @@ function ChordGenerator({ onChordGenerated }) {
             <div className="control-group">
               <label>
                 Instrument:
-                <select 
-                  value={selectedInstrument} 
+                <select
+                  value={selectedInstrument}
                   onChange={(e) => {
                     setSelectedInstrument(e.target.value);
                     loadSoundFontInstrument(e.target.value);

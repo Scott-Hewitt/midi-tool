@@ -13,7 +13,7 @@ export const extendedChordTypes = {
   'dim': [0, 3, 6],       // Diminished: root, minor third, diminished fifth
   'aug': [0, 4, 8],       // Augmented: root, major third, augmented fifth
   'sus4': [0, 5, 7],      // Suspended 4th: root, perfect fourth, perfect fifth
-  
+
   // Extended chord types
   'dom9': [0, 4, 7, 10, 14],  // Dominant 9th: root, major third, perfect fifth, minor seventh, major ninth
   'maj9': [0, 4, 7, 11, 14],  // Major 9th: root, major third, perfect fifth, major seventh, major ninth
@@ -140,13 +140,13 @@ export const generateChord = (rootNote, chordType) => {
 export const getChordInversion = (rootNote, chordType, inversion) => {
   const baseChord = generateChord(rootNote, chordType);
   const midiNotes = baseChord.map(note => noteToMidi(note));
-  
+
   // Apply inversion
   for (let i = 0; i < inversion; i++) {
     const bass = midiNotes.shift();
     midiNotes.push(bass + 12); // Move bottom note up an octave
   }
-  
+
   return midiNotes.map(midi => midiToNote(midi));
 };
 
@@ -159,15 +159,15 @@ export const getChordInversion = (rootNote, chordType, inversion) => {
 export const generateChordVoicings = (rootNote, chordType) => {
   const voicings = [];
   const intervals = extendedChordTypes[chordType] || extendedChordTypes.maj;
-  
+
   // Base voicing
   voicings.push(generateChord(rootNote, chordType));
-  
+
   // Inversions
   for (let i = 1; i < intervals.length; i++) {
     voicings.push(getChordInversion(rootNote, chordType, i));
   }
-  
+
   // Spread voicing (wider intervals)
   const spreadVoicing = [];
   const rootMidi = noteToMidi(rootNote);
@@ -175,7 +175,7 @@ export const generateChordVoicings = (rootNote, chordType) => {
     spreadVoicing.push(midiToNote(rootMidi + interval + (idx > 0 ? 12 : 0)));
   });
   voicings.push(spreadVoicing);
-  
+
   return voicings;
 };
 
@@ -203,18 +203,50 @@ export const calculateTotalMovement = (voicing1, voicing2) => {
 export const applyVoiceLeading = (chords) => {
   const voiceLedChords = [];
   let previousVoicing = null;
-  
+
   chords.forEach(chord => {
     if (!previousVoicing) {
       // For the first chord, use the default voicing
       previousVoicing = chord.notes;
       voiceLedChords.push(chord);
     } else {
+      // Extract root note from the chord symbol or use the root property
+      let rootNote;
+      if (chord.root) {
+        rootNote = chord.root + '4';
+      } else {
+        const rootMatch = chord.symbol ? chord.symbol.match(/^[A-G][#b]?/) : null;
+        rootNote = rootMatch ? rootMatch[0] + '4' : 'C4'; // Default to C4 if no match
+      }
+
+      // Determine chord type from the chord object or symbol
+      let chordType;
+      if (chord.type) {
+        chordType = chord.type;
+      } else if (chord.symbol) {
+        chordType = 'maj';
+        if (chord.symbol.includes('m7')) {
+          chordType = 'min7';
+        } else if (chord.symbol.includes('maj7')) {
+          chordType = 'maj7';
+        } else if (chord.symbol.includes('7')) {
+          chordType = '7';
+        } else if (chord.symbol.includes('m')) {
+          chordType = 'min';
+        } else if (chord.symbol.includes('dim')) {
+          chordType = 'dim';
+        } else if (chord.symbol.includes('aug')) {
+          chordType = 'aug';
+        }
+      } else {
+        chordType = 'maj'; // Default to major if no type info available
+      }
+
       // Find the closest voicing to the previous chord
-      const possibleVoicings = generateChordVoicings(chord.root, chord.type);
+      const possibleVoicings = generateChordVoicings(rootNote, chordType);
       let bestVoicing = possibleVoicings[0];
       let smallestMovement = calculateTotalMovement(previousVoicing, bestVoicing);
-      
+
       possibleVoicings.forEach(voicing => {
         const movement = calculateTotalMovement(previousVoicing, voicing);
         if (movement < smallestMovement) {
@@ -222,14 +254,14 @@ export const applyVoiceLeading = (chords) => {
           bestVoicing = voicing;
         }
       });
-      
+
       // Use the best voicing
       const voiceLedChord = {...chord, notes: bestVoicing};
       voiceLedChords.push(voiceLedChord);
       previousVoicing = bestVoicing;
     }
   });
-  
+
   return voiceLedChords;
 };
 
@@ -242,15 +274,15 @@ export const applyVoiceLeading = (chords) => {
 export const getSecondaryDominantRoot = (degree, key) => {
   const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
   const keyIndex = notes.indexOf(key.split('/')[0]);
-  
+
   // Parse the secondary dominant notation (e.g., 'V/V')
   const [dominantDegree, targetDegree] = degree.split('/');
-  
+
   // Get the root of the target chord
   const targetRoot = (keyIndex + majorDegrees[targetDegree]) % 12;
-  
+
   // Calculate the dominant of that chord (fifth above)
   const dominantRoot = (targetRoot + 7) % 12;
-  
+
   return dominantRoot;
 };
