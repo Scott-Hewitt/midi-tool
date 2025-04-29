@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { exportAndDownloadMIDI } from '../utils/jzzMidi';
+import { exportAndDownloadMIDI } from '../utils/simpleMidi';
 
 function MIDIExport({ data, type }) {
   const [fileName, setFileName] = useState('my-music');
@@ -44,8 +44,8 @@ function MIDIExport({ data, type }) {
 
       // Export the MIDI file
       const success = await exportAndDownloadMIDI(
-        melodyData, 
-        chordData, 
+        melodyData,
+        chordData,
         `${fileName}-${type}`,
         options
       );
@@ -74,9 +74,9 @@ function MIDIExport({ data, type }) {
         <div className="control-group">
           <label>
             File Name:
-            <input 
-              type="text" 
-              value={fileName} 
+            <input
+              type="text"
+              value={fileName}
               onChange={(e) => setFileName(e.target.value)}
               placeholder="Enter file name"
             />
@@ -197,7 +197,7 @@ function MIDIExport({ data, type }) {
           </div>
         </div>
 
-        <button 
+        <button
           onClick={handleExport}
           disabled={!data}
         >
@@ -213,12 +213,12 @@ function MIDIExport({ data, type }) {
 
       <div className="export-info">
         <p>
-          Export your {type === 'melody' ? 'melody' : 'chord progression'} as a standard MIDI file 
-          that can be imported into any Digital Audio Workstation (DAW) like Ableton Live, 
+          Export your {type === 'melody' ? 'melody' : 'chord progression'} as a standard MIDI file
+          that can be imported into any Digital Audio Workstation (DAW) like Ableton Live,
           Logic Pro, FL Studio, etc.
         </p>
         <p>
-          <strong>Pro Tip:</strong> Customize your export with the options above to create more 
+          <strong>Pro Tip:</strong> Customize your export with the options above to create more
           professional and complete MIDI files with multiple tracks and instruments.
         </p>
       </div>
