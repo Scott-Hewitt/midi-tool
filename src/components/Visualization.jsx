@@ -1,11 +1,11 @@
 import { useRef, useEffect, useState, useLayoutEffect } from 'react';
-import { 
-  Box, 
-  Heading, 
-  Text, 
-  Card, 
-  CardHeader, 
-  CardBody, 
+import {
+  Box,
+  Heading,
+  Text,
+  Card,
+  CardHeader,
+  CardBody,
   useColorModeValue,
   Tooltip,
   HStack,
@@ -13,6 +13,7 @@ import {
   Badge,
   useTheme
 } from '@chakra-ui/react';
+import PlayButton from './PlayButton';
 
 function Visualization({ data, type }) {
   const canvasRef = useRef(null);
@@ -63,7 +64,7 @@ function Visualization({ data, type }) {
         if (!chord.visualData) return;
 
         chord.visualData.forEach(noteData => {
-          if (x >= noteData.x && x <= noteData.x + noteData.width && 
+          if (x >= noteData.x && x <= noteData.x + noteData.width &&
               y >= noteData.y && y <= noteData.y + noteData.height) {
             foundNote = {
               ...noteData,
@@ -99,7 +100,7 @@ function Visualization({ data, type }) {
           if (!chord.visualData) return;
 
           chord.visualData.forEach(noteData => {
-            if (x >= noteData.x && x <= noteData.x + noteData.width && 
+            if (x >= noteData.x && x <= noteData.x + noteData.width &&
                 y >= noteData.y && y <= noteData.y + noteData.height) {
               foundNote = {
                 ...noteData,
@@ -159,7 +160,7 @@ function Visualization({ data, type }) {
 
       // Only update if the size has changed significantly (more than 1px)
       if (
-        Math.abs(width - lastWidth) > 1 || 
+        Math.abs(width - lastWidth) > 1 ||
         Math.abs(height - lastHeight) > 1
       ) {
         lastWidth = width;
@@ -465,7 +466,7 @@ function Visualization({ data, type }) {
     const bassNotes = composition.bass?.notes || [];
 
     // Calculate total duration
-    const melodyDuration = melodyNotes.length > 0 
+    const melodyDuration = melodyNotes.length > 0
       ? melodyNotes.reduce((max, note) => Math.max(max, note.startTime + note.duration), 0)
       : 0;
 
@@ -643,7 +644,7 @@ function Visualization({ data, type }) {
       ctx.shadowOffsetX = 1;
       ctx.shadowOffsetY = 1;
 
-      ctx.fillText(`${chord.symbol || chord.root.slice(0, -1) + chord.type} (${chord.degree})`, 
+      ctx.fillText(`${chord.symbol || chord.root.slice(0, -1) + chord.type} (${chord.degree})`,
                   chordStartX + (chordWidth / 2), HEADER_HEIGHT + 14);
 
       // Reset shadow
@@ -945,7 +946,7 @@ function Visualization({ data, type }) {
       ctx.shadowOffsetX = 1;
       ctx.shadowOffsetY = 1;
 
-      ctx.fillText(`${chord.symbol || chord.root.slice(0, -1) + chord.type} (${chord.degree})`, 
+      ctx.fillText(`${chord.symbol || chord.root.slice(0, -1) + chord.type} (${chord.degree})`,
                   chordStartX + (chordWidth / 2), HEADER_HEIGHT + 14);
 
       // Reset shadow
@@ -1280,14 +1281,17 @@ function Visualization({ data, type }) {
   return (
     <Card p={6} variant="elevated" bg="rgba(30, 41, 59, 0.5)" backdropFilter="blur(12px)" border="1px solid rgba(255, 255, 255, 0.1)" boxShadow="0 8px 32px 0 rgba(0, 0, 0, 0.37)">
       <CardHeader pb={4}>
-        <Heading size="lg" color="primary.400">Piano Roll Visualization</Heading>
+        <HStack justifyContent="space-between" alignItems="center">
+          <Heading size="lg" color="primary.400">Piano Roll Visualization</Heading>
+          <PlayButton data={data} type={type} />
+        </HStack>
       </CardHeader>
 
       <CardBody>
-        <Box 
+        <Box
           ref={containerRef}
-          position="relative" 
-          width="100%" 
+          position="relative"
+          width="100%"
           mb={4}
           borderRadius="md"
           overflow="hidden"
@@ -1301,15 +1305,15 @@ function Visualization({ data, type }) {
           style={{ maxWidth: '100%' }}
         >
           {/* Canvas for piano roll */}
-          <Box 
+          <Box
             as="canvas"
-            ref={canvasRef} 
+            ref={canvasRef}
             borderRadius="md"
             display="block"
             width="100%"
             height="auto"
             boxShadow="inset 0 0 10px rgba(0, 0, 0, 0.2)"
-            style={{ 
+            style={{
               aspectRatio: '2/1',
               maxWidth: '100%',
               objectFit: 'contain'
@@ -1318,8 +1322,8 @@ function Visualization({ data, type }) {
 
           {/* Tooltip for hovered note */}
           {hoveredNote && (
-            <Tooltip 
-              isOpen={true} 
+            <Tooltip
+              isOpen={true}
               label={renderTooltipContent()}
               placement="top"
               hasArrow
@@ -1332,7 +1336,7 @@ function Visualization({ data, type }) {
               border="1px solid"
               borderColor="rgba(99, 102, 241, 0.3)"
             >
-              <Box 
+              <Box
                 position="absolute"
                 left={mousePosition.x}
                 top={mousePosition.y}
@@ -1344,9 +1348,9 @@ function Visualization({ data, type }) {
           )}
         </Box>
 
-        <Text 
-          fontSize="sm" 
-          color="gray.300" 
+        <Text
+          fontSize="sm"
+          color="gray.300"
           mt={4}
           p={4}
           bg="rgba(255, 255, 255, 0.05)"
@@ -1356,8 +1360,8 @@ function Visualization({ data, type }) {
           boxShadow="sm"
           lineHeight="1.6"
         >
-          {type === 'melody' 
-            ? 'Piano Roll: Hover over notes to see details. Each rectangle represents a note. Height indicates pitch, width indicates duration, and color indicates velocity.' 
+          {type === 'melody'
+            ? 'Piano Roll: Hover over notes to see details. Each rectangle represents a note. Height indicates pitch, width indicates duration, and color indicates velocity.'
             : 'Piano Roll: Hover over notes to see details. Each block represents a note in a chord. Colors indicate chord types.'}
         </Text>
       </CardBody>

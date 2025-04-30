@@ -3,6 +3,7 @@
 // Singleton AudioContext instance
 let audioContext = null;
 let isInitialized = false;
+let hasUserInteraction = false;
 
 /**
  * Get the shared AudioContext instance
@@ -56,6 +57,9 @@ export const isAudioContextInitialized = () => {
  * @returns {Promise<AudioContext>} - A promise that resolves to the AudioContext instance
  */
 export const ensureAudioContext = async () => {
+  // Mark that we've had user interaction
+  hasUserInteraction = true;
+
   if (!audioContext) {
     return initializeAudioContext();
   }
@@ -70,4 +74,20 @@ export const ensureAudioContext = async () => {
   }
 
   return audioContext;
+};
+
+/**
+ * Check if we've had user interaction
+ * @returns {boolean} - True if we've had user interaction
+ */
+export const hasHadUserInteraction = () => {
+  return hasUserInteraction;
+};
+
+/**
+ * Register a user interaction event
+ * Call this on any user interaction (click, touch, etc.)
+ */
+export const registerUserInteraction = () => {
+  hasUserInteraction = true;
 };

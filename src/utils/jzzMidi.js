@@ -2,9 +2,9 @@
 
 import JZZ from 'jzz';
 
-// We need to require the SMF module directly to ensure it's properly initialized
-const jzzMidiSmf = require('jzz-midi-smf');
-jzzMidiSmf(JZZ);
+// Import the SMF module
+import 'jzz-midi-smf';
+// The import above automatically registers with JZZ
 
 /**
  * Initialize JZZ
@@ -40,10 +40,11 @@ export const noteToMidiNumber = (noteName) => {
  * Export MIDI with JZZ (more advanced features)
  * @param {Object} melodyData - Melody data
  * @param {Object} chordData - Chord progression data
+ * @param {string} fileName - File name (not used in this function but kept for API compatibility)
  * @param {Object} options - Export options
  * @returns {Promise<Uint8Array>} - MIDI file data
  */
-export const exportMIDIWithJZZ = async (melodyData, chordData, options = {}) => {
+export const exportMIDIWithJZZ = async (melodyData, chordData, fileName, options = {}) => {
   const {
     includeMelody = true,
     includeChords = true,

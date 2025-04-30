@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import * as Tone from 'tone';
+import { initializeTone, createSynth } from '../utils/toneContext';
 import { ensureAudioContext, getAudioContext } from '../utils/audioContext';
 import {
   Box,
@@ -127,10 +128,10 @@ function CompositionGenerator({ onCompositionGenerated }) {
   const chordInstrumentRef = useRef(null);
   const bassInstrumentRef = useRef(null);
 
-  // Initialize Tone.js synths
-  const melodySynth = useRef(new Tone.PolySynth(Tone.Synth).toDestination());
-  const chordSynth = useRef(new Tone.PolySynth(Tone.Synth).toDestination());
-  const bassSynth = useRef(new Tone.PolySynth(Tone.Synth).toDestination());
+  // Synths will be created lazily when needed
+  const melodySynthRef = useRef(null);
+  const chordSynthRef = useRef(null);
+  const bassSynthRef = useRef(null);
 
   // Load available progressions and instruments on component mount
   useEffect(() => {
@@ -193,13 +194,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
   // Generate the complete composition
   const generateComposition = async () => {
-    // Ensure AudioContext is initialized (this should be called in response to a user gesture)
-    try {
-      await ensureAudioContext();
-    } catch (error) {
-      console.error('Failed to initialize AudioContext:', error);
-      // Continue anyway, we can still generate the composition
-    }
+    // We'll initialize AudioContext only when playing, not during generation
 
     // Generate chord progression
     let formattedChords = [];
@@ -338,7 +333,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
           if (useMotif && sectionMotif) {
             // Use motif-based melody generation
             const useVariation = chordIndex % 2 === 1 || (chordIndex > 0 && Math.random() < 0.3);
-            const currentMotif = useVariation 
+            const currentMotif = useVariation
               ? applyMotifVariation(sectionMotif, scale.length, motifVariation)
               : sectionMotif;
 
@@ -403,7 +398,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
                 // Calculate scale position based on contour and complexity
                 const scalePosition = Math.floor(
-                  contourPosition * scale.length + 
+                  contourPosition * scale.length +
                   (Math.random() * complexity / 5 - complexity / 10)
                 );
 
@@ -502,7 +497,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
           for (let bar = 0; bar < bars; bar++) {
             // Decide whether to use the motif directly or with variation
             const useVariation = bar % 2 === 1 || (bar > 0 && Math.random() < 0.3);
-            const currentMotif = useVariation 
+            const currentMotif = useVariation
               ? applyMotifVariation(motif, scale.length, motifVariation)
               : motif;
 
@@ -532,7 +527,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
               // Calculate scale position based on contour and complexity
               const scalePosition = Math.floor(
-                contourPosition * scale.length + 
+                contourPosition * scale.length +
                 (Math.random() * complexity / 5 - complexity / 10)
               );
 
@@ -1059,7 +1054,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
       return;
     }
 
-    // Ensure AudioContext is initialized (this should be called in response to a user gesture)
+    // Ensure AudioContext is initialized (this is now safe because it's in response to a user gesture)
     try {
       const ctx = await ensureAudioContext();
       if (ctx && audioContextRef.current !== ctx) {
@@ -1091,31 +1086,51 @@ function CompositionGenerator({ onCompositionGenerated }) {
   };
 
   // Play melody using Tone.js
-  const playMelodyWithToneJs = (notes) => {
-    Tone.Transport.bpm.value = tempo;
+  const playMelodyWithToneJs = async (notes) => {
+    try {
+      // Initialize Tone.js on user interaction
+      const success = await initializeTone();
+      if (!success) {
+        console.error('Failed to initialize Tone.js');
+        setIsPlaying(false);
+        setActivePlayingPart(null);
+        return;
+      }
 
-    const now = Tone.now();
-    notes.forEach(note => {
-      const durationSeconds = note.duration * 60 / tempo;
-      const startTime = now + (note.startTime * 60 / tempo);
+      // Create synth lazily if it doesn't exist
+      if (!melodySynthRef.current) {
+        melodySynthRef.current = createSynth();
+      }
 
-      melodySynth.current.triggerAttackRelease(
-        note.pitch,
-        durationSeconds,
-        startTime,
-        note.velocity
+      Tone.Transport.bpm.value = tempo;
+
+      const now = Tone.now();
+      notes.forEach(note => {
+        const durationSeconds = note.duration * 60 / tempo;
+        const startTime = now + (note.startTime * 60 / tempo);
+
+        melodySynthRef.current.triggerAttackRelease(
+          note.pitch,
+          durationSeconds,
+          startTime,
+          note.velocity
+        );
+      });
+
+      const totalDuration = notes.reduce(
+        (max, note) => Math.max(max, note.startTime + note.duration),
+        0
       );
-    });
 
-    const totalDuration = notes.reduce(
-      (max, note) => Math.max(max, note.startTime + note.duration),
-      0
-    );
-
-    setTimeout(() => {
+      setTimeout(() => {
+        setIsPlaying(false);
+        setActivePlayingPart(null);
+      }, (totalDuration * 60 / tempo * 1000) + 500);
+    } catch (error) {
+      console.error('Error playing melody with Tone.js:', error);
       setIsPlaying(false);
       setActivePlayingPart(null);
-    }, (totalDuration * 60 / tempo * 1000) + 500);
+    }
   };
 
   // Play the chord part
@@ -1161,25 +1176,45 @@ function CompositionGenerator({ onCompositionGenerated }) {
   };
 
   // Play chords using Tone.js
-  const playChordsWithToneJs = (chords) => {
-    Tone.Transport.bpm.value = tempo;
+  const playChordsWithToneJs = async (chords) => {
+    try {
+      // Initialize Tone.js on user interaction
+      const success = await initializeTone();
+      if (!success) {
+        console.error('Failed to initialize Tone.js');
+        setIsPlaying(false);
+        setActivePlayingPart(null);
+        return;
+      }
 
-    const now = Tone.now();
-    const secondsPerBar = 60 / tempo * 4; // 4 beats per bar
+      // Create synth lazily if it doesn't exist
+      if (!chordSynthRef.current) {
+        chordSynthRef.current = createSynth();
+      }
 
-    chords.forEach((chord, index) => {
-      const startTime = now + (chord.position * secondsPerBar);
-      const duration = chord.duration * secondsPerBar;
+      Tone.Transport.bpm.value = tempo;
 
-      chordSynth.current.triggerAttackRelease(chord.notes, duration, startTime);
-    });
+      const now = Tone.now();
+      const secondsPerBar = 60 / tempo * 4; // 4 beats per bar
 
-    const totalDuration = chords.reduce((sum, chord) => Math.max(sum, chord.position + chord.duration), 0) * secondsPerBar * 1000;
+      chords.forEach((chord, index) => {
+        const startTime = now + (chord.position * secondsPerBar);
+        const duration = chord.duration * secondsPerBar;
 
-    setTimeout(() => {
+        chordSynthRef.current.triggerAttackRelease(chord.notes, duration, startTime);
+      });
+
+      const totalDuration = chords.reduce((sum, chord) => Math.max(sum, chord.position + chord.duration), 0) * secondsPerBar * 1000;
+
+      setTimeout(() => {
+        setIsPlaying(false);
+        setActivePlayingPart(null);
+      }, totalDuration + 500);
+    } catch (error) {
+      console.error('Error playing chords with Tone.js:', error);
       setIsPlaying(false);
       setActivePlayingPart(null);
-    }, totalDuration + 500);
+    }
   };
 
   // Play the bass part
@@ -1225,31 +1260,51 @@ function CompositionGenerator({ onCompositionGenerated }) {
   };
 
   // Play bass using Tone.js
-  const playBassWithToneJs = (notes) => {
-    Tone.Transport.bpm.value = tempo;
+  const playBassWithToneJs = async (notes) => {
+    try {
+      // Initialize Tone.js on user interaction
+      const success = await initializeTone();
+      if (!success) {
+        console.error('Failed to initialize Tone.js');
+        setIsPlaying(false);
+        setActivePlayingPart(null);
+        return;
+      }
 
-    const now = Tone.now();
-    notes.forEach(note => {
-      const durationSeconds = note.duration * 60 / tempo;
-      const startTime = now + (note.startTime * 60 / tempo);
+      // Create synth lazily if it doesn't exist
+      if (!bassSynthRef.current) {
+        bassSynthRef.current = createSynth();
+      }
 
-      bassSynth.current.triggerAttackRelease(
-        note.pitch,
-        durationSeconds,
-        startTime,
-        note.velocity
+      Tone.Transport.bpm.value = tempo;
+
+      const now = Tone.now();
+      notes.forEach(note => {
+        const durationSeconds = note.duration * 60 / tempo;
+        const startTime = now + (note.startTime * 60 / tempo);
+
+        bassSynthRef.current.triggerAttackRelease(
+          note.pitch,
+          durationSeconds,
+          startTime,
+          note.velocity
+        );
+      });
+
+      const totalDuration = notes.reduce(
+        (max, note) => Math.max(max, note.startTime + note.duration),
+        0
       );
-    });
 
-    const totalDuration = notes.reduce(
-      (max, note) => Math.max(max, note.startTime + note.duration),
-      0
-    );
-
-    setTimeout(() => {
+      setTimeout(() => {
+        setIsPlaying(false);
+        setActivePlayingPart(null);
+      }, (totalDuration * 60 / tempo * 1000) + 500);
+    } catch (error) {
+      console.error('Error playing bass with Tone.js:', error);
       setIsPlaying(false);
       setActivePlayingPart(null);
-    }, (totalDuration * 60 / tempo * 1000) + 500);
+    }
   };
 
   // Play the full composition
@@ -1327,8 +1382,11 @@ function CompositionGenerator({ onCompositionGenerated }) {
       if (chordInstrumentRef.current) stopAllSounds(chordInstrumentRef.current);
       if (bassInstrumentRef.current) stopAllSounds(bassInstrumentRef.current);
     } else {
-      Tone.Transport.stop();
-      Tone.Transport.cancel();
+      // Stop Tone.js playback if it's initialized
+      if (melodySynthRef.current || chordSynthRef.current || bassSynthRef.current) {
+        Tone.Transport.stop();
+        Tone.Transport.cancel();
+      }
     }
 
     setIsPlaying(false);
@@ -1347,8 +1405,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
           <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
             <FormControl>
               <FormLabel>Key</FormLabel>
-              <Select 
-                value={selectedKey} 
+              <Select
+                value={selectedKey}
                 onChange={(e) => setSelectedKey(e.target.value)}
                 bg="rgba(255, 255, 255, 0.1)"
                 borderColor="rgba(255, 255, 255, 0.15)"
@@ -1411,8 +1469,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
                 <TabPanel>
                   <Heading size="sm" mb={3}>Instrument Selection</Heading>
                   <Flex align="center" mb={3}>
-                    <Checkbox 
-                      isChecked={useSoundFont} 
+                    <Checkbox
+                      isChecked={useSoundFont}
                       onChange={(e) => {
                         setUseSoundFont(e.target.checked);
                         if (e.target.checked) {
@@ -1448,8 +1506,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
                     <FormControl>
                       <FormLabel>Melody Instrument</FormLabel>
                       <Flex align="center">
-                        <Select 
-                          value={melodyInstrument} 
+                        <Select
+                          value={melodyInstrument}
                           onChange={(e) => {
                             setMelodyInstrument(e.target.value);
                             // Ensure AudioContext is initialized on user interaction
@@ -1478,8 +1536,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
                     <FormControl>
                       <FormLabel>Chord Instrument</FormLabel>
                       <Flex align="center">
-                        <Select 
-                          value={chordInstrument} 
+                        <Select
+                          value={chordInstrument}
                           onChange={(e) => {
                             setChordInstrument(e.target.value);
                             // Ensure AudioContext is initialized on user interaction
@@ -1508,8 +1566,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
                     <FormControl>
                       <FormLabel>Bass Instrument</FormLabel>
                       <Flex align="center">
-                        <Select 
-                          value={bassInstrument} 
+                        <Select
+                          value={bassInstrument}
                           onChange={(e) => {
                             setBassInstrument(e.target.value);
                             // Ensure AudioContext is initialized on user interaction
@@ -1539,8 +1597,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
                   <FormControl mt={4}>
                     <FormLabel>Humanization</FormLabel>
                     <Flex align="center">
-                      <Checkbox 
-                        isChecked={humanize} 
+                      <Checkbox
+                        isChecked={humanize}
                         onChange={(e) => setHumanize(e.target.checked)}
                         colorScheme="primary"
                         mr={2}
@@ -1575,8 +1633,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
                     <FormControl>
                       <FormLabel>Rhythm Pattern</FormLabel>
-                      <Select 
-                        value={rhythmPattern} 
+                      <Select
+                        value={rhythmPattern}
                         onChange={(e) => setRhythmPattern(e.target.value)}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
@@ -1590,8 +1648,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
                     <FormControl>
                       <FormLabel>Melodic Contour</FormLabel>
-                      <Select 
-                        value={contourType} 
+                      <Select
+                        value={contourType}
                         onChange={(e) => setContourType(e.target.value)}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
@@ -1605,8 +1663,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
                     <FormControl>
                       <FormLabel>Articulation</FormLabel>
-                      <Select 
-                        value={melodyArticulation} 
+                      <Select
+                        value={melodyArticulation}
                         onChange={(e) => setMelodyArticulation(e.target.value)}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
@@ -1622,8 +1680,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
                     <FormControl>
                       <FormLabel>Dynamics</FormLabel>
-                      <Select 
-                        value={melodyDynamics} 
+                      <Select
+                        value={melodyDynamics}
                         onChange={(e) => setMelodyDynamics(e.target.value)}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
@@ -1641,8 +1699,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
                     <FormControl>
                       <Flex align="center">
                         <FormLabel mb={0}>Use Motif</FormLabel>
-                        <Checkbox 
-                          isChecked={useMotif} 
+                        <Checkbox
+                          isChecked={useMotif}
                           onChange={(e) => setUseMotif(e.target.checked)}
                           colorScheme="primary"
                         />
@@ -1655,8 +1713,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
                     {useMotif && (
                       <FormControl>
                         <FormLabel>Motif Variation</FormLabel>
-                        <Select 
-                          value={motifVariation} 
+                        <Select
+                          value={motifVariation}
                           onChange={(e) => setMotifVariation(e.target.value)}
                           bg="rgba(255, 255, 255, 0.1)"
                           borderColor="rgba(255, 255, 255, 0.15)"
@@ -1679,8 +1737,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                     <FormControl>
                       <FormLabel>Chord Progression</FormLabel>
-                      <Select 
-                        value={selectedProgression} 
+                      <Select
+                        value={selectedProgression}
                         onChange={(e) => setSelectedProgression(e.target.value)}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
@@ -1714,8 +1772,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
                     <FormControl>
                       <Flex align="center">
                         <FormLabel mb={0}>Use Voice Leading</FormLabel>
-                        <Checkbox 
-                          isChecked={useVoiceLeading} 
+                        <Checkbox
+                          isChecked={useVoiceLeading}
                           onChange={(e) => setUseVoiceLeading(e.target.checked)}
                           colorScheme="primary"
                         />
@@ -1728,8 +1786,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
                     <FormControl>
                       <Flex align="center">
                         <FormLabel mb={0}>Use Inversions</FormLabel>
-                        <Checkbox 
-                          isChecked={useInversions} 
+                        <Checkbox
+                          isChecked={useInversions}
                           onChange={(e) => setUseInversions(e.target.checked)}
                           colorScheme="primary"
                         />
@@ -1742,8 +1800,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
                     {useInversions && (
                       <FormControl>
                         <FormLabel>Inversion</FormLabel>
-                        <Select 
-                          value={inversion} 
+                        <Select
+                          value={inversion}
                           onChange={(e) => setInversion(parseInt(e.target.value))}
                           bg="rgba(255, 255, 255, 0.1)"
                           borderColor="rgba(255, 255, 255, 0.15)"
@@ -1760,8 +1818,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
                     <FormControl>
                       <Flex align="center">
                         <FormLabel mb={0}>Use Extended Chords</FormLabel>
-                        <Checkbox 
-                          isChecked={useExtendedChords} 
+                        <Checkbox
+                          isChecked={useExtendedChords}
                           onChange={(e) => setUseExtendedChords(e.target.checked)}
                           colorScheme="primary"
                         />
@@ -1774,8 +1832,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
                     <FormControl>
                       <Flex align="center">
                         <FormLabel mb={0}>Auto-Randomize Options</FormLabel>
-                        <Checkbox 
-                          isChecked={autoRandomize} 
+                        <Checkbox
+                          isChecked={autoRandomize}
                           onChange={(e) => setAutoRandomize(e.target.checked)}
                           colorScheme="primary"
                         />
@@ -1793,8 +1851,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                     <FormControl>
                       <FormLabel>Bass Pattern</FormLabel>
-                      <Select 
-                        value={bassPattern} 
+                      <Select
+                        value={bassPattern}
                         onChange={(e) => setBassPattern(e.target.value)}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
@@ -1852,8 +1910,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
                     <FormControl>
                       <Flex align="center">
                         <FormLabel mb={0}>Use Verse/Chorus Structure</FormLabel>
-                        <Checkbox 
-                          isChecked={useVerseChorus} 
+                        <Checkbox
+                          isChecked={useVerseChorus}
                           onChange={(e) => setUseVerseChorus(e.target.checked)}
                           colorScheme="primary"
                         />
@@ -1867,8 +1925,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
                       <>
                         <FormControl>
                           <FormLabel>Song Structure</FormLabel>
-                          <Select 
-                            value={structure} 
+                          <Select
+                            value={structure}
                             onChange={(e) => setStructure(e.target.value)}
                             bg="rgba(255, 255, 255, 0.1)"
                             borderColor="rgba(255, 255, 255, 0.15)"
@@ -1884,8 +1942,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
                         <FormControl>
                           <FormLabel>Verse Progression</FormLabel>
-                          <Select 
-                            value={verseProgression} 
+                          <Select
+                            value={verseProgression}
                             onChange={(e) => setVerseProgression(e.target.value)}
                             bg="rgba(255, 255, 255, 0.1)"
                             borderColor="rgba(255, 255, 255, 0.15)"
@@ -1899,8 +1957,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
                         <FormControl>
                           <FormLabel>Chorus Progression</FormLabel>
-                          <Select 
-                            value={chorusProgression} 
+                          <Select
+                            value={chorusProgression}
                             onChange={(e) => setChorusProgression(e.target.value)}
                             bg="rgba(255, 255, 255, 0.1)"
                             borderColor="rgba(255, 255, 255, 0.15)"
@@ -1914,8 +1972,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
                         <Box gridColumn="span 2" p={4} bg="rgba(255, 255, 255, 0.05)" borderRadius="md">
                           <Text fontSize="sm" color="gray.300">
-                            Using verse/chorus structure will create a more complex composition with different 
-                            chord progressions for verses and choruses. The melody and bass will adapt to these 
+                            Using verse/chorus structure will create a more complex composition with different
+                            chord progressions for verses and choruses. The melody and bass will adapt to these
                             changes, creating a more interesting and dynamic piece of music.
                           </Text>
                         </Box>
@@ -1929,25 +1987,19 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
           {/* Action Buttons */}
           <HStack spacing={4} mt={6}>
-            <Button 
+            <Button
               onClick={() => {
-                // Ensure AudioContext is initialized on user interaction
-                ensureAudioContext().then(() => {
-                  generateComposition();
-                }).catch(error => {
-                  console.error('Failed to initialize AudioContext:', error);
-                  // Continue anyway, we can still generate the composition
-                  generateComposition();
-                });
-              }} 
-              colorScheme="primary" 
+                // Just generate the composition without initializing AudioContext
+                generateComposition();
+              }}
+              colorScheme="primary"
               size="lg"
               leftIcon={<Box as="span" className="icon">🎼</Box>}
             >
               Generate Composition
             </Button>
-            <Button 
-              onClick={stopPlayback} 
+            <Button
+              onClick={stopPlayback}
               colorScheme="red"
               variant="outline"
               size="lg"
@@ -2037,10 +2089,10 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
           {/* Composition Info */}
           {composition && (
-            <Box 
-              mt={8} 
-              p={4} 
-              borderRadius="md" 
+            <Box
+              mt={8}
+              p={4}
+              borderRadius="md"
               bg="rgba(255, 255, 255, 0.05)"
               borderLeft="4px solid"
               borderColor="primary.500"

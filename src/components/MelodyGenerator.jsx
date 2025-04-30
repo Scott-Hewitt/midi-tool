@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import * as Tone from 'tone';
+import { initializeTone, createSynth } from '../utils/toneContext';
 import { ensureAudioContext, getAudioContext } from '../utils/audioContext';
 import {
   Box,
@@ -80,8 +81,8 @@ function MelodyGenerator({ onMelodyGenerated }) {
   const audioContextRef = useRef(null);
   const instrumentRef = useRef(null);
 
-  // Initialize Tone.js synth
-  const synth = new Tone.PolySynth(Tone.Synth).toDestination();
+  // Synth will be created lazily when needed
+  const synthRef = useRef(null);
 
   // Load available instruments and initialize audio context on component mount
   useEffect(() => {
@@ -154,7 +155,7 @@ function MelodyGenerator({ onMelodyGenerated }) {
       for (let bar = 0; bar < bars; bar++) {
         // Decide whether to use the motif directly or with variation
         const useVariation = bar % 2 === 1 || (bar > 0 && Math.random() < 0.3);
-        const currentMotif = useVariation 
+        const currentMotif = useVariation
           ? applyMotifVariation(motif, scale.length, motifVariation)
           : motif;
 
@@ -184,7 +185,7 @@ function MelodyGenerator({ onMelodyGenerated }) {
 
           // Calculate scale position based on contour and complexity
           const scalePosition = Math.floor(
-            contourPosition * scale.length + 
+            contourPosition * scale.length +
             (Math.random() * complexity / 5 - complexity / 10)
           );
 
@@ -308,39 +309,56 @@ function MelodyGenerator({ onMelodyGenerated }) {
   };
 
   // Play using Tone.js (fallback method)
-  const playWithToneJs = (notes) => {
-    // Set the tempo
-    Tone.Transport.bpm.value = tempo;
+  const playWithToneJs = async (notes) => {
+    try {
+      // Initialize Tone.js on user interaction
+      const success = await initializeTone();
+      if (!success) {
+        console.error('Failed to initialize Tone.js');
+        return;
+      }
 
-    // Schedule the notes
-    const now = Tone.now();
-    notes.forEach(note => {
-      // Convert duration from beats to seconds
-      const durationSeconds = note.duration * 60 / tempo;
+      // Create synth lazily if it doesn't exist
+      if (!synthRef.current) {
+        synthRef.current = createSynth();
+      }
 
-      // Schedule the note at its start time
-      const startTime = now + (note.startTime * 60 / tempo);
+      // Set the tempo
+      Tone.Transport.bpm.value = tempo;
 
-      synth.triggerAttackRelease(
-        note.pitch,
-        durationSeconds,
-        startTime,
-        note.velocity
+      // Schedule the notes
+      const now = Tone.now();
+      notes.forEach(note => {
+        // Convert duration from beats to seconds
+        const durationSeconds = note.duration * 60 / tempo;
+
+        // Schedule the note at its start time
+        const startTime = now + (note.startTime * 60 / tempo);
+
+        synthRef.current.triggerAttackRelease(
+          note.pitch,
+          durationSeconds,
+          startTime,
+          note.velocity
+        );
+      });
+
+      setIsPlaying(true);
+
+      // Calculate total duration of the melody
+      const totalDuration = notes.reduce(
+        (max, note) => Math.max(max, note.startTime + note.duration),
+        0
       );
-    });
 
-    setIsPlaying(true);
-
-    // Calculate total duration of the melody
-    const totalDuration = notes.reduce(
-      (max, note) => Math.max(max, note.startTime + note.duration),
-      0
-    );
-
-    // Stop playing after the melody is complete
-    setTimeout(() => {
+      // Stop playing after the melody is complete
+      setTimeout(() => {
+        setIsPlaying(false);
+      }, (totalDuration * 60 / tempo * 1000) + 500); // Add a small buffer
+    } catch (error) {
+      console.error('Error playing with Tone.js:', error);
       setIsPlaying(false);
-    }, (totalDuration * 60 / tempo * 1000) + 500); // Add a small buffer
+    }
   };
 
   return (
@@ -355,8 +373,8 @@ function MelodyGenerator({ onMelodyGenerated }) {
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
             <FormControl>
               <FormLabel>Scale</FormLabel>
-              <Select 
-                value={selectedScale} 
+              <Select
+                value={selectedScale}
                 onChange={(e) => setSelectedScale(e.target.value)}
                 bg="rgba(255, 255, 255, 0.1)"
                 borderColor="rgba(255, 255, 255, 0.15)"
@@ -423,8 +441,8 @@ function MelodyGenerator({ onMelodyGenerated }) {
           <Box mt={6}>
             <Accordion allowToggle defaultIndex={[]}>
               <AccordionItem border="none">
-                <AccordionButton 
-                  bg="rgba(255, 255, 255, 0.05)" 
+                <AccordionButton
+                  bg="rgba(255, 255, 255, 0.05)"
                   borderRadius="md"
                   _hover={{ bg: "rgba(255, 255, 255, 0.1)" }}
                 >
@@ -437,8 +455,8 @@ function MelodyGenerator({ onMelodyGenerated }) {
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} mt={4}>
                     <FormControl>
                       <FormLabel>Rhythm Pattern</FormLabel>
-                      <Select 
-                        value={rhythmPattern} 
+                      <Select
+                        value={rhythmPattern}
                         onChange={(e) => setRhythmPattern(e.target.value)}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
@@ -452,8 +470,8 @@ function MelodyGenerator({ onMelodyGenerated }) {
 
                     <FormControl>
                       <FormLabel>Melodic Contour</FormLabel>
-                      <Select 
-                        value={contourType} 
+                      <Select
+                        value={contourType}
                         onChange={(e) => setContourType(e.target.value)}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
@@ -468,8 +486,8 @@ function MelodyGenerator({ onMelodyGenerated }) {
                     <FormControl>
                       <Flex align="center">
                         <FormLabel mb={0}>Use Motif</FormLabel>
-                        <Checkbox 
-                          isChecked={useMotif} 
+                        <Checkbox
+                          isChecked={useMotif}
                           onChange={(e) => setUseMotif(e.target.checked)}
                           colorScheme="primary"
                         />
@@ -479,8 +497,8 @@ function MelodyGenerator({ onMelodyGenerated }) {
                     {useMotif && (
                       <FormControl>
                         <FormLabel>Motif Variation</FormLabel>
-                        <Select 
-                          value={motifVariation} 
+                        <Select
+                          value={motifVariation}
                           onChange={(e) => setMotifVariation(e.target.value)}
                           bg="rgba(255, 255, 255, 0.1)"
                           borderColor="rgba(255, 255, 255, 0.15)"
@@ -497,8 +515,8 @@ function MelodyGenerator({ onMelodyGenerated }) {
 
                     <FormControl>
                       <FormLabel>Articulation</FormLabel>
-                      <Select 
-                        value={articulation} 
+                      <Select
+                        value={articulation}
                         onChange={(e) => setArticulation(e.target.value)}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
@@ -514,8 +532,8 @@ function MelodyGenerator({ onMelodyGenerated }) {
 
                     <FormControl>
                       <FormLabel>Dynamics</FormLabel>
-                      <Select 
-                        value={dynamics} 
+                      <Select
+                        value={dynamics}
                         onChange={(e) => setDynamics(e.target.value)}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
@@ -533,8 +551,8 @@ function MelodyGenerator({ onMelodyGenerated }) {
                     <FormControl>
                       <Flex align="center">
                         <FormLabel mb={0}>Humanize</FormLabel>
-                        <Checkbox 
-                          isChecked={humanize} 
+                        <Checkbox
+                          isChecked={humanize}
                           onChange={(e) => setHumanize(e.target.checked)}
                           colorScheme="primary"
                         />
@@ -549,8 +567,8 @@ function MelodyGenerator({ onMelodyGenerated }) {
                     <FormControl>
                       <Flex align="center">
                         <FormLabel mb={0}>Use Realistic Instrument Sounds</FormLabel>
-                        <Checkbox 
-                          isChecked={useSoundFont} 
+                        <Checkbox
+                          isChecked={useSoundFont}
                           onChange={(e) => setUseSoundFont(e.target.checked)}
                           colorScheme="primary"
                         />
@@ -564,8 +582,8 @@ function MelodyGenerator({ onMelodyGenerated }) {
                       <FormControl>
                         <FormLabel>Instrument</FormLabel>
                         <Flex align="center">
-                          <Select 
-                            value={selectedInstrument} 
+                          <Select
+                            value={selectedInstrument}
                             onChange={(e) => {
                               setSelectedInstrument(e.target.value);
                               loadSoundFontInstrument(e.target.value);
@@ -592,16 +610,16 @@ function MelodyGenerator({ onMelodyGenerated }) {
 
           {/* Action Buttons */}
           <HStack spacing={4} mt={6}>
-            <Button 
-              onClick={generateMelody} 
-              colorScheme="primary" 
+            <Button
+              onClick={generateMelody}
+              colorScheme="primary"
               size="lg"
               leftIcon={<Box as="span" className="icon">🎵</Box>}
             >
               Generate Melody
             </Button>
-            <Button 
-              onClick={playMelody} 
+            <Button
+              onClick={playMelody}
               colorScheme={isPlaying ? "red" : "secondary"}
               variant={isPlaying ? "solid" : "outline"}
               size="lg"
@@ -613,10 +631,10 @@ function MelodyGenerator({ onMelodyGenerated }) {
 
           {/* Melody Info */}
           {melody && (
-            <Box 
-              mt={8} 
-              p={4} 
-              borderRadius="md" 
+            <Box
+              mt={8}
+              p={4}
+              borderRadius="md"
               bg="rgba(255, 255, 255, 0.05)"
               borderLeft="4px solid"
               borderColor="primary.500"
