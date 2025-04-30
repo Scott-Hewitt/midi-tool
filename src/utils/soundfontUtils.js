@@ -13,13 +13,13 @@ const instrumentCache = {};
 export const loadInstrument = async (instrumentName = 'acoustic_grand_piano', audioContext) => {
   // Create audio context if not provided
   const ctx = audioContext || new (window.AudioContext || window.webkitAudioContext)();
-  
+
   // Check if instrument is already loaded
   const cacheKey = `${instrumentName}_${ctx.id}`;
   if (instrumentCache[cacheKey]) {
     return instrumentCache[cacheKey];
   }
-  
+
   try {
     // Load the instrument
     const instrument = await Soundfont.instrument(ctx, instrumentName, {
@@ -27,10 +27,10 @@ export const loadInstrument = async (instrumentName = 'acoustic_grand_piano', au
       soundfont: 'MusyngKite',
       gain: 3.0 // Adjust volume
     });
-    
+
     // Cache the loaded instrument
     instrumentCache[cacheKey] = instrument;
-    
+
     return instrument;
   } catch (error) {
     console.error(`Error loading instrument ${instrumentName}:`, error);
@@ -202,7 +202,7 @@ export const midiProgramToInstrumentName = (program) => {
     126: 'applause',
     127: 'gunshot'
   };
-  
+
   return instrumentMap[program] || 'acoustic_grand_piano';
 };
 
@@ -217,19 +217,49 @@ export const playMelodyWithSoundFont = async (instrument, notes, tempo = 120) =>
   if (!instrument || !notes || notes.length === 0) {
     return;
   }
-  
+
   const secondsPerBeat = 60 / tempo;
   const now = instrument.context.currentTime;
-  
+
   // Schedule all notes
   const scheduledNotes = notes.map(note => {
     const startTime = now + (note.startTime * secondsPerBeat);
     const duration = note.duration * secondsPerBeat;
     const velocity = note.velocity || 1.0;
-    
-    return instrument.play(note.pitch, startTime, { duration, gain: velocity });
+
+    try {
+      // Check if the note is valid before playing it
+      if (!note.pitch || typeof note.pitch !== 'string') {
+        console.warn(`Invalid note pitch: ${note.pitch}, skipping`);
+        return Promise.resolve(); // Return a resolved promise to avoid breaking Promise.all
+      }
+
+      // Validate the note format - should be a letter (A-G), optional accidental (#/b), and octave number
+      const validNotePattern = /^[A-G][#b]?\d+$/;
+      if (!validNotePattern.test(note.pitch)) {
+        console.warn(`Invalid note format: ${note.pitch}, skipping`);
+        return Promise.resolve(); // Return a resolved promise to avoid breaking Promise.all
+      }
+
+      // Try to play the note, but catch any errors
+      try {
+        return instrument.play(note.pitch, startTime, { duration, gain: velocity });
+      } catch (playError) {
+        console.error(`Error playing note ${note.pitch}:`, playError);
+        // Try to play a fallback note (middle C) if the original note fails
+        try {
+          return instrument.play('C4', startTime, { duration, gain: velocity * 0.7 });
+        } catch (fallbackError) {
+          console.error('Fallback note also failed:', fallbackError);
+          return Promise.resolve(); // Return a resolved promise to avoid breaking Promise.all
+        }
+      }
+    } catch (error) {
+      console.error(`Error processing note ${note.pitch}:`, error);
+      return Promise.resolve(); // Return a resolved promise to avoid breaking Promise.all
+    }
   });
-  
+
   // Return a promise that resolves when all notes have finished playing
   return Promise.all(scheduledNotes);
 };
@@ -245,21 +275,57 @@ export const playChordProgressionWithSoundFont = async (instrument, chords, temp
   if (!instrument || !chords || chords.length === 0) {
     return;
   }
-  
+
   const secondsPerBeat = 60 / tempo;
   const now = instrument.context.currentTime;
-  
+
   // Schedule all chords
   const scheduledChords = chords.flatMap(chord => {
     const startTime = now + (chord.position * 4 * secondsPerBeat); // 4 beats per bar
     const duration = chord.duration * 4 * secondsPerBeat;
-    
+
+    // Check if chord has notes
+    if (!chord.notes || !Array.isArray(chord.notes) || chord.notes.length === 0) {
+      console.warn(`Chord has no valid notes:`, chord);
+      return [Promise.resolve()]; // Return a resolved promise to avoid breaking Promise.all
+    }
+
     // Play each note in the chord
     return chord.notes.map(note => {
-      return instrument.play(note, startTime, { duration, gain: 0.8 });
+      try {
+        // Check if the note is valid before playing it
+        if (!note || typeof note !== 'string') {
+          console.warn(`Invalid chord note: ${note}, skipping`);
+          return Promise.resolve(); // Return a resolved promise to avoid breaking Promise.all
+        }
+
+        // Validate the note format - should be a letter (A-G), optional accidental (#/b), and octave number
+        const validNotePattern = /^[A-G][#b]?\d+$/;
+        if (!validNotePattern.test(note)) {
+          console.warn(`Invalid note format: ${note}, skipping`);
+          return Promise.resolve(); // Return a resolved promise to avoid breaking Promise.all
+        }
+
+        // Try to play the note, but catch any errors
+        try {
+          return instrument.play(note, startTime, { duration, gain: 0.8 });
+        } catch (playError) {
+          console.error(`Error playing chord note ${note}:`, playError);
+          // Try to play a fallback note (middle C) if the original note fails
+          try {
+            return instrument.play('C4', startTime, { duration, gain: 0.6 });
+          } catch (fallbackError) {
+            console.error('Fallback note also failed:', fallbackError);
+            return Promise.resolve(); // Return a resolved promise to avoid breaking Promise.all
+          }
+        }
+      } catch (error) {
+        console.error(`Error processing chord note ${note}:`, error);
+        return Promise.resolve(); // Return a resolved promise to avoid breaking Promise.all
+      }
     });
   });
-  
+
   // Return a promise that resolves when all chords have finished playing
   return Promise.all(scheduledChords);
 };

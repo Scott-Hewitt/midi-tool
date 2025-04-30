@@ -1,5 +1,43 @@
 import { useState, useEffect, useRef } from 'react';
 import * as Tone from 'tone';
+import { ensureAudioContext, getAudioContext } from '../utils/audioContext';
+import {
+  Box,
+  Heading,
+  SimpleGrid,
+  FormControl,
+  FormLabel,
+  Select,
+  Slider,
+  SliderTrack,
+  SliderFilledTrack,
+  SliderThumb,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+  Checkbox,
+  Button,
+  HStack,
+  VStack,
+  Text,
+  Divider,
+  Flex,
+  Badge,
+  Card,
+  CardHeader,
+  CardBody,
+  Accordion,
+  AccordionItem,
+  AccordionPanel,
+  AccordionIcon,
+  Tooltip,
+  Spinner,
+  Grid,
+  GridItem
+} from '@chakra-ui/react';
+import { AccordionButton } from '@chakra-ui/react';
 
 // Import utility functions from chords.js for backward compatibility
 import {
@@ -66,13 +104,13 @@ function ChordGenerator({ onChordGenerated }) {
     setAvailableProgressions(getCommonProgressions());
     setAvailableInstruments(getAvailableInstruments());
 
-    // Initialize audio context
-    if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    // Store a reference to the current AudioContext if it exists
+    const currentAudioContext = getAudioContext();
+    if (currentAudioContext) {
+      audioContextRef.current = currentAudioContext;
+      // Load default instrument if we already have an AudioContext
+      loadSoundFontInstrument('acoustic_grand_piano');
     }
-
-    // Load default instrument
-    loadSoundFontInstrument('acoustic_grand_piano');
 
     // Cleanup on unmount
     return () => {
@@ -84,11 +122,20 @@ function ChordGenerator({ onChordGenerated }) {
 
   // Load a SoundFont instrument
   const loadSoundFontInstrument = async (instrumentName) => {
-    if (!audioContextRef.current) return;
-
-    setInstrumentLoading(true);
     try {
-      const instrument = await loadInstrument(instrumentName, audioContextRef.current);
+      // Ensure AudioContext is initialized (this should be called in response to a user gesture)
+      const ctx = await ensureAudioContext();
+      if (!ctx) {
+        console.error('Failed to initialize AudioContext');
+        setUseSoundFont(false);
+        return;
+      }
+
+      // Update our reference
+      audioContextRef.current = ctx;
+
+      setInstrumentLoading(true);
+      const instrument = await loadInstrument(instrumentName, ctx);
       instrumentRef.current = instrument;
       setInstrumentLoading(false);
     } catch (error) {
@@ -213,6 +260,17 @@ function ChordGenerator({ onChordGenerated }) {
       return;
     }
 
+    // Ensure AudioContext is initialized (this should be called in response to a user gesture)
+    try {
+      const ctx = await ensureAudioContext();
+      if (ctx && audioContextRef.current !== ctx) {
+        audioContextRef.current = ctx;
+      }
+    } catch (error) {
+      console.error('Failed to initialize AudioContext:', error);
+      // Continue anyway, we can still try to play using Tone.js
+    }
+
     // Generate progression if not already generated
     const chords = progression ? progression.progression : generateProgression();
 
@@ -263,191 +321,272 @@ function ChordGenerator({ onChordGenerated }) {
   };
 
   return (
-    <div className="chord-generator">
-      <h2>Chord Generator</h2>
+    <Card p={6} variant="elevated" bg="rgba(30, 41, 59, 0.5)" backdropFilter="blur(12px)" border="1px solid rgba(255, 255, 255, 0.1)" boxShadow="0 8px 32px 0 rgba(0, 0, 0, 0.37)">
+      <CardHeader pb={4}>
+        <Heading size="lg" color="primary.400">Chord Generator</Heading>
+      </CardHeader>
 
-      <div className="controls">
-        <div className="control-group">
-          <label>
-            Key:
-            <select
-              value={selectedKey}
-              onChange={(e) => setSelectedKey(e.target.value)}
-            >
-              {keyOptions.map(key => (
-                <option key={key} value={key}>{key}</option>
-              ))}
-            </select>
-          </label>
-        </div>
+      <CardBody>
+        <VStack spacing={6} align="stretch">
+          {/* Basic Controls */}
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+            <FormControl>
+              <FormLabel>Key</FormLabel>
+              <Select 
+                value={selectedKey} 
+                onChange={(e) => setSelectedKey(e.target.value)}
+                bg="rgba(255, 255, 255, 0.1)"
+                borderColor="rgba(255, 255, 255, 0.15)"
+                _hover={{ borderColor: "primary.400" }}
+              >
+                {keyOptions.map(key => (
+                  <option key={key} value={key}>{key}</option>
+                ))}
+              </Select>
+            </FormControl>
 
-        <div className="control-group">
-          <label>
-            Progression:
-            <select
-              value={selectedProgression}
-              onChange={(e) => setSelectedProgression(e.target.value)}
-            >
-              {Object.keys(availableProgressions).map(prog => (
-                <option key={prog} value={prog}>{prog}</option>
-              ))}
-            </select>
-          </label>
-        </div>
+            <FormControl>
+              <FormLabel>Progression</FormLabel>
+              <Select 
+                value={selectedProgression} 
+                onChange={(e) => setSelectedProgression(e.target.value)}
+                bg="rgba(255, 255, 255, 0.1)"
+                borderColor="rgba(255, 255, 255, 0.15)"
+                _hover={{ borderColor: "primary.400" }}
+              >
+                {Object.keys(availableProgressions).map(prog => (
+                  <option key={prog} value={prog}>{prog}</option>
+                ))}
+              </Select>
+            </FormControl>
 
-        <div className="control-group">
-          <label>
-            Tempo (BPM):
-            <input
-              type="range"
-              min="60"
-              max="180"
-              value={tempo}
-              onChange={(e) => setTempo(parseInt(e.target.value))}
-            />
-            <span>{tempo} BPM</span>
-          </label>
-        </div>
+            <FormControl>
+              <FormLabel>Tempo (BPM): {tempo}</FormLabel>
+              <Slider
+                min={60}
+                max={180}
+                value={tempo}
+                onChange={(val) => setTempo(val)}
+                focusThumbOnChange={false}
+              >
+                <SliderTrack bg="rgba(255, 255, 255, 0.1)">
+                  <SliderFilledTrack bg="primary.500" />
+                </SliderTrack>
+                <SliderThumb boxSize={6} />
+              </Slider>
+            </FormControl>
 
-        <div className="control-group">
-          <label>
-            Chord Duration (bars):
-            <input
-              type="number"
-              min="0.5"
-              max="4"
-              step="0.5"
-              value={chordDuration}
-              onChange={(e) => setChordDuration(parseFloat(e.target.value))}
-            />
-          </label>
-        </div>
+            <FormControl>
+              <FormLabel>Chord Duration (bars)</FormLabel>
+              <NumberInput
+                min={0.5}
+                max={4}
+                step={0.5}
+                value={chordDuration}
+                onChange={(valueString) => setChordDuration(parseFloat(valueString))}
+                bg="rgba(255, 255, 255, 0.1)"
+                borderColor="rgba(255, 255, 255, 0.15)"
+              >
+                <NumberInputField />
+                <NumberInputStepper>
+                  <NumberIncrementStepper />
+                  <NumberDecrementStepper />
+                </NumberInputStepper>
+              </NumberInput>
+            </FormControl>
+          </SimpleGrid>
 
-        {/* Advanced controls */}
-        <div className="advanced-controls">
-          <h3>Advanced Options</h3>
-
-          <div className="control-group">
-            <label>
-              Use Voice Leading:
-              <input
-                type="checkbox"
-                checked={useVoiceLeading}
-                onChange={(e) => setUseVoiceLeading(e.target.checked)}
-              />
-            </label>
-          </div>
-
-          <div className="control-group">
-            <label>
-              Use Inversions:
-              <input
-                type="checkbox"
-                checked={useInversions}
-                onChange={(e) => setUseInversions(e.target.checked)}
-              />
-            </label>
-          </div>
-
-          {useInversions && (
-            <div className="control-group">
-              <label>
-                Inversion:
-                <select
-                  value={inversion}
-                  onChange={(e) => setInversion(parseInt(e.target.value))}
+          {/* Advanced Controls */}
+          <Box mt={6}>
+            <Accordion allowToggle defaultIndex={[]}>
+              <AccordionItem border="none">
+                <AccordionButton 
+                  bg="rgba(255, 255, 255, 0.05)" 
+                  borderRadius="md"
+                  _hover={{ bg: "rgba(255, 255, 255, 0.1)" }}
                 >
-                  <option value="0">Root Position</option>
-                  <option value="1">First Inversion</option>
-                  <option value="2">Second Inversion</option>
-                  <option value="3">Third Inversion</option>
-                </select>
-              </label>
-            </div>
+                  <Box flex="1" textAlign="left">
+                    <Heading size="sm">Advanced Options</Heading>
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+                <AccordionPanel pb={4}>
+                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} mt={4}>
+                    <FormControl>
+                      <Flex align="center">
+                        <FormLabel mb={0}>Use Voice Leading</FormLabel>
+                        <Checkbox 
+                          isChecked={useVoiceLeading} 
+                          onChange={(e) => setUseVoiceLeading(e.target.checked)}
+                          colorScheme="primary"
+                        />
+                      </Flex>
+                    </FormControl>
+
+                    <FormControl>
+                      <Flex align="center">
+                        <FormLabel mb={0}>Use Inversions</FormLabel>
+                        <Checkbox 
+                          isChecked={useInversions} 
+                          onChange={(e) => setUseInversions(e.target.checked)}
+                          colorScheme="primary"
+                        />
+                      </Flex>
+                    </FormControl>
+
+                    {useInversions && (
+                      <FormControl>
+                        <FormLabel>Inversion</FormLabel>
+                        <Select 
+                          value={inversion} 
+                          onChange={(e) => setInversion(parseInt(e.target.value))}
+                          bg="rgba(255, 255, 255, 0.1)"
+                          borderColor="rgba(255, 255, 255, 0.15)"
+                          _hover={{ borderColor: "primary.400" }}
+                        >
+                          <option value="0">Root Position</option>
+                          <option value="1">First Inversion</option>
+                          <option value="2">Second Inversion</option>
+                          <option value="3">Third Inversion</option>
+                        </Select>
+                      </FormControl>
+                    )}
+
+                    <FormControl>
+                      <Flex align="center">
+                        <FormLabel mb={0}>Use Extended Chords</FormLabel>
+                        <Checkbox 
+                          isChecked={useExtendedChords} 
+                          onChange={(e) => setUseExtendedChords(e.target.checked)}
+                          colorScheme="primary"
+                        />
+                      </Flex>
+                    </FormControl>
+
+                    <FormControl>
+                      <Flex align="center">
+                        <FormLabel mb={0}>Auto-Randomize Options</FormLabel>
+                        <Checkbox 
+                          isChecked={autoRandomize} 
+                          onChange={(e) => setAutoRandomize(e.target.checked)}
+                          colorScheme="primary"
+                        />
+                        <Tooltip label="Automatically applies random advanced options for variety" hasArrow placement="top">
+                          <Box as="span" ml={2} color="gray.300" fontSize="sm">ⓘ</Box>
+                        </Tooltip>
+                      </Flex>
+                    </FormControl>
+                  </SimpleGrid>
+
+                  <Divider my={6} borderColor="rgba(255, 255, 255, 0.1)" />
+
+                  <Heading size="sm" mb={4}>Sound Options</Heading>
+                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+                    <FormControl>
+                      <Flex align="center">
+                        <FormLabel mb={0}>Use Realistic Instrument Sounds</FormLabel>
+                        <Checkbox 
+                          isChecked={useSoundFont} 
+                          onChange={(e) => setUseSoundFont(e.target.checked)}
+                          colorScheme="primary"
+                        />
+                      </Flex>
+                    </FormControl>
+
+                    {useSoundFont && (
+                      <FormControl>
+                        <FormLabel>Instrument</FormLabel>
+                        <Flex align="center">
+                          <Select 
+                            value={selectedInstrument} 
+                            onChange={(e) => {
+                              setSelectedInstrument(e.target.value);
+                              loadSoundFontInstrument(e.target.value);
+                            }}
+                            isDisabled={instrumentLoading}
+                            bg="rgba(255, 255, 255, 0.1)"
+                            borderColor="rgba(255, 255, 255, 0.15)"
+                            _hover={{ borderColor: "primary.400" }}
+                            mr={2}
+                          >
+                            {Object.entries(availableInstruments).map(([value, name]) => (
+                              <option key={value} value={value}>{name}</option>
+                            ))}
+                          </Select>
+                          {instrumentLoading && <Spinner size="sm" color="primary.400" />}
+                        </Flex>
+                      </FormControl>
+                    )}
+                  </SimpleGrid>
+                </AccordionPanel>
+              </AccordionItem>
+            </Accordion>
+          </Box>
+
+          {/* Action Buttons */}
+          <HStack spacing={4} mt={6}>
+            <Button 
+              onClick={generateProgression} 
+              colorScheme="primary" 
+              size="lg"
+              leftIcon={<Box as="span" className="icon">🎹</Box>}
+            >
+              Generate Progression
+            </Button>
+            <Button 
+              onClick={playProgression} 
+              colorScheme={isPlaying ? "red" : "secondary"}
+              variant={isPlaying ? "solid" : "outline"}
+              size="lg"
+              leftIcon={<Box as="span" className="icon">{isPlaying ? '⏹️' : '▶️'}</Box>}
+            >
+              {isPlaying ? 'Stop Playing' : 'Play Progression'}
+            </Button>
+          </HStack>
+
+          {/* Progression Info */}
+          {progression && (
+            <Box 
+              mt={8} 
+              p={4} 
+              borderRadius="md" 
+              bg="rgba(255, 255, 255, 0.05)"
+              borderLeft="4px solid"
+              borderColor="primary.500"
+            >
+              <Heading size="md" mb={4}>Generated Chord Progression</Heading>
+              <Text mb={4}><Badge colorScheme="primary" mr={2}>Key:</Badge> {progression.key}</Text>
+
+              <Grid 
+                templateColumns={{ base: "1fr", md: "repeat(auto-fill, minmax(200px, 1fr))" }}
+                gap={4}
+              >
+                {progression.progression.map((chord, index) => (
+                  <GridItem 
+                    key={index} 
+                    p={3} 
+                    borderRadius="md" 
+                    bg="rgba(255, 255, 255, 0.05)"
+                    _hover={{ bg: "rgba(255, 255, 255, 0.1)" }}
+                    transition="background 0.2s"
+                  >
+                    <Flex direction="column" align="center">
+                      <Heading size="md" color="primary.300">
+                        {chord.symbol || `${chord.root.slice(0, -1)}${chord.type}`}
+                      </Heading>
+                      <Badge mb={2}>{chord.degree}</Badge>
+                      <Text fontSize="sm" color="gray.300" textAlign="center">
+                        {chord.notes.join(', ')}
+                      </Text>
+                    </Flex>
+                  </GridItem>
+                ))}
+              </Grid>
+            </Box>
           )}
-
-          <div className="control-group">
-            <label>
-              Use Extended Chords:
-              <input
-                type="checkbox"
-                checked={useExtendedChords}
-                onChange={(e) => setUseExtendedChords(e.target.checked)}
-              />
-            </label>
-          </div>
-
-          <div className="control-group">
-            <label>
-              Auto-Randomize Options:
-              <input
-                type="checkbox"
-                checked={autoRandomize}
-                onChange={(e) => setAutoRandomize(e.target.checked)}
-              />
-              <span className="tooltip">(Automatically applies random advanced options for variety)</span>
-            </label>
-          </div>
-
-          <h3>Sound Options</h3>
-
-          <div className="control-group">
-            <label>
-              Use Realistic Instrument Sounds:
-              <input
-                type="checkbox"
-                checked={useSoundFont}
-                onChange={(e) => setUseSoundFont(e.target.checked)}
-              />
-            </label>
-          </div>
-
-          {useSoundFont && (
-            <div className="control-group">
-              <label>
-                Instrument:
-                <select
-                  value={selectedInstrument}
-                  onChange={(e) => {
-                    setSelectedInstrument(e.target.value);
-                    loadSoundFontInstrument(e.target.value);
-                  }}
-                  disabled={instrumentLoading}
-                >
-                  {Object.entries(availableInstruments).map(([value, name]) => (
-                    <option key={value} value={value}>{name}</option>
-                  ))}
-                </select>
-              </label>
-              {instrumentLoading && <span className="loading-indicator">Loading...</span>}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="actions">
-        <button onClick={generateProgression}>Generate Progression</button>
-        <button onClick={playProgression}>
-          {isPlaying ? 'Stop Playing' : 'Play Progression'}
-        </button>
-      </div>
-
-      {progression && (
-        <div className="progression-info">
-          <h3>Generated Chord Progression</h3>
-          <p>Key: {progression.key}</p>
-          <div className="chord-list">
-            {progression.progression.map((chord, index) => (
-              <div key={index} className="chord">
-                <strong>{chord.symbol || `${chord.root.slice(0, -1)}${chord.type}`}</strong>
-                <span className="chord-degree">{chord.degree}</span>
-                <span className="chord-notes">{chord.notes.join(', ')}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+        </VStack>
+      </CardBody>
+    </Card>
   );
 }
 

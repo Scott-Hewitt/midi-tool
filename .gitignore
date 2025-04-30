@@ -25,3 +25,4 @@ dist-ssr
 /.junie
 requirements-doc.txt
 library-alternatives.md
+/firebase-setup-guide.md

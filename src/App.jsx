@@ -1,15 +1,28 @@
 import { useState } from 'react'
-import './App.css'
+import { 
+  Box, 
+  Flex, 
+  Heading, 
+  Text, 
+  Tabs, 
+  TabList, 
+  TabPanels, 
+  Tab, 
+  TabPanel,
+  Container,
+  VStack
+} from '@chakra-ui/react'
+import './App.css' // Keep for now, will clean up later
 import MelodyGenerator from './components/MelodyGenerator'
 import ChordGenerator from './components/ChordGenerator'
+import CompositionGenerator from './components/CompositionGenerator'
 import Visualization from './components/Visualization'
 import MIDIExport from './components/MIDIExport'
-import DebugPage from './debug'
 
 function App() {
-  const [activeTab, setActiveTab] = useState('melody');
   const [melodyData, setMelodyData] = useState(null);
   const [chordData, setChordData] = useState(null);
+  const [compositionData, setCompositionData] = useState(null);
 
   // Handle melody generation
   const handleMelodyGenerated = (data) => {
@@ -21,82 +34,188 @@ function App() {
     setChordData(data);
   };
 
+  // Handle composition generation
+  const handleCompositionGenerated = (data) => {
+    setCompositionData(data);
+  };
+
   return (
-    <div className="app-container">
-      <header className="app-header">
-        <h1>MIDI Melody & Chord Generator</h1>
-        <p className="app-description">
+    <Container maxW="container.xl" px={6} py={8} minH="100vh" display="flex" flexDirection="column">
+
+      <Box as="header" textAlign="center" mb={12} pb={6} position="relative" 
+        _after={{
+          content: '""',
+          position: 'absolute',
+          bottom: 0,
+          left: '25%',
+          width: '50%',
+          height: '1px',
+          background: 'linear-gradient(90deg, transparent, primary.300, transparent)'
+        }}
+      >
+        <Heading 
+          as="h1" 
+          mb={3} 
+          fontSize="2.5rem" 
+          fontWeight="700" 
+          letterSpacing="-0.025em"
+          color="primary.400"
+          textShadow="0 0 15px rgba(99, 102, 241, 0.5)"
+        >
+          MIDI Melody & Chord Generator
+        </Heading>
+        <Text 
+          color="gray.300" 
+          fontSize="1.1rem" 
+          maxW="600px" 
+          mx="auto" 
+          lineHeight="1.6"
+        >
           Generate melodies and chord progressions, visualize them, and export as MIDI files.
-        </p>
-      </header>
+        </Text>
+      </Box>
 
-      <div className="tabs">
-        <button
-          className={`tab ${activeTab === 'melody' ? 'active' : ''}`}
-          onClick={() => setActiveTab('melody')}
+      <Tabs 
+        variant="enclosed" 
+        isFitted 
+        mx="auto" 
+        mb={10}
+        width="fit-content"
+        onChange={() => {}}
+      >
+        <TabList 
+          bg="rgba(255, 255, 255, 0.08)" 
+          borderRadius="full" 
+          p={2}
+          boxShadow="md"
+          backdropFilter="blur(10px)"
         >
-          Melody Generator
-        </button>
-        <button
-          className={`tab ${activeTab === 'chord' ? 'active' : ''}`}
-          onClick={() => setActiveTab('chord')}
-        >
-          Chord Generator
-        </button>
-        <button
-          className={`tab ${activeTab === 'debug' ? 'active' : ''}`}
-          onClick={() => setActiveTab('debug')}
-        >
-          Debug
-        </button>
-      </div>
+          <Tab 
+            borderRadius="full" 
+            _selected={{ 
+              color: "white", 
+              bg: "rgba(255, 255, 255, 0.1)",
+              boxShadow: "sm"
+            }}
+            _hover={{
+              color: "white"
+            }}
+            transition="all 0.3s ease"
+            fontWeight="500"
+            px={6}
+            py={3}
+          >
+            Melody Generator
+          </Tab>
+          <Tab 
+            borderRadius="full" 
+            _selected={{ 
+              color: "white", 
+              bg: "rgba(255, 255, 255, 0.1)",
+              boxShadow: "sm"
+            }}
+            _hover={{
+              color: "white"
+            }}
+            transition="all 0.3s ease"
+            fontWeight="500"
+            px={6}
+            py={3}
+          >
+            Chord Generator
+          </Tab>
+          <Tab 
+            borderRadius="full" 
+            _selected={{ 
+              color: "white", 
+              bg: "rgba(255, 255, 255, 0.1)",
+              boxShadow: "sm"
+            }}
+            _hover={{
+              color: "white"
+            }}
+            transition="all 0.3s ease"
+            fontWeight="500"
+            px={6}
+            py={3}
+          >
+            Composition Studio
+          </Tab>
+        </TabList>
 
-      <main className="app-content">
-        <div className={`tab-content ${activeTab === 'melody' ? 'active' : ''}`}>
-          <div className="generator-section">
-            <MelodyGenerator onMelodyGenerated={handleMelodyGenerated} />
-          </div>
+        <TabPanels>
+          <TabPanel p={0} mt={6}>
+            <VStack spacing={8} align="stretch">
+              <Box>
+                <MelodyGenerator onMelodyGenerated={handleMelodyGenerated} />
+              </Box>
 
-          {melodyData && (
-            <>
-              <div className="visualization-section">
-                <Visualization data={melodyData} type="melody" />
-              </div>
+              {melodyData && (
+                <>
+                  <Box>
+                    <Visualization data={melodyData} type="melody" />
+                  </Box>
 
-              <div className="export-section">
-                <MIDIExport data={melodyData} type="melody" />
-              </div>
-            </>
-          )}
-        </div>
+                  <Box>
+                    <MIDIExport data={melodyData} type="melody" />
+                  </Box>
+                </>
+              )}
+            </VStack>
+          </TabPanel>
 
-        <div className={`tab-content ${activeTab === 'chord' ? 'active' : ''}`}>
-          <div className="generator-section">
-            <ChordGenerator onChordGenerated={handleChordGenerated} />
-          </div>
+          <TabPanel p={0} mt={6}>
+            <VStack spacing={8} align="stretch">
+              <Box>
+                <ChordGenerator onChordGenerated={handleChordGenerated} />
+              </Box>
 
-          {chordData && (
-            <>
-              <div className="visualization-section">
-                <Visualization data={chordData} type="chord" />
-              </div>
+              {chordData && (
+                <>
+                  <Box>
+                    <Visualization data={chordData} type="chord" />
+                  </Box>
 
-              <div className="export-section">
-                <MIDIExport data={chordData} type="chord" />
-              </div>
-            </>
-          )}
-        </div>
+                  <Box>
+                    <MIDIExport data={chordData} type="chord" />
+                  </Box>
+                </>
+              )}
+            </VStack>
+          </TabPanel>
 
-        <div className={`tab-content ${activeTab === 'debug' ? 'active' : ''}`}>
-          <DebugPage />
-        </div>
-      </main>
+          <TabPanel p={0} mt={6}>
+            <VStack spacing={8} align="stretch">
+              <Box>
+                <CompositionGenerator onCompositionGenerated={handleCompositionGenerated} />
+              </Box>
 
-      <footer className="app-footer">
-        <p>MIDI Melody & Chord Generator - MVP Version</p>
-      </footer>
-    </div>
+              {compositionData && (
+                <>
+                  <Box>
+                    <Visualization data={compositionData} type="composition" />
+                  </Box>
+
+                  <Box>
+                    <MIDIExport data={compositionData} type="composition" />
+                  </Box>
+                </>
+              )}
+            </VStack>
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
+
+      <Box 
+        as="footer" 
+        mt="auto" 
+        textAlign="center" 
+        py={4}
+        color="gray.300"
+      >
+        <Text>MIDI Melody & Chord Generator</Text>
+      </Box>
+    </Container>
   )
 }
 

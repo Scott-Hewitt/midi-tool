@@ -150,8 +150,8 @@ export const generateChordProgression = (key, progression, extended = false) => 
     console.log('Chord symbols from Tonal.js:', chordSymbols);
 
     // Check if we got valid chord symbols
-    if (!chordSymbols || chordSymbols.length === 0 || chordSymbols.every(symbol => symbol === chordSymbols[0])) {
-      throw new Error('Invalid chord symbols or all symbols are the same');
+    if (!chordSymbols || chordSymbols.length === 0 || chordSymbols.includes(undefined) || chordSymbols.includes(null)) {
+      throw new Error('Invalid chord symbols generated');
     }
   } catch (error) {
     console.error('Error converting Roman numerals to chord symbols:', error);
@@ -169,27 +169,57 @@ export const generateChordProgression = (key, progression, extended = false) => 
       let chordType = 'maj';
 
       // Parse the Roman numeral
-      if (degree.toLowerCase() === 'i') {
+      // Extract the base degree (i, ii, iii, etc.) without any extensions
+      const baseDegree = degree.replace(/[^ivIV]/g, '').toLowerCase();
+      const isMajor = degree === degree.toUpperCase(); // Check if the degree is uppercase (major)
+
+      // Determine scale index based on the base degree
+      if (baseDegree === 'i') {
         scaleIndex = 0;
-        chordType = mode === 'minor' ? 'min' : 'maj';
-      } else if (degree.toLowerCase() === 'ii') {
+      } else if (baseDegree === 'ii') {
         scaleIndex = 1;
-        chordType = mode === 'minor' ? 'dim' : 'min';
-      } else if (degree.toLowerCase() === 'iii') {
+      } else if (baseDegree === 'iii') {
         scaleIndex = 2;
-        chordType = mode === 'minor' ? 'maj' : 'min';
-      } else if (degree.toLowerCase() === 'iv') {
+      } else if (baseDegree === 'iv') {
         scaleIndex = 3;
-        chordType = mode === 'minor' ? 'min' : 'maj';
-      } else if (degree.toLowerCase() === 'v') {
+      } else if (baseDegree === 'v') {
         scaleIndex = 4;
-        chordType = mode === 'minor' ? 'min' : 'maj';
-      } else if (degree.toLowerCase() === 'vi') {
+      } else if (baseDegree === 'vi') {
         scaleIndex = 5;
-        chordType = mode === 'minor' ? 'maj' : 'min';
-      } else if (degree.toLowerCase() === 'vii') {
+      } else if (baseDegree === 'vii') {
         scaleIndex = 6;
-        chordType = mode === 'minor' ? 'maj' : 'dim';
+      }
+
+      // Determine chord type based on mode and whether the degree is major or minor
+      if (mode === 'major') {
+        // In major keys: I, IV, V are major; ii, iii, vi are minor; vii is diminished
+        if (baseDegree === 'i' || baseDegree === 'iv' || baseDegree === 'v') {
+          chordType = isMajor ? 'maj' : 'min';
+        } else if (baseDegree === 'ii' || baseDegree === 'iii' || baseDegree === 'vi') {
+          chordType = isMajor ? 'maj' : 'min';
+        } else if (baseDegree === 'vii') {
+          chordType = isMajor ? 'maj' : 'dim';
+        }
+      } else { // minor mode
+        // In minor keys: III, VI, VII are major; i, iv, v are minor; ii is diminished
+        if (baseDegree === 'iii' || baseDegree === 'vi' || baseDegree === 'vii') {
+          chordType = isMajor ? 'maj' : 'min';
+        } else if (baseDegree === 'i' || baseDegree === 'iv' || baseDegree === 'v') {
+          chordType = isMajor ? 'maj' : 'min';
+        } else if (baseDegree === 'ii') {
+          chordType = isMajor ? 'maj' : 'dim';
+        }
+      }
+
+      // Handle extensions like 7, maj7, etc.
+      if (degree.includes('7')) {
+        if (chordType === 'maj') {
+          chordType = 'maj7';
+        } else if (chordType === 'min') {
+          chordType = 'm7';
+        } else if (chordType === 'dim') {
+          chordType = 'dim7';
+        }
       }
 
       // Get the root note for this degree
@@ -209,6 +239,24 @@ export const generateChordProgression = (key, progression, extended = false) => 
     });
 
     console.log('Manually created chord symbols:', chordSymbols);
+
+    // Validate manually created chord symbols
+    if (!chordSymbols || chordSymbols.length === 0) {
+      throw new Error('Failed to create chord symbols');
+    }
+
+    // Check if all symbols are the same
+    const allSame = chordSymbols.every(symbol => symbol === chordSymbols[0]);
+    if (allSame) {
+      // If all symbols are the same, try to create different symbols
+      // This is a fallback to ensure we have some variety
+      if (mode === 'major') {
+        chordSymbols = [tonic, tonic + 'maj7', tonic + 'm', tonic + '7'];
+      } else {
+        chordSymbols = [tonic + 'm', tonic + 'dim', tonic + 'maj7', tonic + '7'];
+      }
+      console.log('Created fallback chord symbols:', chordSymbols);
+    }
   }
 
   // Generate chord objects
