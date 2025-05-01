@@ -125,9 +125,18 @@ export const deleteMidiFile = async (fileId, userId) => {
       throw new Error('Unauthorized');
     }
 
-    // Delete the file from Storage
-    const storageRef = ref(storage, fileData.filePath);
-    await deleteObject(storageRef);
+    // Try to delete the file from Storage, but don't fail if it doesn't exist
+    try {
+      const storageRef = ref(storage, fileData.filePath);
+      await deleteObject(storageRef);
+    } catch (storageError) {
+      // If the error is "object-not-found", continue with deleting the metadata
+      // Otherwise, rethrow the error
+      if (storageError.code !== 'storage/object-not-found') {
+        throw storageError;
+      }
+      console.warn(`File not found in storage: ${fileData.filePath}. Continuing with metadata deletion.`);
+    }
 
     // Delete the metadata from Firestore
     await deleteDoc(fileRef);
