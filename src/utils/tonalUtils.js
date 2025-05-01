@@ -27,17 +27,13 @@ export const getScaleNotes = (scaleName, octave = 4) => {
  * Get all available scale types
  * @returns {string[]} - Array of scale types
  */
-export const getScaleTypes = () => {
-  return Scale.names();
-};
+export const getScaleTypes = () => Scale.names();
 
 /**
  * Get all available keys
  * @returns {string[]} - Array of key names
  */
-export const getKeys = () => {
-  return Key.names();
-};
+export const getKeys = () => Key.names();
 
 /**
  * Generate a chord from a chord symbol
@@ -46,7 +42,6 @@ export const getKeys = () => {
  * @returns {string[]} - Array of note names in the chord
  */
 export const getChordNotes = (chordSymbol, octave = 4) => {
-
   if (!chordSymbol || chordSymbol.trim() === '') {
     return ['C4', 'E4', 'G4'];
   }
@@ -71,21 +66,19 @@ export const getChordNotes = (chordSymbol, octave = 4) => {
  * @param {string} degree - Scale degree (e.g., 'I', 'ii', 'V7')
  * @returns {string} - Chord symbol
  */
-export const getChordFromDegree = (key, degree) => {
-  return Progression.fromRomanNumerals(key, [degree])[0];
-};
+export const getChordFromDegree = (key, degree) => Progression.fromRomanNumerals(key, [degree])[0];
 
 /**
  * Get all chords in a key
  * @param {string} key - Key (e.g., 'C major', 'A minor')
  * @returns {Object[]} - Array of chord objects with symbol and degree
  */
-export const getChordsInKey = (key) => {
+export const getChordsInKey = key => {
   const keyObj = Key.majorKey(key.split(' ')[0]);
 
   return keyObj.chords.map((chord, index) => ({
     symbol: chord,
-    degree: keyObj.grades[index]
+    degree: keyObj.grades[index],
   }));
 };
 
@@ -93,34 +86,32 @@ export const getChordsInKey = (key) => {
  * Get common chord progressions
  * @returns {Object} - Object with progression names and their Roman numeral patterns
  */
-export const getCommonProgressions = () => {
-  return {
-    // Basic progressions
-    'Basic I-IV-V-I': ['I', 'IV', 'V', 'I'],
-    'Pop I-V-vi-IV': ['I', 'V', 'vi', 'IV'],
-    'Jazz ii-V-I': ['ii', 'V', 'I'],
-    'Blues I-IV-I-V-IV-I': ['I', 'IV', 'I', 'V', 'IV', 'I'],
-    '50s I-vi-IV-V': ['I', 'vi', 'IV', 'V'],
-    'Circle of Fifths': ['vi', 'ii', 'V', 'I'],
-    'Emotional vi-IV-I-V': ['vi', 'IV', 'I', 'V'],
+export const getCommonProgressions = () => ({
+  // Basic progressions
+  'Basic I-IV-V-I': ['I', 'IV', 'V', 'I'],
+  'Pop I-V-vi-IV': ['I', 'V', 'vi', 'IV'],
+  'Jazz ii-V-I': ['ii', 'V', 'I'],
+  'Blues I-IV-I-V-IV-I': ['I', 'IV', 'I', 'V', 'IV', 'I'],
+  '50s I-vi-IV-V': ['I', 'vi', 'IV', 'V'],
+  'Circle of Fifths': ['vi', 'ii', 'V', 'I'],
+  'Emotional vi-IV-I-V': ['vi', 'IV', 'I', 'V'],
 
-    // Additional progressions
-    'Canon (Pachelbel)': ['I', 'V', 'vi', 'iii', 'IV', 'I', 'IV', 'V'],
-    'Andalusian Cadence': ['i', 'VII', 'VI', 'V'],
-    'Royal Road': ['I', 'vi', 'ii', 'V'],
-    'Creep (Radiohead)': ['I', 'III', 'IV', 'iv'],
-    'Doo-Wop': ['I', 'vi', 'IV', 'V', 'I'],
-    'Sad Ballad': ['vi', 'IV', 'ii', 'V'],
-    'Epic Journey': ['I', 'V', 'vi', 'iii', 'IV', 'I', 'V'],
-    'Dramatic Minor': ['i', 'VI', 'III', 'VII'],
-    'Hopeful': ['I', 'iii', 'vi', 'IV'],
-    'Mysterious': ['i', 'VII', 'VI', 'v'],
-    'Heroic': ['I', 'V', 'vi', 'IV', 'I', 'V', 'IV', 'V'],
-    'Nostalgic': ['IV', 'V', 'iii', 'vi'],
-    'Suspenseful': ['i', 'V', 'VI', 'III'],
-    'Triumphant': ['I', 'IV', 'V', 'I', 'IV', 'I', 'V', 'I']
-  };
-};
+  // Additional progressions
+  'Canon (Pachelbel)': ['I', 'V', 'vi', 'iii', 'IV', 'I', 'IV', 'V'],
+  'Andalusian Cadence': ['i', 'VII', 'VI', 'V'],
+  'Royal Road': ['I', 'vi', 'ii', 'V'],
+  'Creep (Radiohead)': ['I', 'III', 'IV', 'iv'],
+  'Doo-Wop': ['I', 'vi', 'IV', 'V', 'I'],
+  'Sad Ballad': ['vi', 'IV', 'ii', 'V'],
+  'Epic Journey': ['I', 'V', 'vi', 'iii', 'IV', 'I', 'V'],
+  'Dramatic Minor': ['i', 'VI', 'III', 'VII'],
+  Hopeful: ['I', 'iii', 'vi', 'IV'],
+  Mysterious: ['i', 'VII', 'VI', 'v'],
+  Heroic: ['I', 'V', 'vi', 'IV', 'I', 'V', 'IV', 'V'],
+  Nostalgic: ['IV', 'V', 'iii', 'vi'],
+  Suspenseful: ['i', 'V', 'VI', 'III'],
+  Triumphant: ['I', 'IV', 'V', 'I', 'IV', 'I', 'V', 'I'],
+});
 
 /**
  * Generate a chord progression in a key
@@ -135,7 +126,13 @@ export const generateChordProgression = (key, progression, extended = false) => 
   let chordSymbols = [];
   try {
     chordSymbols = Progression.fromRomanNumerals(key, progression);
-    if (!chordSymbols || chordSymbols.length === 0 || chordSymbols.includes(undefined) || chordSymbols.includes(null) || chordSymbols.includes('')) {
+    if (
+      !chordSymbols ||
+      chordSymbols.length === 0 ||
+      chordSymbols.includes(undefined) ||
+      chordSymbols.includes(null) ||
+      chordSymbols.includes('')
+    ) {
       throw new Error('Invalid chord symbols generated');
     }
   } catch (error) {
@@ -144,10 +141,10 @@ export const generateChordProgression = (key, progression, extended = false) => 
         const scale = Scale.get(`${tonic} major`).notes;
         if (scale && scale.length >= 7) {
           chordSymbols = [
-            scale[0] + 'maj',  // I chord
-            scale[3] + 'maj',  // IV chord
-            scale[4] + 'maj',  // V chord
-            scale[0] + 'maj'   // I chord
+            scale[0] + 'maj', // I chord
+            scale[3] + 'maj', // IV chord
+            scale[4] + 'maj', // V chord
+            scale[0] + 'maj', // I chord
           ];
         } else {
           chordSymbols = [tonic + 'maj', tonic + 'maj7', tonic + '7', tonic + 'maj'];
@@ -160,10 +157,10 @@ export const generateChordProgression = (key, progression, extended = false) => 
         const scale = Scale.get(`${tonic} minor`).notes;
         if (scale && scale.length >= 7) {
           chordSymbols = [
-            scale[0] + 'm',    // i chord
-            scale[3] + 'm',    // iv chord
-            scale[4] + 'maj',  // V chord (major in minor key)
-            scale[0] + 'm'     // i chord
+            scale[0] + 'm', // i chord
+            scale[3] + 'm', // iv chord
+            scale[4] + 'maj', // V chord (major in minor key)
+            scale[0] + 'm', // i chord
           ];
         } else {
           chordSymbols = [tonic + 'm', tonic + 'm7', tonic + 'dim', tonic + 'm'];
@@ -181,7 +178,6 @@ export const generateChordProgression = (key, progression, extended = false) => 
   if (chordSymbols.length > progression.length) {
     chordSymbols = chordSymbols.slice(0, progression.length);
   }
-
 
   // Generate chord objects
   return chordSymbols.map((symbol, index) => {
@@ -211,7 +207,7 @@ export const generateChordProgression = (key, progression, extended = false) => 
       degree: progression[index],
       notes,
       root,
-      type: type || 'maj' // Default to 'maj' if type is empty
+      type: type || 'maj', // Default to 'maj' if type is empty
     };
   });
 };
@@ -231,7 +227,8 @@ export const transposeNote = (note, semitones) => {
   const transposed = Note.transpose(noteName, Tonal.Interval.fromSemitones(semitones));
 
   // Calculate new octave
-  const newOctave = octave + Math.floor((Note.get(noteName).midi + semitones - Note.get(transposed).midi) / 12);
+  const newOctave =
+    octave + Math.floor((Note.get(noteName).midi + semitones - Note.get(transposed).midi) / 12);
 
   return `${transposed}${newOctave}`;
 };
@@ -241,7 +238,7 @@ export const transposeNote = (note, semitones) => {
  * @param {string} note - Note name (e.g., 'C4')
  * @returns {Object} - Note properties including midi number, frequency, etc.
  */
-export const getNoteProperties = (note) => {
+export const getNoteProperties = note => {
   const noteName = note.slice(0, -1);
   const octave = parseInt(note.slice(-1));
 
@@ -253,6 +250,6 @@ export const getNoteProperties = (note) => {
     octave,
     midi,
     frequency: Note.freq(note),
-    chroma: noteObj.chroma
+    chroma: noteObj.chroma,
   };
 };

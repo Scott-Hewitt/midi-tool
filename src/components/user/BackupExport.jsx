@@ -19,7 +19,7 @@ import {
   AlertIcon,
   AlertTitle,
   AlertDescription,
-  Spinner
+  Spinner,
 } from '@chakra-ui/react';
 import { useAuth } from '../../utils/firebase/AuthContext';
 import { exportAllMidiFiles, exportUserData } from '../../utils/backupExport';
@@ -31,11 +31,11 @@ function BackupExport() {
     includeProfile: true,
     includeMidiFiles: true,
     includeFavorites: true,
-    includeMetadata: true
+    includeMetadata: true,
   });
   const [loading, setLoading] = useState({
     midiExport: false,
-    dataExport: false
+    dataExport: false,
   });
   const [result, setResult] = useState(null);
 
@@ -43,10 +43,10 @@ function BackupExport() {
   const toast = useToast();
 
   // Handle option change
-  const handleOptionChange = (option) => {
+  const handleOptionChange = option => {
     setExportOptions(prev => ({
       ...prev,
-      [option]: !prev[option]
+      [option]: !prev[option],
     }));
   };
 
@@ -68,12 +68,12 @@ function BackupExport() {
       setResult(null);
 
       const exportResult = await exportAllMidiFiles(currentUser.uid, {
-        includeMetadata: exportOptions.includeMetadata
+        includeMetadata: exportOptions.includeMetadata,
       });
 
       setResult({
         type: 'success',
-        message: exportResult.message
+        message: exportResult.message,
       });
 
       // Track the export event
@@ -90,7 +90,7 @@ function BackupExport() {
       handleApiError(error, toast, 'exporting MIDI files');
       setResult({
         type: 'error',
-        message: error.message
+        message: error.message,
       });
     } finally {
       setLoading(prev => ({ ...prev, midiExport: false }));
@@ -117,12 +117,12 @@ function BackupExport() {
       const exportResult = await exportUserData(currentUser.uid, {
         includeProfile: exportOptions.includeProfile,
         includeMidiFiles: exportOptions.includeMidiFiles,
-        includeFavorites: exportOptions.includeFavorites
+        includeFavorites: exportOptions.includeFavorites,
       });
 
       setResult({
         type: 'success',
-        message: exportResult.message
+        message: exportResult.message,
       });
 
       // Track the export event
@@ -139,7 +139,7 @@ function BackupExport() {
       handleApiError(error, toast, 'exporting user data');
       setResult({
         type: 'error',
-        message: error.message
+        message: error.message,
       });
     } finally {
       setLoading(prev => ({ ...prev, dataExport: false }));
@@ -149,7 +149,9 @@ function BackupExport() {
   if (!currentUser) {
     return (
       <Box textAlign="center" py={10}>
-        <Heading size="lg" mb={6} color="primary.400">Backup & Export</Heading>
+        <Heading size="lg" mb={6} color="primary.400">
+          Backup & Export
+        </Heading>
         <Text>Please sign in to access backup and export features.</Text>
       </Box>
     );
@@ -157,17 +159,22 @@ function BackupExport() {
 
   return (
     <Box p={6}>
-      <Heading size="lg" mb={6} color="primary.400">Backup & Export</Heading>
+      <Heading size="lg" mb={6} color="primary.400">
+        Backup & Export
+      </Heading>
 
       <VStack spacing={6} align="stretch">
         {/* MIDI Files Export */}
         <Card bg="rgba(30, 41, 59, 0.5)" backdropFilter="blur(12px)" borderRadius="md">
           <CardHeader>
-            <Heading size="md" color="primary.300">Export MIDI Files</Heading>
+            <Heading size="md" color="primary.300">
+              Export MIDI Files
+            </Heading>
           </CardHeader>
           <CardBody>
             <Text mb={4}>
-              Export all your MIDI files as a zip archive. This includes melodies, chord progressions, and compositions.
+              Export all your MIDI files as a zip archive. This includes melodies, chord
+              progressions, and compositions.
             </Text>
             <FormControl display="flex" alignItems="center" mb={4}>
               <FormLabel htmlFor="include-metadata" mb="0">
@@ -187,7 +194,11 @@ function BackupExport() {
               onClick={handleExportMidiFiles}
               isLoading={loading.midiExport}
               loadingText="Exporting..."
-              leftIcon={<Box as="span" className="icon">📦</Box>}
+              leftIcon={
+                <Box as="span" className="icon">
+                  📦
+                </Box>
+              }
             >
               Export MIDI Files
             </Button>
@@ -197,11 +208,14 @@ function BackupExport() {
         {/* User Data Export */}
         <Card bg="rgba(30, 41, 59, 0.5)" backdropFilter="blur(12px)" borderRadius="md">
           <CardHeader>
-            <Heading size="md" color="primary.300">Export User Data</Heading>
+            <Heading size="md" color="primary.300">
+              Export User Data
+            </Heading>
           </CardHeader>
           <CardBody>
             <Text mb={4}>
-              Export your user data as a JSON file. This includes your profile information, MIDI file metadata, and favorites.
+              Export your user data as a JSON file. This includes your profile information, MIDI
+              file metadata, and favorites.
             </Text>
             <VStack align="start" spacing={2} mb={4}>
               <FormControl display="flex" alignItems="center">
@@ -245,7 +259,11 @@ function BackupExport() {
               onClick={handleExportUserData}
               isLoading={loading.dataExport}
               loadingText="Exporting..."
-              leftIcon={<Box as="span" className="icon">💾</Box>}
+              leftIcon={
+                <Box as="span" className="icon">
+                  💾
+                </Box>
+              }
             >
               Export User Data
             </Button>
@@ -268,9 +286,7 @@ function BackupExport() {
             <AlertTitle mt={4} mb={1} fontSize="lg">
               {result.type === 'success' ? 'Export Successful' : 'Export Failed'}
             </AlertTitle>
-            <AlertDescription maxWidth="sm">
-              {result.message}
-            </AlertDescription>
+            <AlertDescription maxWidth="sm">{result.message}</AlertDescription>
           </Alert>
         )}
 
@@ -282,14 +298,16 @@ function BackupExport() {
           borderLeft="4px solid"
           borderColor="primary.500"
         >
-          <Heading size="sm" mb={2} color="primary.300">About Backups</Heading>
+          <Heading size="sm" mb={2} color="primary.300">
+            About Backups
+          </Heading>
           <Text mb={2}>
-            Backups allow you to save your MIDI files and user data locally on your device.
-            You can use these backups to restore your data if needed or transfer it to another account.
+            Backups allow you to save your MIDI files and user data locally on your device. You can
+            use these backups to restore your data if needed or transfer it to another account.
           </Text>
           <Text>
-            <strong>Note:</strong> Exported data does not include your account credentials.
-            Your Firebase authentication information is managed separately.
+            <strong>Note:</strong> Exported data does not include your account credentials. Your
+            Firebase authentication information is managed separately.
           </Text>
         </Box>
       </VStack>

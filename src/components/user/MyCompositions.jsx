@@ -23,7 +23,7 @@ import {
   Select,
   Input,
   InputGroup,
-  InputLeftElement
+  InputLeftElement,
 } from '@chakra-ui/react';
 import { useAuth } from '../../utils/firebase/AuthContext';
 import { getUserMidiFiles, deleteMidiFile, updateMidiFile } from '../../firebase/midiStorage';
@@ -54,7 +54,7 @@ function MyCompositions() {
 
         // Check favorite status for each file
         const filesWithFavoriteStatus = await Promise.all(
-          files.map(async (file) => {
+          files.map(async file => {
             const isFavorited = await isFileFavorited(currentUser.uid, file.id);
             return { ...file, isFavorited };
           })
@@ -79,7 +79,7 @@ function MyCompositions() {
   }, [currentUser, toast]);
 
   // Handle delete composition
-  const handleDelete = async (fileId) => {
+  const handleDelete = async fileId => {
     if (!currentUser) return;
 
     try {
@@ -114,11 +114,11 @@ function MyCompositions() {
       await updateMidiFile(fileId, { isPublic: !isCurrentlyPublic }, currentUser.uid);
 
       // Update the state
-      setCompositions(compositions.map(comp =>
-        comp.id === fileId
-          ? { ...comp, isPublic: !isCurrentlyPublic }
-          : comp
-      ));
+      setCompositions(
+        compositions.map(comp =>
+          comp.id === fileId ? { ...comp, isPublic: !isCurrentlyPublic } : comp
+        )
+      );
 
       toast({
         title: `Composition is now ${!isCurrentlyPublic ? 'public' : 'private'}`,
@@ -150,11 +150,11 @@ function MyCompositions() {
       }
 
       // Update the state
-      setCompositions(compositions.map(comp =>
-        comp.id === fileId
-          ? { ...comp, isFavorited: !isCurrentlyFavorited }
-          : comp
-      ));
+      setCompositions(
+        compositions.map(comp =>
+          comp.id === fileId ? { ...comp, isFavorited: !isCurrentlyFavorited } : comp
+        )
+      );
     } catch (error) {
       console.error('Error updating favorite status:', error);
       toast({
@@ -199,7 +199,9 @@ function MyCompositions() {
   if (!currentUser) {
     return (
       <Box textAlign="center" py={10}>
-        <Heading size="lg" mb={6} color="primary.400">My Compositions</Heading>
+        <Heading size="lg" mb={6} color="primary.400">
+          My Compositions
+        </Heading>
         <Text>Please sign in to view your compositions.</Text>
       </Box>
     );
@@ -207,7 +209,9 @@ function MyCompositions() {
 
   return (
     <Box p={6}>
-      <Heading size="lg" mb={6} color="primary.400">My Compositions</Heading>
+      <Heading size="lg" mb={6} color="primary.400">
+        My Compositions
+      </Heading>
 
       {/* Filters and Search */}
       <Flex
@@ -221,11 +225,11 @@ function MyCompositions() {
       >
         <Select
           value={filter}
-          onChange={(e) => setFilter(e.target.value)}
+          onChange={e => setFilter(e.target.value)}
           maxW={{ base: 'full', md: '200px' }}
           bg="rgba(255, 255, 255, 0.1)"
           borderColor="rgba(255, 255, 255, 0.15)"
-          _hover={{ borderColor: "primary.400" }}
+          _hover={{ borderColor: 'primary.400' }}
         >
           <option value="all">All Types</option>
           <option value="melody">Melodies</option>
@@ -235,11 +239,11 @@ function MyCompositions() {
 
         <Select
           value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
+          onChange={e => setSortBy(e.target.value)}
           maxW={{ base: 'full', md: '200px' }}
           bg="rgba(255, 255, 255, 0.1)"
           borderColor="rgba(255, 255, 255, 0.15)"
-          _hover={{ borderColor: "primary.400" }}
+          _hover={{ borderColor: 'primary.400' }}
         >
           <option value="newest">Newest First</option>
           <option value="oldest">Oldest First</option>
@@ -247,16 +251,14 @@ function MyCompositions() {
         </Select>
 
         <InputGroup maxW={{ base: 'full', md: '300px' }}>
-          <InputLeftElement pointerEvents="none">
-            🔍
-          </InputLeftElement>
+          <InputLeftElement pointerEvents="none">🔍</InputLeftElement>
           <Input
             placeholder="Search compositions..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={e => setSearchTerm(e.target.value)}
             bg="rgba(255, 255, 255, 0.1)"
             borderColor="rgba(255, 255, 255, 0.15)"
-            _hover={{ borderColor: "primary.400" }}
+            _hover={{ borderColor: 'primary.400' }}
           />
         </InputGroup>
       </Flex>
@@ -266,8 +268,18 @@ function MyCompositions() {
           <Spinner size="xl" color="primary.500" />
         </Flex>
       ) : filteredCompositions.length === 0 ? (
-        <Box textAlign="center" py={10} bg="rgba(30, 41, 59, 0.7)" backdropFilter="blur(12px)" borderRadius="md" borderLeft="4px solid" borderColor="primary.500">
-          <Text fontWeight="medium" color="white" textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">No compositions found.</Text>
+        <Box
+          textAlign="center"
+          py={10}
+          bg="rgba(30, 41, 59, 0.7)"
+          backdropFilter="blur(12px)"
+          borderRadius="md"
+          borderLeft="4px solid"
+          borderColor="primary.500"
+        >
+          <Text fontWeight="medium" color="white" textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+            No compositions found.
+          </Text>
           {filter !== 'all' && (
             <Button mt={4} onClick={() => setFilter('all')} variant="outline" colorScheme="primary">
               Show All Compositions
@@ -276,7 +288,7 @@ function MyCompositions() {
         </Box>
       ) : (
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-          {filteredCompositions.map((composition) => (
+          {filteredCompositions.map(composition => (
             <Card
               key={composition.id}
               bg="rgba(30, 41, 59, 0.5)"
@@ -300,10 +312,7 @@ function MyCompositions() {
                     {composition.fileName}
                   </Heading>
                   <HStack>
-                    <Badge
-                      colorScheme={composition.isPublic ? 'green' : 'gray'}
-                      variant="subtle"
-                    >
+                    <Badge colorScheme={composition.isPublic ? 'green' : 'gray'} variant="subtle">
                       {composition.isPublic ? 'Public' : 'Private'}
                     </Badge>
                     <Badge
@@ -319,8 +328,7 @@ function MyCompositions() {
                         ? 'Melody'
                         : composition.type === 'chord'
                           ? 'Chord'
-                          : 'Composition'
-                      }
+                          : 'Composition'}
                     </Badge>
                   </HStack>
                 </Flex>
@@ -335,7 +343,8 @@ function MyCompositions() {
                     <strong>Tempo:</strong> {composition.tempo || 'N/A'} BPM
                   </Text>
                   <Text fontSize="sm">
-                    <strong>Created:</strong> {new Date(composition.createdAt?.toDate()).toLocaleDateString()}
+                    <strong>Created:</strong>{' '}
+                    {new Date(composition.createdAt?.toDate()).toLocaleDateString()}
                   </Text>
                 </VStack>
               </CardBody>
@@ -364,11 +373,7 @@ function MyCompositions() {
                     </Button>
 
                     <Menu>
-                      <MenuButton
-                        as={Button}
-                        size="sm"
-                        variant="ghost"
-                      >
+                      <MenuButton as={Button} size="sm" variant="ghost">
                         •••
                       </MenuButton>
                       <MenuList

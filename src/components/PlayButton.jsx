@@ -10,12 +10,12 @@ import { usePlayback } from '../utils/PlaybackContext';
 function PlayButton({ data, type }) {
   const { isPlaying, activePlayingPart, playData, stopPlayback } = usePlayback();
   const [isThisPlaying, setIsThisPlaying] = useState(false);
-  
+
   // Update isThisPlaying when global playback state changes
   useEffect(() => {
     setIsThisPlaying(isPlaying && activePlayingPart === type);
   }, [isPlaying, activePlayingPart, type]);
-  
+
   // Handle play/stop
   const handlePlayToggle = async () => {
     if (isThisPlaying) {
@@ -24,7 +24,7 @@ function PlayButton({ data, type }) {
       await playData(data, type);
     }
   };
-  
+
   return (
     <Tooltip label={isThisPlaying ? 'Stop' : 'Play'}>
       <Button

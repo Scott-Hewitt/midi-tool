@@ -9,9 +9,7 @@ let hasUserInteraction = false;
  * Get the shared AudioContext instance
  * @returns {AudioContext|null} - The AudioContext instance or null if not initialized
  */
-export const getAudioContext = () => {
-  return audioContext;
-};
+export const getAudioContext = () => audioContext;
 
 /**
  * Initialize the AudioContext on user interaction
@@ -27,6 +25,11 @@ export const initializeAudioContext = async () => {
       } catch (error) {
         console.error('Failed to resume AudioContext:', error);
       }
+    } else if (audioContext.state === 'closed') {
+      // If the context is closed, create a new one
+      console.log('AudioContext is closed, creating a new one');
+      audioContext = null;
+      return initializeAudioContext();
     }
     return audioContext;
   }
@@ -47,9 +50,7 @@ export const initializeAudioContext = async () => {
  * Check if the AudioContext is initialized
  * @returns {boolean} - True if the AudioContext is initialized, false otherwise
  */
-export const isAudioContextInitialized = () => {
-  return isInitialized;
-};
+export const isAudioContextInitialized = () => isInitialized;
 
 /**
  * Ensure the AudioContext is running
@@ -71,6 +72,11 @@ export const ensureAudioContext = async () => {
     } catch (error) {
       console.error('Failed to resume AudioContext:', error);
     }
+  } else if (audioContext.state === 'closed') {
+    // If the context is closed, create a new one
+    console.log('AudioContext is closed, creating a new one');
+    audioContext = null;
+    return initializeAudioContext();
   }
 
   return audioContext;
@@ -80,9 +86,7 @@ export const ensureAudioContext = async () => {
  * Check if we've had user interaction
  * @returns {boolean} - True if we've had user interaction
  */
-export const hasHadUserInteraction = () => {
-  return hasUserInteraction;
-};
+export const hasHadUserInteraction = () => hasUserInteraction;
 
 /**
  * Register a user interaction event

@@ -1,12 +1,22 @@
 import { db } from '../../services/firebase';
-import { collection, query, where, getDocs, addDoc, deleteDoc, doc, getDoc, serverTimestamp } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
 
 /**
  * Get a user's favorite MIDI files
  * @param {string} userId - The user's ID
  * @returns {Promise<Array>} - A promise that resolves to an array of favorite objects
  */
-export const getUserFavorites = async (userId) => {
+export const getUserFavorites = async userId => {
   try {
     const favoritesRef = collection(db, 'favorites');
     const q = query(favoritesRef, where('userId', '==', userId));
@@ -24,7 +34,7 @@ export const getUserFavorites = async (userId) => {
           id: docSnapshot.id,
           fileId: favoriteData.fileId,
           favoritedAt: favoriteData.favoritedAt,
-          file: fileDoc.data()
+          file: fileDoc.data(),
         });
       }
     }
@@ -51,11 +61,7 @@ export const addToFavorites = async (userId, fileId) => {
     }
 
     const favoritesRef = collection(db, 'favorites');
-    const q = query(
-      favoritesRef,
-      where('userId', '==', userId),
-      where('fileId', '==', fileId)
-    );
+    const q = query(favoritesRef, where('userId', '==', userId), where('fileId', '==', fileId));
 
     const querySnapshot = await getDocs(q);
 
@@ -66,7 +72,7 @@ export const addToFavorites = async (userId, fileId) => {
     const favoriteDoc = await addDoc(favoritesRef, {
       userId,
       fileId,
-      favoritedAt: serverTimestamp()
+      favoritedAt: serverTimestamp(),
     });
 
     return favoriteDoc.id;
@@ -85,11 +91,7 @@ export const addToFavorites = async (userId, fileId) => {
 export const removeFromFavorites = async (userId, fileId) => {
   try {
     const favoritesRef = collection(db, 'favorites');
-    const q = query(
-      favoritesRef,
-      where('userId', '==', userId),
-      where('fileId', '==', fileId)
-    );
+    const q = query(favoritesRef, where('userId', '==', userId), where('fileId', '==', fileId));
 
     const querySnapshot = await getDocs(q);
 

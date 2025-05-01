@@ -26,44 +26,52 @@ export const usePaginatedQuery = (collectionName, options = {}) => {
     hasPrevPage: false,
     pageSize: options.pageSize || 10,
     currentPage: 1,
-    totalPages: 1
+    totalPages: 1,
   });
 
   const toast = useToast();
 
-  const fetchData = useCallback(async (paginationDirection = 'next') => {
-    try {
-      setLoading(true);
+  const fetchData = useCallback(
+    async (paginationDirection = 'next') => {
+      try {
+        setLoading(true);
 
-      let result;
+        let result;
 
-      if (paginationDirection === 'next' && pagination.lastVisible) {
-        result = await getNextPage(collectionName, options, pagination);
-      } else if (paginationDirection === 'prev' && pagination.firstVisible) {
-        result = await getPrevPage(collectionName, options, pagination);
-      } else {
-        result = await getPaginatedData(collectionName, {
-          ...options,
-          direction: paginationDirection
-        });
+        if (paginationDirection === 'next' && pagination.lastVisible) {
+          result = await getNextPage(collectionName, options, pagination);
+        } else if (paginationDirection === 'prev' && pagination.firstVisible) {
+          result = await getPrevPage(collectionName, options, pagination);
+        } else {
+          result = await getPaginatedData(collectionName, {
+            ...options,
+            direction: paginationDirection,
+          });
+        }
+
+        setData(result.data);
+        setPagination(prev => ({
+          ...result.pagination,
+          currentPage:
+            paginationDirection === 'next'
+              ? prev.hasNextPage
+                ? prev.currentPage + 1
+                : prev.currentPage
+              : prev.hasPrevPage
+                ? prev.currentPage - 1
+                : prev.currentPage,
+          totalPages: prev.totalPages, // This would need to be calculated separately
+        }));
+        setError(null);
+      } catch (err) {
+        setError(err);
+        handleApiError(err, toast, 'fetching data');
+      } finally {
+        setLoading(false);
       }
-
-      setData(result.data);
-      setPagination(prev => ({
-        ...result.pagination,
-        currentPage: paginationDirection === 'next'
-          ? prev.hasNextPage ? prev.currentPage + 1 : prev.currentPage
-          : prev.hasPrevPage ? prev.currentPage - 1 : prev.currentPage,
-        totalPages: prev.totalPages // This would need to be calculated separately
-      }));
-      setError(null);
-    } catch (err) {
-      setError(err);
-      handleApiError(err, toast, 'fetching data');
-    } finally {
-      setLoading(false);
-    }
-  }, [collectionName, options, pagination, toast]);
+    },
+    [collectionName, options, pagination, toast]
+  );
 
   useEffect(() => {
     fetchData('next');
@@ -92,6 +100,6 @@ export const usePaginatedQuery = (collectionName, options = {}) => {
     pagination,
     nextPage,
     prevPage,
-    refresh
+    refresh,
   };
 };

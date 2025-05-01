@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import * as Tone from 'tone';
 import { initializeTone, createSynth } from '../utils/toneContext';
-import { ensureAudioContext, getAudioContext } from '../utils/audioContext';
+import { getAudioContext } from '../utils/audioContext';
 import {
   Box,
   Heading,
@@ -36,34 +36,44 @@ import {
   Tooltip,
   Spinner,
   Grid,
-  GridItem
+  GridItem,
 } from '@chakra-ui/react';
 import { AccordionButton } from '@chakra-ui/react';
 
 // Import utility functions from chords.js for backward compatibility
-import {
-  applyVoiceLeading
-} from '../utils/chords';
+import { applyVoiceLeading } from '../utils/chords';
 
 // Import Tonal.js utility functions
-import {
-  getKeys,
-  getCommonProgressions,
-  generateChordProgression,
-  getChordNotes
-} from '../utils/tonalUtils';
+import { getCommonProgressions, generateChordProgression } from '../utils/tonalUtils';
 
-// Import SoundFont utility functions
-import {
-  getAvailableInstruments
-} from '../utils/soundfontUtils';
+// SoundFont utilities are now managed in the Composition Studio
 
 // Define keys with their full names for Tonal.js compatibility
 const keyOptions = [
-  'C major', 'C# major', 'D major', 'Eb major', 'E major', 'F major',
-  'F# major', 'G major', 'Ab major', 'A major', 'Bb major', 'B major',
-  'A minor', 'Bb minor', 'B minor', 'C minor', 'C# minor', 'D minor',
-  'Eb minor', 'E minor', 'F minor', 'F# minor', 'G minor', 'G# minor'
+  'C major',
+  'C# major',
+  'D major',
+  'Eb major',
+  'E major',
+  'F major',
+  'F# major',
+  'G major',
+  'Ab major',
+  'A major',
+  'Bb major',
+  'B major',
+  'A minor',
+  'Bb minor',
+  'B minor',
+  'C minor',
+  'C# minor',
+  'D minor',
+  'Eb minor',
+  'E minor',
+  'F minor',
+  'F# minor',
+  'G minor',
+  'G# minor',
 ];
 
 function ChordGenerator({ onChordGenerated }) {
@@ -94,8 +104,6 @@ function ChordGenerator({ onChordGenerated }) {
       audioContextRef.current = currentAudioContext;
     }
   }, []);
-
-
 
   const generateProgression = () => {
     const progressionPattern = availableProgressions[selectedProgression] || ['I', 'IV', 'V', 'I'];
@@ -153,7 +161,7 @@ function ChordGenerator({ onChordGenerated }) {
         duration: chordDuration,
         position: index * chordDuration,
         symbol: chord.symbol,
-        degree: chord.degree
+        degree: chord.degree,
       };
     });
 
@@ -167,7 +175,7 @@ function ChordGenerator({ onChordGenerated }) {
       useVoiceLeading,
       useInversions,
       inversion,
-      useExtendedChords
+      useExtendedChords,
     };
 
     setProgression(progressionData);
@@ -180,7 +188,9 @@ function ChordGenerator({ onChordGenerated }) {
     return chords;
   };
 
-  const playProgression = async () => {
+  // This function is not currently used in the UI as playback has been moved to the PlaybackContext
+  // Keeping it for reference or future use
+  const _playProgressionLegacy = async () => {
     if (isPlaying) {
       Tone.Transport.stop();
       Tone.Transport.cancel();
@@ -193,7 +203,7 @@ function ChordGenerator({ onChordGenerated }) {
     playWithToneJs(chords);
   };
 
-  const playWithToneJs = async (chords) => {
+  const playWithToneJs = async chords => {
     try {
       const success = await initializeTone();
       if (!success) {
@@ -208,10 +218,10 @@ function ChordGenerator({ onChordGenerated }) {
       Tone.Transport.bpm.value = tempo;
 
       const now = Tone.now();
-      const secondsPerBar = 60 / tempo * 4;
+      const secondsPerBar = (60 / tempo) * 4;
 
       chords.forEach((chord, index) => {
-        const startTime = now + (index * chord.duration * secondsPerBar);
+        const startTime = now + index * chord.duration * secondsPerBar;
         const duration = chord.duration * secondsPerBar;
 
         synthRef.current.triggerAttackRelease(chord.notes, duration, startTime);
@@ -219,7 +229,8 @@ function ChordGenerator({ onChordGenerated }) {
 
       setIsPlaying(true);
 
-      const totalDuration = chords.reduce((sum, chord) => sum + chord.duration, 0) * secondsPerBar * 1000;
+      const totalDuration =
+        chords.reduce((sum, chord) => sum + chord.duration, 0) * secondsPerBar * 1000;
       setTimeout(() => {
         setIsPlaying(false);
       }, totalDuration + 500);
@@ -230,9 +241,18 @@ function ChordGenerator({ onChordGenerated }) {
   };
 
   return (
-    <Card p={6} variant="elevated" bg="rgba(30, 41, 59, 0.5)" backdropFilter="blur(12px)" border="1px solid rgba(255, 255, 255, 0.1)" boxShadow="0 8px 32px 0 rgba(0, 0, 0, 0.37)">
+    <Card
+      p={6}
+      variant="elevated"
+      bg="rgba(30, 41, 59, 0.5)"
+      backdropFilter="blur(12px)"
+      border="1px solid rgba(255, 255, 255, 0.1)"
+      boxShadow="0 8px 32px 0 rgba(0, 0, 0, 0.37)"
+    >
       <CardHeader pb={4}>
-        <Heading size="lg" color="primary.400">Chord Generator</Heading>
+        <Heading size="lg" color="primary.400">
+          Chord Generator
+        </Heading>
       </CardHeader>
 
       <CardBody>
@@ -243,13 +263,15 @@ function ChordGenerator({ onChordGenerated }) {
               <FormLabel>Key</FormLabel>
               <Select
                 value={selectedKey}
-                onChange={(e) => setSelectedKey(e.target.value)}
+                onChange={e => setSelectedKey(e.target.value)}
                 bg="rgba(255, 255, 255, 0.1)"
                 borderColor="rgba(255, 255, 255, 0.15)"
-                _hover={{ borderColor: "primary.400" }}
+                _hover={{ borderColor: 'primary.400' }}
               >
                 {keyOptions.map(key => (
-                  <option key={key} value={key}>{key}</option>
+                  <option key={key} value={key}>
+                    {key}
+                  </option>
                 ))}
               </Select>
             </FormControl>
@@ -258,13 +280,15 @@ function ChordGenerator({ onChordGenerated }) {
               <FormLabel>Progression</FormLabel>
               <Select
                 value={selectedProgression}
-                onChange={(e) => setSelectedProgression(e.target.value)}
+                onChange={e => setSelectedProgression(e.target.value)}
                 bg="rgba(255, 255, 255, 0.1)"
                 borderColor="rgba(255, 255, 255, 0.15)"
-                _hover={{ borderColor: "primary.400" }}
+                _hover={{ borderColor: 'primary.400' }}
               >
                 {Object.keys(availableProgressions).map(prog => (
-                  <option key={prog} value={prog}>{prog}</option>
+                  <option key={prog} value={prog}>
+                    {prog}
+                  </option>
                 ))}
               </Select>
             </FormControl>
@@ -275,7 +299,7 @@ function ChordGenerator({ onChordGenerated }) {
                 min={60}
                 max={180}
                 value={tempo}
-                onChange={(val) => setTempo(val)}
+                onChange={val => setTempo(val)}
                 focusThumbOnChange={false}
               >
                 <SliderTrack bg="rgba(255, 255, 255, 0.1)">
@@ -292,7 +316,7 @@ function ChordGenerator({ onChordGenerated }) {
                 max={4}
                 step={0.5}
                 value={chordDuration}
-                onChange={(valueString) => setChordDuration(parseFloat(valueString))}
+                onChange={valueString => setChordDuration(parseFloat(valueString))}
                 bg="rgba(255, 255, 255, 0.1)"
                 borderColor="rgba(255, 255, 255, 0.15)"
               >
@@ -312,7 +336,7 @@ function ChordGenerator({ onChordGenerated }) {
                 <AccordionButton
                   bg="rgba(255, 255, 255, 0.05)"
                   borderRadius="md"
-                  _hover={{ bg: "rgba(255, 255, 255, 0.1)" }}
+                  _hover={{ bg: 'rgba(255, 255, 255, 0.1)' }}
                 >
                   <Box flex="1" textAlign="left">
                     <Heading size="sm">Advanced Options</Heading>
@@ -326,7 +350,7 @@ function ChordGenerator({ onChordGenerated }) {
                         <FormLabel mb={0}>Use Voice Leading</FormLabel>
                         <Checkbox
                           isChecked={useVoiceLeading}
-                          onChange={(e) => setUseVoiceLeading(e.target.checked)}
+                          onChange={e => setUseVoiceLeading(e.target.checked)}
                           colorScheme="primary"
                         />
                       </Flex>
@@ -337,7 +361,7 @@ function ChordGenerator({ onChordGenerated }) {
                         <FormLabel mb={0}>Use Inversions</FormLabel>
                         <Checkbox
                           isChecked={useInversions}
-                          onChange={(e) => setUseInversions(e.target.checked)}
+                          onChange={e => setUseInversions(e.target.checked)}
                           colorScheme="primary"
                         />
                       </Flex>
@@ -348,10 +372,10 @@ function ChordGenerator({ onChordGenerated }) {
                         <FormLabel>Inversion</FormLabel>
                         <Select
                           value={inversion}
-                          onChange={(e) => setInversion(parseInt(e.target.value))}
+                          onChange={e => setInversion(parseInt(e.target.value))}
                           bg="rgba(255, 255, 255, 0.1)"
                           borderColor="rgba(255, 255, 255, 0.15)"
-                          _hover={{ borderColor: "primary.400" }}
+                          _hover={{ borderColor: 'primary.400' }}
                         >
                           <option value="0">Root Position</option>
                           <option value="1">First Inversion</option>
@@ -366,7 +390,7 @@ function ChordGenerator({ onChordGenerated }) {
                         <FormLabel mb={0}>Use Extended Chords</FormLabel>
                         <Checkbox
                           isChecked={useExtendedChords}
-                          onChange={(e) => setUseExtendedChords(e.target.checked)}
+                          onChange={e => setUseExtendedChords(e.target.checked)}
                           colorScheme="primary"
                         />
                       </Flex>
@@ -377,11 +401,17 @@ function ChordGenerator({ onChordGenerated }) {
                         <FormLabel mb={0}>Auto-Randomize Options</FormLabel>
                         <Checkbox
                           isChecked={autoRandomize}
-                          onChange={(e) => setAutoRandomize(e.target.checked)}
+                          onChange={e => setAutoRandomize(e.target.checked)}
                           colorScheme="primary"
                         />
-                        <Tooltip label="Automatically applies random advanced options for variety" hasArrow placement="top">
-                          <Box as="span" ml={2} color="gray.300" fontSize="sm">ⓘ</Box>
+                        <Tooltip
+                          label="Automatically applies random advanced options for variety"
+                          hasArrow
+                          placement="top"
+                        >
+                          <Box as="span" ml={2} color="gray.300" fontSize="sm">
+                            ⓘ
+                          </Box>
                         </Tooltip>
                       </Flex>
                     </FormControl>
@@ -397,11 +427,14 @@ function ChordGenerator({ onChordGenerated }) {
               onClick={generateProgression}
               colorScheme="primary"
               size="lg"
-              leftIcon={<Box as="span" className="icon">🎹</Box>}
+              leftIcon={
+                <Box as="span" className="icon">
+                  🎹
+                </Box>
+              }
             >
               Generate Progression
             </Button>
-
           </HStack>
 
           {/* Progression Info */}
@@ -415,11 +448,18 @@ function ChordGenerator({ onChordGenerated }) {
               borderColor="primary.500"
               boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
             >
-              <Heading size="md" mb={4} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Generated Chord Progression</Heading>
-              <Text mb={4} fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Key:</Badge> {progression.key}</Text>
+              <Heading size="md" mb={4} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                Generated Chord Progression
+              </Heading>
+              <Text mb={4} fontWeight="medium">
+                <Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                  Key:
+                </Badge>{' '}
+                {progression.key}
+              </Text>
 
               <Grid
-                templateColumns={{ base: "1fr", md: "repeat(auto-fill, minmax(200px, 1fr))" }}
+                templateColumns={{ base: '1fr', md: 'repeat(auto-fill, minmax(200px, 1fr))' }}
                 gap={4}
               >
                 {progression.progression.map((chord, index) => (
@@ -428,15 +468,21 @@ function ChordGenerator({ onChordGenerated }) {
                     p={3}
                     borderRadius="md"
                     bg="rgba(255, 255, 255, 0.08)"
-                    _hover={{ bg: "rgba(255, 255, 255, 0.12)" }}
+                    _hover={{ bg: 'rgba(255, 255, 255, 0.12)' }}
                     transition="background 0.2s"
                     boxShadow="0 2px 4px rgba(0, 0, 0, 0.1)"
                   >
                     <Flex direction="column" align="center">
-                      <Heading size="md" color="primary.300" textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                      <Heading
+                        size="md"
+                        color="primary.300"
+                        textShadow="0 1px 2px rgba(0, 0, 0, 0.3)"
+                      >
                         {chord.symbol || `${chord.root.slice(0, -1)}${chord.type}`}
                       </Heading>
-                      <Badge mb={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">{chord.degree}</Badge>
+                      <Badge mb={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                        {chord.degree}
+                      </Badge>
                       <Text fontSize="sm" color="gray.200" textAlign="center" fontWeight="medium">
                         {chord.notes.join(', ')}
                       </Text>

@@ -17,7 +17,7 @@ import {
   updateDoc,
   orderBy,
   limit,
-  serverTimestamp
+  serverTimestamp,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../services/firebase';
@@ -40,8 +40,8 @@ export const saveMidiFile = async (midiData, fileName, metadata, userId, isPubli
     const snapshot = await uploadBytes(storageRef, midiBlob, {
       customMetadata: {
         isPublic: isPublic.toString(),
-        type: metadata.type || 'unknown'
-      }
+        type: metadata.type || 'unknown',
+      },
     });
 
     const downloadURL = await getDownloadURL(snapshot.ref);
@@ -53,7 +53,7 @@ export const saveMidiFile = async (midiData, fileName, metadata, userId, isPubli
       isPublic,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-      ...metadata
+      ...metadata,
     });
 
     return docRef.id;
@@ -86,7 +86,7 @@ export const getMidiFileById = async (fileId, userId = null) => {
 
     return {
       id: fileDoc.id,
-      ...fileData
+      ...fileData,
     };
   } catch (error) {
     console.error('Error getting MIDI file:', error);
@@ -117,7 +117,7 @@ export const getUserMidiFiles = async (userId, options = {}) => {
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate().toISOString(),
-      updatedAt: doc.data().updatedAt?.toDate().toISOString()
+      updatedAt: doc.data().updatedAt?.toDate().toISOString(),
     }));
   } catch (error) {
     console.error('Error getting user MIDI files:', error);
@@ -136,7 +136,7 @@ export const getPublicMidiFiles = async (options = {}) => {
       maxResults = 20,
       sortBy = 'createdAt',
       sortDirection = 'desc',
-      fileType = null
+      fileType = null,
     } = options;
 
     let q = query(collection(db, 'midiFiles'), where('isPublic', '==', true));
@@ -152,7 +152,7 @@ export const getPublicMidiFiles = async (options = {}) => {
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate().toISOString(),
-      updatedAt: doc.data().updatedAt?.toDate().toISOString()
+      updatedAt: doc.data().updatedAt?.toDate().toISOString(),
     }));
   } catch (error) {
     console.error('Error getting public MIDI files:', error);
@@ -183,7 +183,7 @@ export const updateMidiFile = async (fileId, updates, userId) => {
     }
     await updateDoc(fileRef, {
       ...updates,
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     });
 
     return true;

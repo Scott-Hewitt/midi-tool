@@ -1,6 +1,6 @@
 /**
  * Analytics Service
- * 
+ *
  * This module initializes and provides Firebase Analytics functionality.
  */
 
@@ -23,7 +23,7 @@ try {
  */
 export const trackEvent = (eventName, eventParams = {}) => {
   if (!analytics) return;
-  
+
   try {
     logEvent(analytics, eventName, eventParams);
   } catch (error) {
@@ -35,9 +35,9 @@ export const trackEvent = (eventName, eventParams = {}) => {
  * Set the user ID for Firebase Analytics
  * @param {string} userId - User ID
  */
-export const setAnalyticsUserId = (userId) => {
+export const setAnalyticsUserId = userId => {
   if (!analytics || !userId) return;
-  
+
   try {
     setUserId(analytics, userId);
   } catch (error) {
@@ -49,9 +49,9 @@ export const setAnalyticsUserId = (userId) => {
  * Set user properties for Firebase Analytics
  * @param {Object} properties - User properties
  */
-export const setAnalyticsUserProperties = (properties) => {
+export const setAnalyticsUserProperties = properties => {
   if (!analytics || !properties) return;
-  
+
   try {
     setUserProperties(analytics, properties);
   } catch (error) {
@@ -69,7 +69,7 @@ export const trackPageView = (pageName, pageParams = {}) => {
     page_title: pageName,
     page_location: window.location.href,
     page_path: window.location.pathname,
-    ...pageParams
+    ...pageParams,
   });
 };
 
@@ -77,7 +77,7 @@ export const trackPageView = (pageName, pageParams = {}) => {
  * Track user sign-in
  * @param {string} method - Sign-in method (e.g., 'email', 'google')
  */
-export const trackSignIn = (method) => {
+export const trackSignIn = method => {
   trackEvent('login', { method });
 };
 
@@ -85,7 +85,7 @@ export const trackSignIn = (method) => {
  * Track user sign-up
  * @param {string} method - Sign-up method (e.g., 'email', 'google')
  */
-export const trackSignUp = (method) => {
+export const trackSignUp = method => {
   trackEvent('sign_up', { method });
 };
 
@@ -97,7 +97,7 @@ export const trackSignUp = (method) => {
 export const trackMidiGeneration = (type, params = {}) => {
   trackEvent('generate_midi', {
     type,
-    ...params
+    ...params,
   });
 };
 
@@ -109,7 +109,7 @@ export const trackMidiGeneration = (type, params = {}) => {
 export const trackMidiDownload = (fileId, type) => {
   trackEvent('download_midi', {
     file_id: fileId,
-    type
+    type,
   });
 };
 
@@ -123,7 +123,7 @@ export const trackMidiSave = (fileId, type, isPublic) => {
   trackEvent('save_midi', {
     file_id: fileId,
     type,
-    is_public: isPublic
+    is_public: isPublic,
   });
 };
 
@@ -131,9 +131,9 @@ export const trackMidiSave = (fileId, type, isPublic) => {
  * Track adding a MIDI file to favorites
  * @param {string} fileId - ID of the MIDI file
  */
-export const trackAddToFavorites = (fileId) => {
+export const trackAddToFavorites = fileId => {
   trackEvent('add_to_favorites', {
-    file_id: fileId
+    file_id: fileId,
   });
 };
 
@@ -141,9 +141,9 @@ export const trackAddToFavorites = (fileId) => {
  * Track removing a MIDI file from favorites
  * @param {string} fileId - ID of the MIDI file
  */
-export const trackRemoveFromFavorites = (fileId) => {
+export const trackRemoveFromFavorites = fileId => {
   trackEvent('remove_from_favorites', {
-    file_id: fileId
+    file_id: fileId,
   });
 };
 
@@ -155,7 +155,7 @@ export const trackRemoveFromFavorites = (fileId) => {
 export const trackMidiDeletion = (fileId, type) => {
   trackEvent('delete_midi', {
     file_id: fileId,
-    type
+    type,
   });
 };
 
@@ -169,7 +169,7 @@ export const trackMidiUpdate = (fileId, type, updatedFields = []) => {
   trackEvent('update_midi', {
     file_id: fileId,
     type,
-    updated_fields: updatedFields.join(',')
+    updated_fields: updatedFields.join(','),
   });
 };
 
@@ -181,7 +181,7 @@ export const trackMidiUpdate = (fileId, type, updatedFields = []) => {
 export const trackMidiPlayback = (fileId, type) => {
   trackEvent('play_midi', {
     file_id: fileId,
-    type
+    type,
   });
 };
 
@@ -193,7 +193,7 @@ export const trackMidiPlayback = (fileId, type) => {
 export const trackDataExport = (exportType, itemCount) => {
   trackEvent('export_data', {
     export_type: exportType,
-    item_count: itemCount
+    item_count: itemCount,
   });
 };
 
@@ -207,6 +207,6 @@ export const trackError = (errorCode, errorMessage, context) => {
   trackEvent('app_error', {
     error_code: errorCode,
     error_message: errorMessage,
-    error_context: context
+    error_context: context,
   });
 };

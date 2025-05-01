@@ -1,4 +1,5 @@
 import { expect, afterEach, vi } from 'vitest';
+/* global global */
 import { cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
 
@@ -6,6 +7,11 @@ import * as matchers from '@testing-library/jest-dom/matchers';
 expect.extend(matchers);
 
 // Mock browser APIs that might be needed for tests
+// Define global if it doesn't exist (for Node.js environment)
+if (typeof global === 'undefined' && typeof window !== 'undefined') {
+  window.global = window;
+}
+
 global.URL.createObjectURL = vi.fn().mockReturnValue('mock-url');
 global.URL.revokeObjectURL = vi.fn();
 
@@ -15,13 +21,13 @@ class MockAudioContext {
     this.destination = {};
     this.createGain = vi.fn().mockReturnValue({
       connect: vi.fn(),
-      gain: { value: 1, setValueAtTime: vi.fn() }
+      gain: { value: 1, setValueAtTime: vi.fn() },
     });
     this.createOscillator = vi.fn().mockReturnValue({
       connect: vi.fn(),
       start: vi.fn(),
       stop: vi.fn(),
-      frequency: { value: 440 }
+      frequency: { value: 440 },
     });
   }
 }

@@ -5,7 +5,7 @@
  * This is a frontend wrapper around the backend MIDI export functionality.
  */
 
-import { exportMIDIWithJZZ } from '../../utils/jzzMidi';
+import { exportMIDIWithJZZ } from '../../utils/jzzMidi.js';
 import { saveMidiFile } from '../../backend/utils/midiExport';
 
 /**
@@ -112,7 +112,7 @@ export const exportAndSaveMIDI = async (
       tempo: melodyData?.tempo || chordData?.tempo || 120,
       key: melodyData?.scale || chordData?.key || 'C',
       bars: melodyData?.length || chordData?.bars || 4,
-      exportOptions: options
+      exportOptions: options,
     };
 
     // Save to Firebase

@@ -1,15 +1,15 @@
 /**
  * Favorite Controller
- * 
+ *
  * Handles favorite-related business logic.
  * This controller connects the favorite model with the UI components.
  */
 
-import { 
-  addToFavorites, 
-  removeFromFavorites, 
-  getUserFavorites, 
-  isFileFavorited 
+import {
+  addToFavorites,
+  removeFromFavorites,
+  getUserFavorites,
+  isFileFavorited,
 } from '../models/FavoriteModel';
 
 /**
@@ -47,7 +47,7 @@ export const removeFavorite = async (userId, fileId) => {
  * @param {string} userId - User ID
  * @returns {Promise<Array>} - Array of favorites with file data
  */
-export const getFavorites = async (userId) => {
+export const getFavorites = async userId => {
   try {
     return await getUserFavorites(userId);
   } catch (error) {

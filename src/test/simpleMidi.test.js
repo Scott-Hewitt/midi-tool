@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+/* global global */
 import { noteToMidiNumber, createMIDIFile, exportAndDownloadMIDI } from '../utils/simpleMidi';
 
 describe('simpleMidi Utility Functions', () => {
@@ -43,7 +44,7 @@ describe('simpleMidi Utility Functions', () => {
       expect(result).toBeInstanceOf(Uint8Array);
       expect(result.length).toBeGreaterThan(0);
       // Check for MIDI header
-      expect(result[0]).toBe(0x4D); // 'M'
+      expect(result[0]).toBe(0x4d); // 'M'
       expect(result[1]).toBe(0x54); // 'T'
       expect(result[2]).toBe(0x68); // 'h'
       expect(result[3]).toBe(0x64); // 'd'
@@ -65,9 +66,7 @@ describe('simpleMidi Utility Functions', () => {
   describe('exportAndDownloadMIDI', () => {
     const mockMelodyData = {
       tempo: 120,
-      notes: [
-        { pitch: 'C4', duration: 1, startTime: 0, velocity: 0.8 },
-      ],
+      notes: [{ pitch: 'C4', duration: 1, startTime: 0, velocity: 0.8 }],
     };
 
     beforeEach(() => {
@@ -88,10 +87,15 @@ describe('simpleMidi Utility Functions', () => {
       URL.revokeObjectURL = vi.fn();
 
       // Store the mock anchor for tests to access
+      // Define global if it doesn't exist (for Node.js environment)
+      if (typeof global === 'undefined' && typeof window !== 'undefined') {
+        window.global = window;
+      }
+
       global.mockAnchor = mockAnchor;
 
       // Mock setTimeout
-      vi.spyOn(global, 'setTimeout').mockImplementation((callback) => {
+      vi.spyOn(global, 'setTimeout').mockImplementation(callback => {
         callback();
         return 1;
       });

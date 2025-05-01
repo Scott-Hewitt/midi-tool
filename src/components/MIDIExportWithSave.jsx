@@ -37,7 +37,7 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
-  useToast
+  useToast,
 } from '@chakra-ui/react';
 import { AccordionButton } from '@chakra-ui/react';
 
@@ -49,10 +49,10 @@ function MIDIExportWithSave({ data, type }) {
     includeChords: true,
     includeBass: true,
     melodyInstrument: 0, // Piano
-    chordInstrument: 4,  // Electric Piano
-    bassInstrument: 32,  // Acoustic Bass
+    chordInstrument: 4, // Electric Piano
+    bassInstrument: 32, // Acoustic Bass
     applyExpression: true,
-    humanize: true
+    humanize: true,
   });
   const [isPublic, setIsPublic] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -67,7 +67,7 @@ function MIDIExportWithSave({ data, type }) {
   const handleOptionChange = (option, value) => {
     setExportOptions({
       ...exportOptions,
-      [option]: value
+      [option]: value,
     });
   };
 
@@ -120,7 +120,7 @@ function MIDIExportWithSave({ data, type }) {
         ...exportOptions,
         includeMelody: (type === 'melody' || type === 'composition') && exportOptions.includeMelody,
         includeChords: (type === 'chord' || type === 'composition') && exportOptions.includeChords,
-        includeBass: type === 'composition' && exportOptions.includeBass
+        includeBass: type === 'composition' && exportOptions.includeBass,
       };
 
       // Export the MIDI file
@@ -180,7 +180,7 @@ function MIDIExportWithSave({ data, type }) {
         ...exportOptions,
         includeMelody: (type === 'melody' || type === 'composition') && exportOptions.includeMelody,
         includeChords: (type === 'chord' || type === 'composition') && exportOptions.includeChords,
-        includeBass: type === 'composition' && exportOptions.includeBass
+        includeBass: type === 'composition' && exportOptions.includeBass,
       };
 
       // Save to Firebase
@@ -260,9 +260,18 @@ function MIDIExportWithSave({ data, type }) {
   };
 
   return (
-    <Card p={6} variant="elevated" bg="rgba(30, 41, 59, 0.5)" backdropFilter="blur(12px)" border="1px solid rgba(255, 255, 255, 0.1)" boxShadow="0 8px 32px 0 rgba(0, 0, 0, 0.37)">
+    <Card
+      p={6}
+      variant="elevated"
+      bg="rgba(30, 41, 59, 0.5)"
+      backdropFilter="blur(12px)"
+      border="1px solid rgba(255, 255, 255, 0.1)"
+      boxShadow="0 8px 32px 0 rgba(0, 0, 0, 0.37)"
+    >
       <CardHeader pb={4}>
-        <Heading size="lg" color="primary.400">MIDI Export</Heading>
+        <Heading size="lg" color="primary.400">
+          MIDI Export
+        </Heading>
       </CardHeader>
 
       <CardBody>
@@ -272,11 +281,11 @@ function MIDIExportWithSave({ data, type }) {
             <FormLabel>File Name</FormLabel>
             <Input
               value={fileName}
-              onChange={(e) => setFileName(e.target.value)}
+              onChange={e => setFileName(e.target.value)}
               placeholder="Enter file name"
               bg="rgba(255, 255, 255, 0.1)"
               borderColor="rgba(255, 255, 255, 0.15)"
-              _hover={{ borderColor: "primary.400" }}
+              _hover={{ borderColor: 'primary.400' }}
             />
           </FormControl>
 
@@ -289,7 +298,7 @@ function MIDIExportWithSave({ data, type }) {
               <Switch
                 id="include-melody"
                 isChecked={exportOptions.includeMelody}
-                onChange={(e) => handleOptionChange('includeMelody', e.target.checked)}
+                onChange={e => handleOptionChange('includeMelody', e.target.checked)}
                 colorScheme="primary"
                 isDisabled={type === 'chord'}
               />
@@ -302,7 +311,7 @@ function MIDIExportWithSave({ data, type }) {
               <Switch
                 id="include-chords"
                 isChecked={exportOptions.includeChords}
-                onChange={(e) => handleOptionChange('includeChords', e.target.checked)}
+                onChange={e => handleOptionChange('includeChords', e.target.checked)}
                 colorScheme="primary"
                 isDisabled={type === 'melody'}
               />
@@ -316,7 +325,7 @@ function MIDIExportWithSave({ data, type }) {
                 <Switch
                   id="include-bass"
                   isChecked={exportOptions.includeBass}
-                  onChange={(e) => handleOptionChange('includeBass', e.target.checked)}
+                  onChange={e => handleOptionChange('includeBass', e.target.checked)}
                   colorScheme="primary"
                 />
               </FormControl>
@@ -329,7 +338,7 @@ function MIDIExportWithSave({ data, type }) {
               <AccordionButton
                 bg="rgba(255, 255, 255, 0.05)"
                 borderRadius="md"
-                _hover={{ bg: "rgba(255, 255, 255, 0.1)" }}
+                _hover={{ bg: 'rgba(255, 255, 255, 0.1)' }}
               >
                 <Box flex="1" textAlign="left">
                   <Heading size="sm">Advanced Options</Heading>
@@ -343,10 +352,12 @@ function MIDIExportWithSave({ data, type }) {
                       <FormLabel>Melody Instrument</FormLabel>
                       <Select
                         value={exportOptions.melodyInstrument}
-                        onChange={(e) => handleOptionChange('melodyInstrument', parseInt(e.target.value))}
+                        onChange={e =>
+                          handleOptionChange('melodyInstrument', parseInt(e.target.value))
+                        }
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
-                        _hover={{ borderColor: "primary.400" }}
+                        _hover={{ borderColor: 'primary.400' }}
                       >
                         <option value="0">Piano</option>
                         <option value="24">Acoustic Guitar</option>
@@ -363,10 +374,12 @@ function MIDIExportWithSave({ data, type }) {
                       <FormLabel>Chord Instrument</FormLabel>
                       <Select
                         value={exportOptions.chordInstrument}
-                        onChange={(e) => handleOptionChange('chordInstrument', parseInt(e.target.value))}
+                        onChange={e =>
+                          handleOptionChange('chordInstrument', parseInt(e.target.value))
+                        }
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
-                        _hover={{ borderColor: "primary.400" }}
+                        _hover={{ borderColor: 'primary.400' }}
                       >
                         <option value="0">Piano</option>
                         <option value="4">Electric Piano</option>
@@ -383,10 +396,12 @@ function MIDIExportWithSave({ data, type }) {
                       <FormLabel>Bass Instrument</FormLabel>
                       <Select
                         value={exportOptions.bassInstrument}
-                        onChange={(e) => handleOptionChange('bassInstrument', parseInt(e.target.value))}
+                        onChange={e =>
+                          handleOptionChange('bassInstrument', parseInt(e.target.value))
+                        }
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
-                        _hover={{ borderColor: "primary.400" }}
+                        _hover={{ borderColor: 'primary.400' }}
                       >
                         <option value="32">Acoustic Bass</option>
                         <option value="33">Electric Bass</option>
@@ -403,7 +418,7 @@ function MIDIExportWithSave({ data, type }) {
                     <Switch
                       id="apply-expression"
                       isChecked={exportOptions.applyExpression}
-                      onChange={(e) => handleOptionChange('applyExpression', e.target.checked)}
+                      onChange={e => handleOptionChange('applyExpression', e.target.checked)}
                       colorScheme="primary"
                     />
                   </FormControl>
@@ -415,7 +430,7 @@ function MIDIExportWithSave({ data, type }) {
                     <Switch
                       id="humanize"
                       isChecked={exportOptions.humanize}
-                      onChange={(e) => handleOptionChange('humanize', e.target.checked)}
+                      onChange={e => handleOptionChange('humanize', e.target.checked)}
                       colorScheme="primary"
                     />
                   </FormControl>
@@ -428,7 +443,9 @@ function MIDIExportWithSave({ data, type }) {
           {currentUser && (
             <Box>
               <Divider my={4} />
-              <Heading size="sm" mb={4}>Save Options</Heading>
+              <Heading size="sm" mb={4}>
+                Save Options
+              </Heading>
               <FormControl display="flex" alignItems="center">
                 <FormLabel htmlFor="is-public" mb="0">
                   Make Public
@@ -437,7 +454,7 @@ function MIDIExportWithSave({ data, type }) {
                   <Switch
                     id="is-public"
                     isChecked={isPublic}
-                    onChange={(e) => setIsPublic(e.target.checked)}
+                    onChange={e => setIsPublic(e.target.checked)}
                     colorScheme="primary"
                   />
                 </Tooltip>
@@ -447,7 +464,10 @@ function MIDIExportWithSave({ data, type }) {
 
           {/* Status Message */}
           {exportStatus && (
-            <Alert status={exportStatus.includes('success') ? 'success' : 'error'} borderRadius="md">
+            <Alert
+              status={exportStatus.includes('success') ? 'success' : 'error'}
+              borderRadius="md"
+            >
               <AlertIcon />
               {exportStatus}
             </Alert>
@@ -458,7 +478,11 @@ function MIDIExportWithSave({ data, type }) {
             <Button
               onClick={handleExport}
               colorScheme="primary"
-              leftIcon={<Box as="span" className="icon">💾</Box>}
+              leftIcon={
+                <Box as="span" className="icon">
+                  💾
+                </Box>
+              }
             >
               Download MIDI
             </Button>
@@ -469,7 +493,11 @@ function MIDIExportWithSave({ data, type }) {
                   onClick={handleSave}
                   variant="outline"
                   colorScheme="primary"
-                  leftIcon={<Box as="span" className="icon">☁️</Box>}
+                  leftIcon={
+                    <Box as="span" className="icon">
+                      ☁️
+                    </Box>
+                  }
                   isLoading={isSaving}
                   loadingText="Saving..."
                 >
@@ -480,8 +508,12 @@ function MIDIExportWithSave({ data, type }) {
                   <Button
                     onClick={handleToggleFavorite}
                     variant="ghost"
-                    colorScheme={isFavorited ? "yellow" : "gray"}
-                    leftIcon={<Box as="span" className="icon">{isFavorited ? '⭐' : '☆'}</Box>}
+                    colorScheme={isFavorited ? 'yellow' : 'gray'}
+                    leftIcon={
+                      <Box as="span" className="icon">
+                        {isFavorited ? '⭐' : '☆'}
+                      </Box>
+                    }
                   >
                     {isFavorited ? 'Favorited' : 'Favorite'}
                   </Button>
@@ -492,7 +524,11 @@ function MIDIExportWithSave({ data, type }) {
                 onClick={onOpen}
                 variant="outline"
                 colorScheme="primary"
-                leftIcon={<Box as="span" className="icon">👤</Box>}
+                leftIcon={
+                  <Box as="span" className="icon">
+                    👤
+                  </Box>
+                }
               >
                 Sign In to Save
               </Button>
@@ -509,12 +545,20 @@ function MIDIExportWithSave({ data, type }) {
             borderColor="primary.500"
           >
             <Text mb={3}>
-              Export your {type === 'melody' ? 'melody' : type === 'chord' ? 'chord progression' : 'composition'} as a standard MIDI file
-              that can be imported into any Digital Audio Workstation (DAW) like Ableton Live,
-              Logic Pro, FL Studio, etc.
+              Export your{' '}
+              {type === 'melody'
+                ? 'melody'
+                : type === 'chord'
+                  ? 'chord progression'
+                  : 'composition'}{' '}
+              as a standard MIDI file that can be imported into any Digital Audio Workstation (DAW)
+              like Ableton Live, Logic Pro, FL Studio, etc.
             </Text>
             <Text fontWeight="bold" color="primary.300">
-              Pro Tip: <Text as="span" fontWeight="normal">Sign in to save your compositions to your account and access them later.</Text>
+              Pro Tip:{' '}
+              <Text as="span" fontWeight="normal">
+                Sign in to save your compositions to your account and access them later.
+              </Text>
             </Text>
           </Box>
         </VStack>
@@ -528,18 +572,22 @@ function MIDIExportWithSave({ data, type }) {
           <ModalCloseButton />
           <ModalBody>
             <Text>
-              You need to be signed in to save compositions to your account or add them to favorites.
+              You need to be signed in to save compositions to your account or add them to
+              favorites.
             </Text>
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="primary" mr={3} onClick={onClose}>
               Close
             </Button>
-            <Button variant="ghost" onClick={() => {
-              onClose();
-              // Redirect to login page or open login modal
-              // This would depend on your app's routing/navigation
-            }}>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                onClose();
+                // Redirect to login page or open login modal
+                // This would depend on your app's routing/navigation
+              }}
+            >
               Sign In
             </Button>
           </ModalFooter>

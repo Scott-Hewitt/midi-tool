@@ -1,21 +1,15 @@
-import { 
-  ref, 
-  uploadBytes, 
-  getDownloadURL, 
-  listAll, 
-  deleteObject 
-} from 'firebase/storage';
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
-  query, 
-  where, 
-  doc, 
-  deleteDoc, 
+import { ref, uploadBytes, getDownloadURL, /* listAll, */ deleteObject } from 'firebase/storage';
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  doc,
+  deleteDoc,
   updateDoc,
   serverTimestamp,
-  getDoc
+  getDoc,
 } from 'firebase/firestore';
 import { storage, db } from './config';
 
@@ -32,21 +26,21 @@ export const saveMidiFile = async (midiData, fileName, metadata, userId, isPubli
   try {
     // Create a blob from the MIDI data
     const midiBlob = new Blob([midiData], { type: 'audio/midi' });
-    
+
     // Create a reference to the file in Firebase Storage
     const storageRef = ref(storage, `midiFiles/${userId}/${fileName}.mid`);
-    
+
     // Upload the file
     const snapshot = await uploadBytes(storageRef, midiBlob, {
       customMetadata: {
         isPublic: isPublic.toString(),
-        type: metadata.type || 'unknown'
-      }
+        type: metadata.type || 'unknown',
+      },
     });
-    
+
     // Get the download URL
     const downloadURL = await getDownloadURL(snapshot.ref);
-    
+
     // Add metadata to Firestore
     const docRef = await addDoc(collection(db, 'midiFiles'), {
       fileName,
@@ -56,9 +50,9 @@ export const saveMidiFile = async (midiData, fileName, metadata, userId, isPubli
       isPublic,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-      ...metadata
+      ...metadata,
     });
-    
+
     return docRef.id;
   } catch (error) {
     console.error('Error saving MIDI file:', error);
@@ -71,14 +65,14 @@ export const saveMidiFile = async (midiData, fileName, metadata, userId, isPubli
  * @param {string} userId - The user ID
  * @returns {Promise<Array>} - Array of MIDI file metadata
  */
-export const getUserMidiFiles = async (userId) => {
+export const getUserMidiFiles = async userId => {
   try {
     const q = query(collection(db, 'midiFiles'), where('userId', '==', userId));
     const querySnapshot = await getDocs(q);
-    
+
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
+      ...doc.data(),
     }));
   } catch (error) {
     console.error('Error getting user MIDI files:', error);
@@ -95,11 +89,13 @@ export const getPublicMidiFiles = async (limit = 20) => {
   try {
     const q = query(collection(db, 'midiFiles'), where('isPublic', '==', true));
     const querySnapshot = await getDocs(q);
-    
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })).slice(0, limit);
+
+    return querySnapshot.docs
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+      .slice(0, limit);
   } catch (error) {
     console.error('Error getting public MIDI files:', error);
     throw error;
@@ -117,25 +113,25 @@ export const deleteMidiFile = async (fileId, userId) => {
     // Get the file metadata from Firestore
     const fileRef = doc(db, 'midiFiles', fileId);
     const fileDoc = await getDoc(fileRef);
-    
+
     if (!fileDoc.exists()) {
       throw new Error('File not found');
     }
-    
+
     const fileData = fileDoc.data();
-    
+
     // Check if the user owns the file
     if (fileData.userId !== userId) {
       throw new Error('Unauthorized');
     }
-    
+
     // Delete the file from Storage
     const storageRef = ref(storage, fileData.filePath);
     await deleteObject(storageRef);
-    
+
     // Delete the metadata from Firestore
     await deleteDoc(fileRef);
-    
+
     return true;
   } catch (error) {
     console.error('Error deleting MIDI file:', error);
@@ -155,24 +151,24 @@ export const updateMidiFile = async (fileId, updates, userId) => {
     // Get the file metadata from Firestore
     const fileRef = doc(db, 'midiFiles', fileId);
     const fileDoc = await getDoc(fileRef);
-    
+
     if (!fileDoc.exists()) {
       throw new Error('File not found');
     }
-    
+
     const fileData = fileDoc.data();
-    
+
     // Check if the user owns the file
     if (fileData.userId !== userId) {
       throw new Error('Unauthorized');
     }
-    
+
     // Update the file metadata
     await updateDoc(fileRef, {
       ...updates,
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     });
-    
+
     return true;
   } catch (error) {
     console.error('Error updating MIDI file:', error);
@@ -190,21 +186,21 @@ export const getMidiFile = async (fileId, userId = null) => {
   try {
     const fileRef = doc(db, 'midiFiles', fileId);
     const fileDoc = await getDoc(fileRef);
-    
+
     if (!fileDoc.exists()) {
       throw new Error('File not found');
     }
-    
+
     const fileData = fileDoc.data();
-    
+
     // Check if the user can access the file
     if (!fileData.isPublic && fileData.userId !== userId) {
       throw new Error('Unauthorized');
     }
-    
+
     return {
       id: fileDoc.id,
-      ...fileData
+      ...fileData,
     };
   } catch (error) {
     console.error('Error getting MIDI file:', error);

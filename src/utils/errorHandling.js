@@ -1,6 +1,6 @@
 /**
  * Error Handling Utilities
- * 
+ *
  * This module provides utilities for consistent error handling across the application.
  */
 
@@ -9,9 +9,9 @@
  * @param {Error} error - The error object
  * @returns {string} - User-friendly error message
  */
-export const getFirebaseErrorMessage = (error) => {
+export const getFirebaseErrorMessage = error => {
   const errorCode = error.code || '';
-  
+
   // Authentication errors
   const authErrors = {
     'auth/user-not-found': 'No account found with this email address.',
@@ -19,49 +19,54 @@ export const getFirebaseErrorMessage = (error) => {
     'auth/email-already-in-use': 'An account with this email already exists.',
     'auth/weak-password': 'Password is too weak. Please use at least 6 characters.',
     'auth/invalid-email': 'Invalid email address format.',
-    'auth/account-exists-with-different-credential': 'An account already exists with the same email but different sign-in credentials.',
+    'auth/account-exists-with-different-credential':
+      'An account already exists with the same email but different sign-in credentials.',
     'auth/operation-not-allowed': 'This sign-in method is not enabled for this project.',
-    'auth/requires-recent-login': 'This operation requires recent authentication. Please log in again.',
+    'auth/requires-recent-login':
+      'This operation requires recent authentication. Please log in again.',
     'auth/user-disabled': 'This account has been disabled.',
     'auth/popup-closed-by-user': 'Sign-in popup was closed before completing the sign-in.',
     'auth/cancelled-popup-request': 'The sign-in popup was cancelled.',
     'auth/popup-blocked': 'The sign-in popup was blocked by the browser.',
-    'auth/network-request-failed': 'A network error occurred. Please check your connection and try again.',
+    'auth/network-request-failed':
+      'A network error occurred. Please check your connection and try again.',
   };
-  
+
   // Firestore errors
   const firestoreErrors = {
-    'permission-denied': 'You don\'t have permission to perform this action.',
+    'permission-denied': "You don't have permission to perform this action.",
     'not-found': 'The requested document was not found.',
     'already-exists': 'The document already exists.',
     'resource-exhausted': 'Too many requests. Please try again later.',
     'failed-precondition': 'Operation failed due to the current state of the database.',
-    'aborted': 'The operation was aborted.',
+    aborted: 'The operation was aborted.',
     'out-of-range': 'Operation was attempted past the valid range.',
-    'unimplemented': 'This operation is not implemented or supported.',
-    'internal': 'An internal error occurred. Please try again later.',
-    'unavailable': 'The service is currently unavailable. Please try again later.',
+    unimplemented: 'This operation is not implemented or supported.',
+    internal: 'An internal error occurred. Please try again later.',
+    unavailable: 'The service is currently unavailable. Please try again later.',
     'data-loss': 'Unrecoverable data loss or corruption.',
-    'unauthenticated': 'You must be logged in to perform this action.',
+    unauthenticated: 'You must be logged in to perform this action.',
   };
-  
+
   // Storage errors
   const storageErrors = {
     'storage/object-not-found': 'The file does not exist.',
-    'storage/unauthorized': 'You don\'t have permission to access this file.',
+    'storage/unauthorized': "You don't have permission to access this file.",
     'storage/canceled': 'The operation was canceled.',
     'storage/unknown': 'An unknown error occurred.',
     'storage/quota-exceeded': 'Storage quota exceeded.',
-    'storage/invalid-checksum': 'File on the client does not match the checksum of the file received by the server.',
+    'storage/invalid-checksum':
+      'File on the client does not match the checksum of the file received by the server.',
     'storage/retry-limit-exceeded': 'Maximum retry time for operation exceeded.',
     'storage/invalid-event-name': 'Invalid event name provided.',
     'storage/invalid-url': 'Invalid URL provided.',
     'storage/invalid-argument': 'Invalid argument provided.',
     'storage/no-default-bucket': 'No default bucket found.',
     'storage/cannot-slice-blob': 'Cannot slice blob.',
-    'storage/server-file-wrong-size': 'File on the server does not match the size of the file received by the server.',
+    'storage/server-file-wrong-size':
+      'File on the server does not match the size of the file received by the server.',
   };
-  
+
   // MIDI-specific errors
   const midiErrors = {
     'midi/invalid-data': 'Invalid MIDI data format.',
@@ -70,7 +75,7 @@ export const getFirebaseErrorMessage = (error) => {
     'midi/download-failed': 'Failed to download MIDI file.',
     'midi/playback-failed': 'Failed to play MIDI file.',
   };
-  
+
   // Combine all error maps
   const errorMap = {
     ...authErrors,
@@ -78,7 +83,7 @@ export const getFirebaseErrorMessage = (error) => {
     ...storageErrors,
     ...midiErrors,
   };
-  
+
   // Return the mapped error message or a generic message
   return errorMap[errorCode] || error.message || 'An unexpected error occurred. Please try again.';
 };
@@ -90,7 +95,7 @@ export const getFirebaseErrorMessage = (error) => {
  */
 export const logError = (context, error) => {
   console.error(`Error in ${context}:`, error);
-  
+
   // You could extend this to log to a service like Firebase Crashlytics
   // or another error tracking service
 };
@@ -103,10 +108,10 @@ export const logError = (context, error) => {
  */
 export const handleApiError = (error, toast, context = 'operation') => {
   const errorMessage = getFirebaseErrorMessage(error);
-  
+
   // Log the error
   logError(context, error);
-  
+
   // Display toast notification if toast function is provided
   if (toast) {
     toast({
@@ -117,6 +122,6 @@ export const handleApiError = (error, toast, context = 'operation') => {
       isClosable: true,
     });
   }
-  
+
   return errorMessage;
 };

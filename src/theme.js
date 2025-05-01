@@ -1,7 +1,9 @@
 import { extendTheme } from '@chakra-ui/react';
 
 // Define the gradient animation
-const gradientAnimation = {
+// This is currently not used directly but kept for reference
+// It's applied via CSS in index.css
+const _gradientAnimation = {
   '@keyframes gradientAnimation': {
     '0%': { backgroundPosition: '0% 50%' },
     '50%': { backgroundPosition: '100% 50%' },
@@ -23,7 +25,8 @@ const theme = extendTheme({
         fontFamily: "'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif",
         minHeight: '100vh',
         overflowX: 'hidden',
-        background: 'linear-gradient(125deg, #0f172a, #1e1b4b, #4a1d96, #701a75, #4a1d96, #1e1b4b, #0f172a)',
+        background:
+          'linear-gradient(125deg, #0f172a, #1e1b4b, #4a1d96, #701a75, #4a1d96, #1e1b4b, #0f172a)',
         backgroundSize: '300% 300%',
         animation: 'gradientAnimation 20s ease infinite',
         position: 'relative',
@@ -34,7 +37,8 @@ const theme = extendTheme({
           left: 0,
           width: '100%',
           height: '100%',
-          background: 'radial-gradient(circle at center, rgba(99, 102, 241, 0.1) 0%, rgba(15, 23, 42, 0.5) 100%)',
+          background:
+            'radial-gradient(circle at center, rgba(99, 102, 241, 0.1) 0%, rgba(15, 23, 42, 0.5) 100%)',
           zIndex: -1,
           pointerEvents: 'none',
         },
@@ -45,7 +49,8 @@ const theme = extendTheme({
           left: 0,
           width: '100%',
           height: '100%',
-          backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E\")",
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E\")",
           opacity: 0.15,
           zIndex: -1,
           pointerEvents: 'none',
@@ -191,7 +196,8 @@ const theme = extendTheme({
             left: 0,
             width: '100%',
             height: '100%',
-            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.05), transparent 50%, rgba(16, 185, 129, 0.05))',
+            background:
+              'linear-gradient(135deg, rgba(99, 102, 241, 0.05), transparent 50%, rgba(16, 185, 129, 0.05))',
             pointerEvents: 'none',
             zIndex: 0,
           },

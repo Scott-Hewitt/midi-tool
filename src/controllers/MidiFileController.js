@@ -1,19 +1,19 @@
 /**
  * MIDI File Controller
- * 
+ *
  * Handles MIDI file-related business logic.
  * This controller connects the MIDI file model with the UI components.
  */
 
-import { 
-  saveMidiFile, 
-  getMidiFileById, 
-  getUserMidiFiles, 
-  getPublicMidiFiles, 
-  updateMidiFile, 
-  deleteMidiFile 
+import {
+  saveMidiFile,
+  getMidiFileById,
+  getUserMidiFiles,
+  getPublicMidiFiles,
+  updateMidiFile,
+  deleteMidiFile,
 } from '../models/MidiFileModel';
-import { exportMIDIWithJZZ } from '../utils/jzzMidi';
+import { exportMIDIWithJZZ } from '../utils/jzzMidi.js';
 
 /**
  * Generate and save a MIDI file
@@ -26,11 +26,11 @@ import { exportMIDIWithJZZ } from '../utils/jzzMidi';
  * @returns {Promise<string>} - The ID of the saved file
  */
 export const generateAndSaveMidiFile = async (
-  melodyData, 
-  chordData, 
-  fileName, 
-  options, 
-  userId, 
+  melodyData,
+  chordData,
+  fileName,
+  options,
+  userId,
   isPublic = false
 ) => {
   try {
@@ -43,23 +43,23 @@ export const generateAndSaveMidiFile = async (
     } else if (melodyData && chordData) {
       type = 'composition';
     }
-    
+
     // Generate MIDI data
     const midiData = await exportMIDIWithJZZ(melodyData, chordData, options);
-    
+
     if (!midiData) {
       throw new Error('Failed to generate MIDI data');
     }
-    
+
     // Prepare metadata
     const metadata = {
       type,
       tempo: melodyData?.tempo || chordData?.tempo || 120,
       key: melodyData?.scale || chordData?.key || 'C',
       bars: melodyData?.length || chordData?.bars || 4,
-      exportOptions: options
+      exportOptions: options,
     };
-    
+
     // Save to Firebase
     return await saveMidiFile(midiData, fileName, metadata, userId, isPublic);
   } catch (error) {

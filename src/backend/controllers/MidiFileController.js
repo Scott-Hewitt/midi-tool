@@ -1,17 +1,17 @@
 /**
  * MIDI File Controller
- * 
+ *
  * Handles MIDI file-related business logic.
  * This controller connects the MIDI file model with the UI components.
  */
 
-import { 
-  saveMidiFile, 
-  getMidiFileById, 
-  getUserMidiFiles, 
-  getPublicMidiFiles, 
-  updateMidiFile, 
-  deleteMidiFile 
+import {
+  saveMidiFile,
+  getMidiFileById,
+  getUserMidiFiles,
+  getPublicMidiFiles,
+  updateMidiFile,
+  deleteMidiFile,
 } from '../models/MidiFileModel';
 
 /**
@@ -24,10 +24,10 @@ import {
  * @returns {Promise<string>} - The ID of the saved file
  */
 export const saveMidiFileToStorage = async (
-  midiData, 
-  fileName, 
-  metadata, 
-  userId, 
+  midiData,
+  fileName,
+  metadata,
+  userId,
   isPublic = false
 ) => {
   try {

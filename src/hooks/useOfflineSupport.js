@@ -9,7 +9,7 @@ import { checkOnlineStatus } from '../utils/syncService';
 import {
   saveMidiFileOffline,
   getUserMidiFilesOffline,
-  deleteMidiFileOffline
+  deleteMidiFileOffline,
 } from '../utils/offlineStorage';
 import { handleApiError } from '../utils/errorHandling';
 import { useToast } from '@chakra-ui/react';
@@ -57,75 +57,84 @@ export const useOfflineSupport = (options = {}) => {
     };
   }, [toast]);
 
-  const loadOfflineFiles = useCallback(async (userId) => {
-    if (!userId) return;
+  const loadOfflineFiles = useCallback(
+    async userId => {
+      if (!userId) return;
 
-    try {
-      setLoading(true);
-      const files = await getUserMidiFilesOffline(userId);
-      setOfflineFiles(files);
-    } catch (error) {
-      handleApiError(error, toast, 'loading offline files');
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+      try {
+        setLoading(true);
+        const files = await getUserMidiFilesOffline(userId);
+        setOfflineFiles(files);
+      } catch (error) {
+        handleApiError(error, toast, 'loading offline files');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [toast]
+  );
 
-  const saveFileOffline = useCallback(async (fileData, userId) => {
-    if (!userId) {
-      toast({
-        title: 'Authentication required',
-        description: 'You need to be logged in to save files, even offline.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-      return null;
-    }
+  const saveFileOffline = useCallback(
+    async (fileData, userId) => {
+      if (!userId) {
+        toast({
+          title: 'Authentication required',
+          description: 'You need to be logged in to save files, even offline.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+        return null;
+      }
 
-    try {
-      fileData.userId = userId;
+      try {
+        fileData.userId = userId;
 
-      const fileId = await saveMidiFileOffline(fileData);
+        const fileId = await saveMidiFileOffline(fileData);
 
-      setOfflineFiles(prev => [...prev, { ...fileData, id: fileId }]);
+        setOfflineFiles(prev => [...prev, { ...fileData, id: fileId }]);
 
-      toast({
-        title: 'File saved offline',
-        description: 'The file will be synced when you reconnect.',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
+        toast({
+          title: 'File saved offline',
+          description: 'The file will be synced when you reconnect.',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
 
-      return fileId;
-    } catch (error) {
-      handleApiError(error, toast, 'saving file offline');
-      return null;
-    }
-  }, [toast]);
+        return fileId;
+      } catch (error) {
+        handleApiError(error, toast, 'saving file offline');
+        return null;
+      }
+    },
+    [toast]
+  );
 
-  const deleteFileOffline = useCallback(async (fileId, userId) => {
-    if (!userId) return false;
+  const deleteFileOffline = useCallback(
+    async (fileId, userId) => {
+      if (!userId) return false;
 
-    try {
-      await deleteMidiFileOffline(fileId, userId);
+      try {
+        await deleteMidiFileOffline(fileId, userId);
 
-      setOfflineFiles(prev => prev.filter(file => file.id !== fileId));
+        setOfflineFiles(prev => prev.filter(file => file.id !== fileId));
 
-      toast({
-        title: 'File deleted',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
+        toast({
+          title: 'File deleted',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
 
-      return true;
-    } catch (error) {
-      handleApiError(error, toast, 'deleting file offline');
-      return false;
-    }
-  }, [toast]);
+        return true;
+      } catch (error) {
+        handleApiError(error, toast, 'deleting file offline');
+        return false;
+      }
+    },
+    [toast]
+  );
 
   useEffect(() => {
     if (options.userId) {
@@ -139,6 +148,6 @@ export const useOfflineSupport = (options = {}) => {
     loading,
     loadOfflineFiles,
     saveFileOffline,
-    deleteFileOffline
+    deleteFileOffline,
   };
 };

@@ -32,28 +32,31 @@ function AudioInitializer() {
   const handleInitializeAudio = async () => {
     try {
       setIsInitializing(true);
-      
+
       // Register user interaction
       registerUserInteraction();
-      
-      // Initialize AudioContext
+
+      // Initialize AudioContext first
       const audioContext = await ensureAudioContext();
-      
-      // Initialize Tone.js
-      const toneInitialized = await initializeTone();
-      
-      if (audioContext && toneInitialized) {
-        setAudioInitialized(true);
-        toast({
-          title: 'Audio enabled',
-          description: 'You can now play and export audio',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-      } else {
-        throw new Error('Failed to initialize audio');
+
+      if (!audioContext) {
+        throw new Error('Failed to initialize AudioContext');
       }
+
+      // Initialize Tone.js - this must be done during a user gesture
+      // and after the AudioContext is initialized
+      const toneInitialized = await initializeTone();
+
+      // Even if Tone.js initialization fails, we can still proceed with basic audio
+      // as long as the AudioContext is initialized
+      setAudioInitialized(true);
+      toast({
+        title: 'Audio enabled',
+        description: 'You can now play and export audio',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
     } catch (error) {
       console.error('Error initializing audio:', error);
       toast({
@@ -74,13 +77,13 @@ function AudioInitializer() {
   }
 
   return (
-    <Box 
-      position="fixed" 
-      bottom="20px" 
-      right="20px" 
+    <Box
+      position="fixed"
+      bottom="20px"
+      right="20px"
       zIndex="1000"
-      bg="rgba(30, 41, 59, 0.8)" 
-      p={4} 
+      bg="rgba(30, 41, 59, 0.8)"
+      p={4}
       borderRadius="md"
       boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
       backdropFilter="blur(10px)"
@@ -94,7 +97,11 @@ function AudioInitializer() {
         colorScheme="primary"
         isLoading={isInitializing}
         loadingText="Enabling audio..."
-        leftIcon={<span role="img" aria-label="sound">🔊</span>}
+        leftIcon={
+          <span role="img" aria-label="sound">
+            🔊
+          </span>
+        }
       >
         Enable Audio
       </Button>

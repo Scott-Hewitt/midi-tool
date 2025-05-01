@@ -1,6 +1,6 @@
 /**
  * Sync Service
- * 
+ *
  * This module provides utilities for synchronizing offline data with Firebase
  * when the user comes back online.
  */
@@ -16,7 +16,7 @@ let isOnline = navigator.onLine;
  * Initialize the sync service
  * @param {Function} toast - Toast function for notifications
  */
-export const initSyncService = (toast) => {
+export const initSyncService = toast => {
   // Set up online/offline event listeners
   window.addEventListener('online', () => {
     isOnline = true;
@@ -55,9 +55,7 @@ export const initSyncService = (toast) => {
  * Check if the user is online
  * @returns {boolean} - Whether the user is online
  */
-export const checkOnlineStatus = () => {
-  return isOnline;
-};
+export const checkOnlineStatus = () => isOnline;
 
 /**
  * Sync pending uploads with Firebase
@@ -72,13 +70,13 @@ export const syncPendingUploads = async () => {
     // Get all pending uploads for all users
     // In a real app, you might want to limit this to the current user
     const pendingUploads = await getPendingUploads();
-    
+
     if (pendingUploads.length === 0) {
       return;
     }
-    
+
     console.log(`Syncing ${pendingUploads.length} pending uploads...`);
-    
+
     // Process each pending upload
     for (const upload of pendingUploads) {
       try {
@@ -96,7 +94,7 @@ export const syncPendingUploads = async () => {
           default:
             console.warn(`Unknown upload type: ${upload.type}`);
         }
-        
+
         // Remove the pending upload after successful sync
         await removePendingUpload(upload.id);
       } catch (error) {
@@ -105,7 +103,7 @@ export const syncPendingUploads = async () => {
         // It will be retried next time
       }
     }
-    
+
     console.log('Sync completed');
   } catch (error) {
     logError('syncPendingUploads', error);
@@ -117,9 +115,9 @@ export const syncPendingUploads = async () => {
  * @param {Object} upload - Upload data
  * @returns {Promise<void>}
  */
-const syncMidiFile = async (upload) => {
+const syncMidiFile = async upload => {
   const { midiData, fileName, metadata, userId, isPublic } = upload.data;
-  
+
   // Save to Firebase
   await saveMidiFile(midiData, fileName, metadata, userId, isPublic);
 };
@@ -129,12 +127,12 @@ const syncMidiFile = async (upload) => {
  * @param {Object} upload - Upload data
  * @returns {Promise<void>}
  */
-const syncFavorite = async (upload) => {
+const syncFavorite = async upload => {
   const { userId, fileId, action } = upload.data;
-  
+
   // Import dynamically to avoid circular dependencies
   const { addToFavorites, removeFromFavorites } = await import('../models/FavoriteModel');
-  
+
   if (action === 'add') {
     await addToFavorites(userId, fileId);
   } else if (action === 'remove') {
@@ -147,12 +145,12 @@ const syncFavorite = async (upload) => {
  * @param {Object} upload - Upload data
  * @returns {Promise<void>}
  */
-const syncUserSettings = async (upload) => {
+const syncUserSettings = async upload => {
   const { userId, settings } = upload.data;
-  
+
   // Import dynamically to avoid circular dependencies
   const { updateUserProfile } = await import('../models/UserModel');
-  
+
   await updateUserProfile(userId, settings);
 };
 
@@ -161,24 +159,24 @@ const syncUserSettings = async (upload) => {
  * @param {string} userId - User ID
  * @returns {Promise<void>}
  */
-export const syncOfflineMidiFiles = async (userId) => {
+export const syncOfflineMidiFiles = async userId => {
   if (!isOnline || !userId) {
     return;
   }
-  
+
   try {
     // Get offline MIDI files
     const offlineFiles = await getUserMidiFilesOffline(userId);
-    
+
     // Filter files that need syncing
     const filesToSync = offlineFiles.filter(file => file.pendingSync);
-    
+
     if (filesToSync.length === 0) {
       return;
     }
-    
+
     console.log(`Syncing ${filesToSync.length} offline MIDI files...`);
-    
+
     // Process each file
     for (const file of filesToSync) {
       try {
@@ -191,15 +189,15 @@ export const syncOfflineMidiFiles = async (userId) => {
             tempo: file.tempo,
             key: file.key,
             bars: file.bars,
-            exportOptions: file.exportOptions
+            exportOptions: file.exportOptions,
           },
           userId,
           file.isPublic
         );
-        
+
         // Update the offline file to mark it as synced
         file.pendingSync = false;
-        
+
         // Import dynamically to avoid circular dependencies
         const { saveMidiFileOffline } = await import('./offlineStorage');
         await saveMidiFileOffline(file);
@@ -207,7 +205,7 @@ export const syncOfflineMidiFiles = async (userId) => {
         logError(`Syncing offline file ${file.id}`, error);
       }
     }
-    
+
     console.log('Offline files sync completed');
   } catch (error) {
     logError('syncOfflineMidiFiles', error);

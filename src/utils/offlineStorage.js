@@ -1,6 +1,6 @@
 /**
  * Offline Storage Utilities
- * 
+ *
  * This module provides utilities for storing and retrieving data offline using IndexedDB.
  * It allows the application to function when the user is offline.
  */
@@ -21,24 +21,26 @@ const STORES = {
  * Initialize the IndexedDB database
  * @returns {Promise<IDBDatabase>} - The database instance
  */
-export const initDatabase = () => {
-  return new Promise((resolve, reject) => {
+export const initDatabase = () =>
+  new Promise((resolve, reject) => {
     if (!window.indexedDB) {
-      reject(new Error('Your browser doesn\'t support IndexedDB. Offline functionality will be limited.'));
+      reject(
+        new Error("Your browser doesn't support IndexedDB. Offline functionality will be limited.")
+      );
       return;
     }
 
     const request = window.indexedDB.open(DB_NAME, DB_VERSION);
 
-    request.onerror = (event) => {
+    request.onerror = () => {
       reject(new Error('Failed to open IndexedDB database.'));
     };
 
-    request.onsuccess = (event) => {
+    request.onsuccess = event => {
       resolve(event.target.result);
     };
 
-    request.onupgradeneeded = (event) => {
+    request.onupgradeneeded = event => {
       const db = event.target.result;
 
       // Create object stores if they don't exist
@@ -50,7 +52,10 @@ export const initDatabase = () => {
       }
 
       if (!db.objectStoreNames.contains(STORES.PENDING_UPLOADS)) {
-        const pendingUploadsStore = db.createObjectStore(STORES.PENDING_UPLOADS, { keyPath: 'id', autoIncrement: true });
+        const pendingUploadsStore = db.createObjectStore(STORES.PENDING_UPLOADS, {
+          keyPath: 'id',
+          autoIncrement: true,
+        });
         pendingUploadsStore.createIndex('userId', 'userId', { unique: false });
       }
 
@@ -59,48 +64,50 @@ export const initDatabase = () => {
       }
 
       if (!db.objectStoreNames.contains(STORES.COMPOSITIONS)) {
-        const compositionsStore = db.createObjectStore(STORES.COMPOSITIONS, { keyPath: 'id', autoIncrement: true });
+        const compositionsStore = db.createObjectStore(STORES.COMPOSITIONS, {
+          keyPath: 'id',
+          autoIncrement: true,
+        });
         compositionsStore.createIndex('userId', 'userId', { unique: false });
         compositionsStore.createIndex('type', 'type', { unique: false });
       }
     };
   });
-};
 
 /**
  * Save a MIDI file to IndexedDB
  * @param {Object} midiFile - MIDI file object
  * @returns {Promise<string>} - The ID of the saved file
  */
-export const saveMidiFileOffline = async (midiFile) => {
+export const saveMidiFileOffline = async midiFile => {
   try {
     const db = await initDatabase();
-    
+
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORES.MIDI_FILES], 'readwrite');
       const store = transaction.objectStore(STORES.MIDI_FILES);
-      
+
       // Generate a temporary ID if not provided
       if (!midiFile.id) {
         midiFile.id = 'offline_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
       }
-      
+
       // Add offline flag
       midiFile.isOffline = true;
       midiFile.pendingSync = true;
-      
+
       // Add timestamps if not present
       if (!midiFile.createdAt) {
         midiFile.createdAt = new Date().toISOString();
       }
       midiFile.updatedAt = new Date().toISOString();
-      
+
       const request = store.put(midiFile);
-      
+
       request.onsuccess = () => {
         resolve(midiFile.id);
       };
-      
+
       request.onerror = () => {
         reject(new Error('Failed to save MIDI file offline.'));
       };
@@ -116,20 +123,20 @@ export const saveMidiFileOffline = async (midiFile) => {
  * @param {string} userId - User ID
  * @returns {Promise<Array>} - Array of MIDI files
  */
-export const getUserMidiFilesOffline = async (userId) => {
+export const getUserMidiFilesOffline = async userId => {
   try {
     const db = await initDatabase();
-    
+
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORES.MIDI_FILES], 'readonly');
       const store = transaction.objectStore(STORES.MIDI_FILES);
       const index = store.index('userId');
       const request = index.getAll(userId);
-      
+
       request.onsuccess = () => {
         resolve(request.result);
       };
-      
+
       request.onerror = () => {
         reject(new Error('Failed to get user MIDI files offline.'));
       };
@@ -147,17 +154,17 @@ export const getUserMidiFilesOffline = async (userId) => {
 export const getPublicMidiFilesOffline = async () => {
   try {
     const db = await initDatabase();
-    
+
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORES.MIDI_FILES], 'readonly');
       const store = transaction.objectStore(STORES.MIDI_FILES);
       const index = store.index('isPublic');
       const request = index.getAll(true);
-      
+
       request.onsuccess = () => {
         resolve(request.result);
       };
-      
+
       request.onerror = () => {
         reject(new Error('Failed to get public MIDI files offline.'));
       };
@@ -177,39 +184,39 @@ export const getPublicMidiFilesOffline = async () => {
 export const deleteMidiFileOffline = async (fileId, userId) => {
   try {
     const db = await initDatabase();
-    
+
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORES.MIDI_FILES], 'readwrite');
       const store = transaction.objectStore(STORES.MIDI_FILES);
-      
+
       // First get the file to check ownership
       const getRequest = store.get(fileId);
-      
+
       getRequest.onsuccess = () => {
         const file = getRequest.result;
-        
+
         if (!file) {
           reject(new Error('File not found.'));
           return;
         }
-        
+
         if (file.userId !== userId) {
           reject(new Error('Unauthorized.'));
           return;
         }
-        
+
         // Delete the file
         const deleteRequest = store.delete(fileId);
-        
+
         deleteRequest.onsuccess = () => {
           resolve(true);
         };
-        
+
         deleteRequest.onerror = () => {
           reject(new Error('Failed to delete MIDI file offline.'));
         };
       };
-      
+
       getRequest.onerror = () => {
         reject(new Error('Failed to get MIDI file for deletion.'));
       };
@@ -229,22 +236,22 @@ export const deleteMidiFileOffline = async (fileId, userId) => {
 export const saveCompositionDraft = async (composition, userId) => {
   try {
     const db = await initDatabase();
-    
+
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORES.COMPOSITIONS], 'readwrite');
       const store = transaction.objectStore(STORES.COMPOSITIONS);
-      
+
       // Add user ID and timestamps
       composition.userId = userId;
       composition.createdAt = composition.createdAt || new Date().toISOString();
       composition.updatedAt = new Date().toISOString();
-      
+
       const request = store.put(composition);
-      
+
       request.onsuccess = () => {
         resolve(request.result);
       };
-      
+
       request.onerror = () => {
         reject(new Error('Failed to save composition draft.'));
       };
@@ -260,20 +267,20 @@ export const saveCompositionDraft = async (composition, userId) => {
  * @param {string} userId - User ID
  * @returns {Promise<Array>} - Array of composition drafts
  */
-export const getUserCompositionDrafts = async (userId) => {
+export const getUserCompositionDrafts = async userId => {
   try {
     const db = await initDatabase();
-    
+
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORES.COMPOSITIONS], 'readonly');
       const store = transaction.objectStore(STORES.COMPOSITIONS);
       const index = store.index('userId');
       const request = index.getAll(userId);
-      
+
       request.onsuccess = () => {
         resolve(request.result);
       };
-      
+
       request.onerror = () => {
         reject(new Error('Failed to get composition drafts.'));
       };
@@ -289,23 +296,23 @@ export const getUserCompositionDrafts = async (userId) => {
  * @param {Object} uploadData - Upload data
  * @returns {Promise<number>} - The ID of the pending upload
  */
-export const addPendingUpload = async (uploadData) => {
+export const addPendingUpload = async uploadData => {
   try {
     const db = await initDatabase();
-    
+
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORES.PENDING_UPLOADS], 'readwrite');
       const store = transaction.objectStore(STORES.PENDING_UPLOADS);
-      
+
       // Add timestamp
       uploadData.createdAt = new Date().toISOString();
-      
+
       const request = store.add(uploadData);
-      
+
       request.onsuccess = () => {
         resolve(request.result);
       };
-      
+
       request.onerror = () => {
         reject(new Error('Failed to add pending upload.'));
       };
@@ -321,20 +328,20 @@ export const addPendingUpload = async (uploadData) => {
  * @param {string} userId - User ID
  * @returns {Promise<Array>} - Array of pending uploads
  */
-export const getPendingUploads = async (userId) => {
+export const getPendingUploads = async userId => {
   try {
     const db = await initDatabase();
-    
+
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORES.PENDING_UPLOADS], 'readonly');
       const store = transaction.objectStore(STORES.PENDING_UPLOADS);
       const index = store.index('userId');
       const request = index.getAll(userId);
-      
+
       request.onsuccess = () => {
         resolve(request.result);
       };
-      
+
       request.onerror = () => {
         reject(new Error('Failed to get pending uploads.'));
       };
@@ -350,19 +357,19 @@ export const getPendingUploads = async (userId) => {
  * @param {number} uploadId - Upload ID
  * @returns {Promise<boolean>} - Whether the removal was successful
  */
-export const removePendingUpload = async (uploadId) => {
+export const removePendingUpload = async uploadId => {
   try {
     const db = await initDatabase();
-    
+
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORES.PENDING_UPLOADS], 'readwrite');
       const store = transaction.objectStore(STORES.PENDING_UPLOADS);
       const request = store.delete(uploadId);
-      
+
       request.onsuccess = () => {
         resolve(true);
       };
-      
+
       request.onerror = () => {
         reject(new Error('Failed to remove pending upload.'));
       };
@@ -382,21 +389,21 @@ export const removePendingUpload = async (uploadId) => {
 export const saveUserSettings = async (userId, settings) => {
   try {
     const db = await initDatabase();
-    
+
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORES.USER_SETTINGS], 'readwrite');
       const store = transaction.objectStore(STORES.USER_SETTINGS);
-      
+
       // Add user ID and timestamp
       settings.userId = userId;
       settings.updatedAt = new Date().toISOString();
-      
+
       const request = store.put(settings);
-      
+
       request.onsuccess = () => {
         resolve(true);
       };
-      
+
       request.onerror = () => {
         reject(new Error('Failed to save user settings.'));
       };
@@ -412,19 +419,19 @@ export const saveUserSettings = async (userId, settings) => {
  * @param {string} userId - User ID
  * @returns {Promise<Object|null>} - User settings or null if not found
  */
-export const getUserSettings = async (userId) => {
+export const getUserSettings = async userId => {
   try {
     const db = await initDatabase();
-    
+
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORES.USER_SETTINGS], 'readonly');
       const store = transaction.objectStore(STORES.USER_SETTINGS);
       const request = store.get(userId);
-      
+
       request.onsuccess = () => {
         resolve(request.result || null);
       };
-      
+
       request.onerror = () => {
         reject(new Error('Failed to get user settings.'));
       };

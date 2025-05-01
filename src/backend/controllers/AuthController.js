@@ -11,7 +11,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   signOut,
-  updateProfile
+  updateProfile,
 } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { createUser, getUserById } from '../models/UserModel';
@@ -32,7 +32,7 @@ export const registerUser = async (email, password, displayName) => {
     return {
       uid: userCredential.user.uid,
       email: userCredential.user.email,
-      displayName: userCredential.user.displayName
+      displayName: userCredential.user.displayName,
     };
   } catch (error) {
     console.error('Error registering user:', error);
@@ -52,11 +52,13 @@ export const loginWithEmail = async (email, password) => {
 
     const userData = await getUserById(userCredential.user.uid);
 
-    return userData || {
-      uid: userCredential.user.uid,
-      email: userCredential.user.email,
-      displayName: userCredential.user.displayName
-    };
+    return (
+      userData || {
+        uid: userCredential.user.uid,
+        email: userCredential.user.email,
+        displayName: userCredential.user.displayName,
+      }
+    );
   } catch (error) {
     console.error('Error logging in with email:', error);
     throw error;
@@ -84,7 +86,7 @@ export const loginWithGoogle = async () => {
       userData = {
         uid: userCredential.user.uid,
         email: userCredential.user.email,
-        displayName: userCredential.user.displayName || 'User'
+        displayName: userCredential.user.displayName || 'User',
       };
     }
 
@@ -112,16 +114,14 @@ export const logoutUser = async () => {
  * Get the current authenticated user
  * @returns {Object|null} - Current user or null if not authenticated
  */
-export const getCurrentUser = () => {
-  return auth.currentUser;
-};
+export const getCurrentUser = () => auth.currentUser;
 
 /**
  * Get user data from Firestore
  * @param {string} uid - User ID
  * @returns {Promise<Object|null>} - User data or null if not found
  */
-export const getUserData = async (uid) => {
+export const getUserData = async uid => {
   try {
     return await getUserById(uid);
   } catch (error) {

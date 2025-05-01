@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import * as Tone from 'tone';
 import { initializeTone, createSynth } from '../utils/toneContext';
-import { ensureAudioContext, getAudioContext } from '../utils/audioContext';
+import { getAudioContext } from '../utils/audioContext';
 import {
   Box,
   Heading,
@@ -34,22 +34,31 @@ import {
   AccordionPanel,
   AccordionIcon,
   Spinner,
-  Tooltip
+  Tooltip,
 } from '@chakra-ui/react';
 import { AccordionButton } from '@chakra-ui/react';
 
 // Import utility functions
 import { defaultScales } from '../utils/scales';
-import { rhythmPatterns, contourTypes, generateMotif, applyMotifVariation } from '../utils/patterns';
+import {
+  rhythmPatterns,
+  contourTypes,
+  generateMotif,
+  applyMotifVariation,
+} from '../utils/patterns';
 import { humanizeNotes, applyArticulation, applyDynamics } from '../utils/humanize';
 
 // Import SoundFont utility functions
 import {
-  loadInstrument,
+  // These functions are not currently used as playback has been moved to PlaybackContext
+  // loadInstrument,
   getAvailableInstruments,
-  playMelodyWithSoundFont,
-  stopAllSounds
+  // playMelodyWithSoundFont,
+  // stopAllSounds,
 } from '../utils/soundfontUtils';
+
+// Define available instruments
+const availableInstruments = getAvailableInstruments();
 
 const scales = defaultScales;
 
@@ -83,7 +92,8 @@ function MelodyGenerator({ onMelodyGenerated }) {
 
   const randomizeOptions = () => {
     const rhythmPatternKeys = Object.keys(rhythmPatterns);
-    const randomRhythmPattern = rhythmPatternKeys[Math.floor(Math.random() * rhythmPatternKeys.length)];
+    const randomRhythmPattern =
+      rhythmPatternKeys[Math.floor(Math.random() * rhythmPatternKeys.length)];
     setRhythmPattern(randomRhythmPattern);
 
     const contourTypeKeys = Object.keys(contourTypes);
@@ -95,7 +105,8 @@ function MelodyGenerator({ onMelodyGenerated }) {
 
     if (shouldUseMotif) {
       const motifVariations = ['transpose', 'invert', 'retrograde', 'rhythmic'];
-      const randomMotifVariation = motifVariations[Math.floor(Math.random() * motifVariations.length)];
+      const randomMotifVariation =
+        motifVariations[Math.floor(Math.random() * motifVariations.length)];
       setMotifVariation(randomMotifVariation);
     }
 
@@ -141,8 +152,8 @@ function MelodyGenerator({ onMelodyGenerated }) {
           notes.push({
             pitch: scale[scaleIndex],
             duration: motifNote.duration,
-            velocity: 0.7 + (Math.random() * 0.3),
-            startTime: currentTime
+            velocity: 0.7 + Math.random() * 0.3,
+            startTime: currentTime,
           });
           currentTime += motifNote.duration;
         });
@@ -154,23 +165,24 @@ function MelodyGenerator({ onMelodyGenerated }) {
         for (let j = 0; j < selectedPattern.length; j++) {
           const duration = selectedPattern[j];
 
-          const contourPosition = contourFn(patternIndex / (totalPatterns * selectedPattern.length));
+          const contourPosition = contourFn(
+            patternIndex / (totalPatterns * selectedPattern.length)
+          );
 
           const scalePosition = Math.floor(
-            contourPosition * scale.length +
-            (Math.random() * complexity / 5 - complexity / 10)
+            contourPosition * scale.length + ((Math.random() * complexity) / 5 - complexity / 10)
           );
 
           const clampedPosition = Math.min(scale.length - 1, Math.max(0, scalePosition));
           const note = scale[clampedPosition];
 
-          const velocity = 0.7 + (Math.random() * 0.3);
+          const velocity = 0.7 + Math.random() * 0.3;
 
           notes.push({
             pitch: note,
             duration: duration,
             velocity: velocity,
-            startTime: currentTime
+            startTime: currentTime,
           });
 
           currentTime += duration;
@@ -194,7 +206,7 @@ function MelodyGenerator({ onMelodyGenerated }) {
       notes = humanizeNotes(notes, {
         timingVariation: 0.02,
         velocityVariation: 0.1,
-        durationVariation: 0.05
+        durationVariation: 0.05,
       });
     }
 
@@ -212,7 +224,7 @@ function MelodyGenerator({ onMelodyGenerated }) {
       humanize: humanize,
       useSoundFont: false,
       instrument: 'acoustic_grand_piano',
-      notes: notes
+      notes: notes,
     };
 
     setMelody(melodyData);
@@ -224,7 +236,9 @@ function MelodyGenerator({ onMelodyGenerated }) {
     return notes;
   };
 
-  const playMelody = async () => {
+  // This function is not currently used in the UI as playback has been moved to the PlaybackContext
+  // Keeping it for reference or future use
+  const _playMelodyLegacy = async () => {
     if (isPlaying) {
       Tone.Transport.stop();
       Tone.Transport.cancel();
@@ -237,7 +251,7 @@ function MelodyGenerator({ onMelodyGenerated }) {
     playWithToneJs(notes);
   };
 
-  const playWithToneJs = async (notes) => {
+  const playWithToneJs = async notes => {
     try {
       const success = await initializeTone();
       if (!success) {
@@ -253,9 +267,9 @@ function MelodyGenerator({ onMelodyGenerated }) {
 
       const now = Tone.now();
       notes.forEach(note => {
-        const durationSeconds = note.duration * 60 / tempo;
+        const durationSeconds = (note.duration * 60) / tempo;
 
-        const startTime = now + (note.startTime * 60 / tempo);
+        const startTime = now + (note.startTime * 60) / tempo;
 
         synthRef.current.triggerAttackRelease(
           note.pitch,
@@ -272,9 +286,12 @@ function MelodyGenerator({ onMelodyGenerated }) {
         0
       );
 
-      setTimeout(() => {
-        setIsPlaying(false);
-      }, (totalDuration * 60 / tempo * 1000) + 500);
+      setTimeout(
+        () => {
+          setIsPlaying(false);
+        },
+        ((totalDuration * 60) / tempo) * 1000 + 500
+      );
     } catch (error) {
       console.error('Error playing with Tone.js:', error);
       setIsPlaying(false);
@@ -282,9 +299,18 @@ function MelodyGenerator({ onMelodyGenerated }) {
   };
 
   return (
-    <Card p={6} variant="elevated" bg="rgba(30, 41, 59, 0.5)" backdropFilter="blur(12px)" border="1px solid rgba(255, 255, 255, 0.1)" boxShadow="0 8px 32px 0 rgba(0, 0, 0, 0.37)">
+    <Card
+      p={6}
+      variant="elevated"
+      bg="rgba(30, 41, 59, 0.5)"
+      backdropFilter="blur(12px)"
+      border="1px solid rgba(255, 255, 255, 0.1)"
+      boxShadow="0 8px 32px 0 rgba(0, 0, 0, 0.37)"
+    >
       <CardHeader pb={4}>
-        <Heading size="lg" color="primary.400">Melody Generator</Heading>
+        <Heading size="lg" color="primary.400">
+          Melody Generator
+        </Heading>
       </CardHeader>
 
       <CardBody>
@@ -295,13 +321,15 @@ function MelodyGenerator({ onMelodyGenerated }) {
               <FormLabel>Scale</FormLabel>
               <Select
                 value={selectedScale}
-                onChange={(e) => setSelectedScale(e.target.value)}
+                onChange={e => setSelectedScale(e.target.value)}
                 bg="rgba(255, 255, 255, 0.1)"
                 borderColor="rgba(255, 255, 255, 0.15)"
-                _hover={{ borderColor: "primary.400" }}
+                _hover={{ borderColor: 'primary.400' }}
               >
                 {Object.keys(scales).map(scale => (
-                  <option key={scale} value={scale}>{scale}</option>
+                  <option key={scale} value={scale}>
+                    {scale}
+                  </option>
                 ))}
               </Select>
             </FormControl>
@@ -312,7 +340,7 @@ function MelodyGenerator({ onMelodyGenerated }) {
                 min={60}
                 max={180}
                 value={tempo}
-                onChange={(val) => setTempo(val)}
+                onChange={val => setTempo(val)}
                 focusThumbOnChange={false}
               >
                 <SliderTrack bg="rgba(255, 255, 255, 0.1)">
@@ -328,7 +356,7 @@ function MelodyGenerator({ onMelodyGenerated }) {
                 min={1}
                 max={16}
                 value={bars}
-                onChange={(valueString) => setBars(parseInt(valueString))}
+                onChange={valueString => setBars(parseInt(valueString))}
                 bg="rgba(255, 255, 255, 0.1)"
                 borderColor="rgba(255, 255, 255, 0.15)"
               >
@@ -346,7 +374,7 @@ function MelodyGenerator({ onMelodyGenerated }) {
                 min={1}
                 max={10}
                 value={complexity}
-                onChange={(val) => setComplexity(val)}
+                onChange={val => setComplexity(val)}
                 focusThumbOnChange={false}
               >
                 <SliderTrack bg="rgba(255, 255, 255, 0.1)">
@@ -364,7 +392,7 @@ function MelodyGenerator({ onMelodyGenerated }) {
                 <AccordionButton
                   bg="rgba(255, 255, 255, 0.05)"
                   borderRadius="md"
-                  _hover={{ bg: "rgba(255, 255, 255, 0.1)" }}
+                  _hover={{ bg: 'rgba(255, 255, 255, 0.1)' }}
                 >
                   <Box flex="1" textAlign="left">
                     <Heading size="sm">Advanced Options</Heading>
@@ -377,11 +405,17 @@ function MelodyGenerator({ onMelodyGenerated }) {
                       <FormLabel mb={0}>Auto-Randomize Options</FormLabel>
                       <Checkbox
                         isChecked={autoRandomize}
-                        onChange={(e) => setAutoRandomize(e.target.checked)}
+                        onChange={e => setAutoRandomize(e.target.checked)}
                         colorScheme="primary"
                       />
-                      <Tooltip label="Automatically randomize advanced options when generating a melody" hasArrow placement="top">
-                        <Box as="span" ml={2} color="gray.300" fontSize="sm">ⓘ</Box>
+                      <Tooltip
+                        label="Automatically randomize advanced options when generating a melody"
+                        hasArrow
+                        placement="top"
+                      >
+                        <Box as="span" ml={2} color="gray.300" fontSize="sm">
+                          ⓘ
+                        </Box>
                       </Tooltip>
                     </Flex>
                   </FormControl>
@@ -390,13 +424,15 @@ function MelodyGenerator({ onMelodyGenerated }) {
                       <FormLabel>Rhythm Pattern</FormLabel>
                       <Select
                         value={rhythmPattern}
-                        onChange={(e) => setRhythmPattern(e.target.value)}
+                        onChange={e => setRhythmPattern(e.target.value)}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
-                        _hover={{ borderColor: "primary.400" }}
+                        _hover={{ borderColor: 'primary.400' }}
                       >
                         {Object.keys(rhythmPatterns).map(pattern => (
-                          <option key={pattern} value={pattern}>{pattern}</option>
+                          <option key={pattern} value={pattern}>
+                            {pattern}
+                          </option>
                         ))}
                       </Select>
                     </FormControl>
@@ -405,13 +441,15 @@ function MelodyGenerator({ onMelodyGenerated }) {
                       <FormLabel>Melodic Contour</FormLabel>
                       <Select
                         value={contourType}
-                        onChange={(e) => setContourType(e.target.value)}
+                        onChange={e => setContourType(e.target.value)}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
-                        _hover={{ borderColor: "primary.400" }}
+                        _hover={{ borderColor: 'primary.400' }}
                       >
                         {Object.keys(contourTypes).map(contour => (
-                          <option key={contour} value={contour}>{contour}</option>
+                          <option key={contour} value={contour}>
+                            {contour}
+                          </option>
                         ))}
                       </Select>
                     </FormControl>
@@ -421,7 +459,7 @@ function MelodyGenerator({ onMelodyGenerated }) {
                         <FormLabel mb={0}>Use Motif</FormLabel>
                         <Checkbox
                           isChecked={useMotif}
-                          onChange={(e) => setUseMotif(e.target.checked)}
+                          onChange={e => setUseMotif(e.target.checked)}
                           colorScheme="primary"
                         />
                       </Flex>
@@ -432,10 +470,10 @@ function MelodyGenerator({ onMelodyGenerated }) {
                         <FormLabel>Motif Variation</FormLabel>
                         <Select
                           value={motifVariation}
-                          onChange={(e) => setMotifVariation(e.target.value)}
+                          onChange={e => setMotifVariation(e.target.value)}
                           bg="rgba(255, 255, 255, 0.1)"
                           borderColor="rgba(255, 255, 255, 0.15)"
-                          _hover={{ borderColor: "primary.400" }}
+                          _hover={{ borderColor: 'primary.400' }}
                         >
                           <option value="transpose">Transpose</option>
                           <option value="invert">Invert</option>
@@ -450,10 +488,10 @@ function MelodyGenerator({ onMelodyGenerated }) {
                       <FormLabel>Articulation</FormLabel>
                       <Select
                         value={articulation}
-                        onChange={(e) => setArticulation(e.target.value)}
+                        onChange={e => setArticulation(e.target.value)}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
-                        _hover={{ borderColor: "primary.400" }}
+                        _hover={{ borderColor: 'primary.400' }}
                       >
                         <option value="none">None</option>
                         <option value="legato">Legato</option>
@@ -467,10 +505,10 @@ function MelodyGenerator({ onMelodyGenerated }) {
                       <FormLabel>Dynamics</FormLabel>
                       <Select
                         value={dynamics}
-                        onChange={(e) => setDynamics(e.target.value)}
+                        onChange={e => setDynamics(e.target.value)}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
-                        _hover={{ borderColor: "primary.400" }}
+                        _hover={{ borderColor: 'primary.400' }}
                       >
                         <option value="none">None</option>
                         <option value="crescendo">Crescendo</option>
@@ -486,7 +524,7 @@ function MelodyGenerator({ onMelodyGenerated }) {
                         <FormLabel mb={0}>Humanize</FormLabel>
                         <Checkbox
                           isChecked={humanize}
-                          onChange={(e) => setHumanize(e.target.checked)}
+                          onChange={e => setHumanize(e.target.checked)}
                           colorScheme="primary"
                         />
                       </Flex>
@@ -503,11 +541,14 @@ function MelodyGenerator({ onMelodyGenerated }) {
               onClick={generateMelody}
               colorScheme="primary"
               size="lg"
-              leftIcon={<Box as="span" className="icon">🎵</Box>}
+              leftIcon={
+                <Box as="span" className="icon">
+                  🎵
+                </Box>
+              }
             >
               Generate Melody
             </Button>
-
           </HStack>
 
           {/* Melody Info */}
@@ -521,19 +562,84 @@ function MelodyGenerator({ onMelodyGenerated }) {
               borderColor="primary.500"
               boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
             >
-              <Heading size="md" mb={4} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Generated Melody</Heading>
+              <Heading size="md" mb={4} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                Generated Melody
+              </Heading>
               <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={3}>
-                <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Scale:</Badge> {melody.scale}</Text>
-                <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Tempo:</Badge> {melody.tempo} BPM</Text>
-                <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Length:</Badge> {melody.length} bars</Text>
-                <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Notes:</Badge> {melody.notes.length}</Text>
-                <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Rhythm:</Badge> {melody.rhythmPattern}</Text>
-                <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Contour:</Badge> {melody.contourType}</Text>
-                {melody.useMotif && <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Motif:</Badge> {melody.motifVariation}</Text>}
-                {melody.articulation !== 'none' && <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Articulation:</Badge> {melody.articulation}</Text>}
-                {melody.dynamics !== 'none' && <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Dynamics:</Badge> {melody.dynamics}</Text>}
-                <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Humanized:</Badge> {melody.humanize ? 'Yes' : 'No'}</Text>
-                {melody.useSoundFont && <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Instrument:</Badge> {availableInstruments[melody.instrument] || melody.instrument}</Text>}
+                <Text fontWeight="medium">
+                  <Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                    Scale:
+                  </Badge>{' '}
+                  {melody.scale}
+                </Text>
+                <Text fontWeight="medium">
+                  <Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                    Tempo:
+                  </Badge>{' '}
+                  {melody.tempo} BPM
+                </Text>
+                <Text fontWeight="medium">
+                  <Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                    Length:
+                  </Badge>{' '}
+                  {melody.length} bars
+                </Text>
+                <Text fontWeight="medium">
+                  <Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                    Notes:
+                  </Badge>{' '}
+                  {melody.notes.length}
+                </Text>
+                <Text fontWeight="medium">
+                  <Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                    Rhythm:
+                  </Badge>{' '}
+                  {melody.rhythmPattern}
+                </Text>
+                <Text fontWeight="medium">
+                  <Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                    Contour:
+                  </Badge>{' '}
+                  {melody.contourType}
+                </Text>
+                {melody.useMotif && (
+                  <Text fontWeight="medium">
+                    <Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                      Motif:
+                    </Badge>{' '}
+                    {melody.motifVariation}
+                  </Text>
+                )}
+                {melody.articulation !== 'none' && (
+                  <Text fontWeight="medium">
+                    <Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                      Articulation:
+                    </Badge>{' '}
+                    {melody.articulation}
+                  </Text>
+                )}
+                {melody.dynamics !== 'none' && (
+                  <Text fontWeight="medium">
+                    <Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                      Dynamics:
+                    </Badge>{' '}
+                    {melody.dynamics}
+                  </Text>
+                )}
+                <Text fontWeight="medium">
+                  <Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                    Humanized:
+                  </Badge>{' '}
+                  {melody.humanize ? 'Yes' : 'No'}
+                </Text>
+                {melody.useSoundFont && (
+                  <Text fontWeight="medium">
+                    <Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                      Instrument:
+                    </Badge>{' '}
+                    {availableInstruments[melody.instrument] || melody.instrument}
+                  </Text>
+                )}
               </SimpleGrid>
             </Box>
           )}

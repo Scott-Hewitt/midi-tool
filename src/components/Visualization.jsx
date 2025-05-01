@@ -6,12 +6,12 @@ import {
   Card,
   CardHeader,
   CardBody,
-  useColorModeValue,
+  // useColorModeValue is no longer used as we're using theme colors directly
   Tooltip,
   HStack,
   VStack,
   Badge,
-  useTheme
+  useTheme,
 } from '@chakra-ui/react';
 import PlayButton from './PlayButton';
 import InstrumentSelector from './InstrumentSelector';
@@ -30,7 +30,7 @@ function Visualisation({ data, type }) {
     setMelodyInstrument,
     setChordInstrument,
     setBassInstrument,
-    instrumentsLoading
+    instrumentsLoading,
   } = usePlayback();
 
   const handleInstrumentChange = (instrumentType, value) => {
@@ -61,7 +61,7 @@ function Visualisation({ data, type }) {
   const HEADER_HEIGHT = 30;
 
   // Handle mouse movement over the canvas
-  const handleMouseMove = (e) => {
+  const handleMouseMove = e => {
     if (!canvasRef.current || !data) return;
 
     const canvas = canvasRef.current;
@@ -93,11 +93,15 @@ function Visualisation({ data, type }) {
         if (!chord.visualData) return;
 
         chord.visualData.forEach(noteData => {
-          if (x >= noteData.x && x <= noteData.x + noteData.width &&
-              y >= noteData.y && y <= noteData.y + noteData.height) {
+          if (
+            x >= noteData.x &&
+            x <= noteData.x + noteData.width &&
+            y >= noteData.y &&
+            y <= noteData.y + noteData.height
+          ) {
             foundNote = {
               ...noteData,
-              chord: chord
+              chord: chord,
             };
           }
         });
@@ -117,7 +121,7 @@ function Visualisation({ data, type }) {
             foundNote = {
               ...note,
               part: 'melody',
-              instrument: data.melody.instrument
+              instrument: data.melody.instrument,
             };
           }
         });
@@ -129,13 +133,17 @@ function Visualisation({ data, type }) {
           if (!chord.visualData) return;
 
           chord.visualData.forEach(noteData => {
-            if (x >= noteData.x && x <= noteData.x + noteData.width &&
-                y >= noteData.y && y <= noteData.y + noteData.height) {
+            if (
+              x >= noteData.x &&
+              x <= noteData.x + noteData.width &&
+              y >= noteData.y &&
+              y <= noteData.y + noteData.height
+            ) {
               foundNote = {
                 ...noteData,
                 chord: chord,
                 part: 'chord',
-                instrument: data.chord.instrument
+                instrument: data.chord.instrument,
               };
             }
           });
@@ -151,7 +159,7 @@ function Visualisation({ data, type }) {
             foundNote = {
               ...note,
               part: 'bass',
-              instrument: data.bass.instrument
+              instrument: data.bass.instrument,
             };
           }
         });
@@ -185,10 +193,7 @@ function Visualisation({ data, type }) {
       const height = width / ASPECT_RATIO;
 
       // Only update if the size has changed significantly (more than 1px)
-      if (
-        Math.abs(width - lastWidth) > 1 ||
-        Math.abs(height - lastHeight) > 1
-      ) {
+      if (Math.abs(width - lastWidth) > 1 || Math.abs(height - lastHeight) > 1) {
         lastWidth = width;
         lastHeight = height;
 
@@ -278,7 +283,10 @@ function Visualisation({ data, type }) {
     if (!melody || !melody.notes || melody.notes.length === 0) return;
 
     const notes = melody.notes;
-    const totalDuration = notes.reduce((sum, note) => Math.max(sum, note.startTime + note.duration), 0);
+    const totalDuration = notes.reduce(
+      (sum, note) => Math.max(sum, note.startTime + note.duration),
+      0
+    );
 
     const pianoRollWidth = width - PIANO_KEY_WIDTH;
     const timeScale = pianoRollWidth / totalDuration;
@@ -304,7 +312,8 @@ function Visualisation({ data, type }) {
     const headerColor = theme.colors.gray[800];
     const textColor = theme.colors.gray[100];
     const primaryColor = theme.colors.primary[500];
-    const secondaryColor = theme.colors.secondary[500];
+    // Secondary color is defined for potential future use
+    // const secondaryColor = theme.colors.secondary[500];
 
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, width, height);
@@ -322,10 +331,10 @@ function Visualisation({ data, type }) {
     const totalBars = Math.ceil(totalDuration / beatsPerBar);
 
     for (let i = 0; i <= totalBars; i++) {
-      const x = PIANO_KEY_WIDTH + (i * barWidth);
+      const x = PIANO_KEY_WIDTH + i * barWidth;
 
       // Draw bar number
-      ctx.fillText(`${i+1}`, x, HEADER_HEIGHT - 10);
+      ctx.fillText(`${i + 1}`, x, HEADER_HEIGHT - 10);
 
       // Draw bar line
       ctx.strokeStyle = i % 4 === 0 ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.15)';
@@ -338,7 +347,7 @@ function Visualisation({ data, type }) {
       // Draw beat lines within each bar
       if (i < totalBars) {
         for (let beat = 1; beat < beatsPerBar; beat++) {
-          const beatX = x + (beat * timeScale);
+          const beatX = x + beat * timeScale;
           ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
           ctx.lineWidth = 1;
           ctx.beginPath();
@@ -351,13 +360,14 @@ function Visualisation({ data, type }) {
 
     // Draw piano keys
     const keyHeight = noteScale;
-    const allNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    // Note names are not currently used but kept for reference
+    // const allNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
     for (let i = lowestNote; i <= highestNote; i++) {
       const note = i % 12;
       const octave = Math.floor(i / 12) - 1;
       const isBlackKey = [1, 3, 6, 8, 10].includes(note);
-      const y = height - ((i - lowestNote) * keyHeight) - keyHeight;
+      const y = height - (i - lowestNote) * keyHeight - keyHeight;
 
       // Draw key background
       if (isBlackKey) {
@@ -393,9 +403,9 @@ function Visualisation({ data, type }) {
     // Draw notes
     notes.forEach((note, index) => {
       const midiNumber = noteNameToMidiNumber(note.pitch);
-      const x = PIANO_KEY_WIDTH + (note.startTime * timeScale);
+      const x = PIANO_KEY_WIDTH + note.startTime * timeScale;
       const noteWidth = Math.max(note.duration * timeScale, 5); // Minimum width for visibility
-      const y = height - ((midiNumber - lowestNote) * keyHeight) - keyHeight;
+      const y = height - (midiNumber - lowestNote) * keyHeight - keyHeight;
 
       // Draw note rectangle with base color
       const noteColor = getColorForVelocity(note.velocity);
@@ -431,17 +441,26 @@ function Visualisation({ data, type }) {
         ctx.fillStyle = textColor;
         ctx.font = 'bold 10px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(note.pitch, x + (noteWidth / 2), y + (keyHeight / 2) + 3);
+        ctx.fillText(note.pitch, x + noteWidth / 2, y + keyHeight / 2 + 3);
       }
 
       // Store note data for hover interaction
       note.visualData = {
-        x, y, width: noteWidth, height: keyHeight, index
+        x,
+        y,
+        width: noteWidth,
+        height: keyHeight,
+        index,
       };
     });
 
     // Draw info overlay with gradient
-    const infoGradient = ctx.createLinearGradient(PIANO_KEY_WIDTH + 10, height - 30, PIANO_KEY_WIDTH + 10, height - 5);
+    const infoGradient = ctx.createLinearGradient(
+      PIANO_KEY_WIDTH + 10,
+      height - 30,
+      PIANO_KEY_WIDTH + 10,
+      height - 5
+    );
     infoGradient.addColorStop(0, `rgba(${hexToRgb(theme.colors.gray[900])}, 0.9)`);
     infoGradient.addColorStop(1, `rgba(${hexToRgb(theme.colors.gray[800])}, 0.9)`);
     ctx.fillStyle = infoGradient;
@@ -456,7 +475,11 @@ function Visualisation({ data, type }) {
     ctx.fillStyle = textColor;
     ctx.font = '12px Arial';
     ctx.textAlign = 'left';
-    ctx.fillText(`Scale: ${melody.scale} | Tempo: ${melody.tempo} BPM | Notes: ${notes.length}`, PIANO_KEY_WIDTH + 20, height - 15);
+    ctx.fillText(
+      `Scale: ${melody.scale} | Tempo: ${melody.tempo} BPM | Notes: ${notes.length}`,
+      PIANO_KEY_WIDTH + 20,
+      height - 15
+    );
   };
 
   const drawComposition = (ctx, composition, width, height) => {
@@ -468,17 +491,20 @@ function Visualisation({ data, type }) {
     const bassNotes = composition.bass?.notes || [];
 
     // Calculate total duration
-    const melodyDuration = melodyNotes.length > 0
-      ? melodyNotes.reduce((max, note) => Math.max(max, note.startTime + note.duration), 0)
-      : 0;
+    const melodyDuration =
+      melodyNotes.length > 0
+        ? melodyNotes.reduce((max, note) => Math.max(max, note.startTime + note.duration), 0)
+        : 0;
 
-    const chordDuration = chords.length > 0
-      ? chords.reduce((sum, chord) => sum + chord.duration * 4, 0) // Convert from bars to beats
-      : 0;
+    const chordDuration =
+      chords.length > 0
+        ? chords.reduce((sum, chord) => sum + chord.duration * 4, 0) // Convert from bars to beats
+        : 0;
 
-    const bassDuration = bassNotes.length > 0
-      ? bassNotes.reduce((max, note) => Math.max(max, note.startTime + note.duration), 0)
-      : 0;
+    const bassDuration =
+      bassNotes.length > 0
+        ? bassNotes.reduce((max, note) => Math.max(max, note.startTime + note.duration), 0)
+        : 0;
 
     const totalDuration = Math.max(melodyDuration, chordDuration, bassDuration);
 
@@ -550,10 +576,10 @@ function Visualisation({ data, type }) {
     const totalBars = Math.ceil(totalDuration / beatsPerBar);
 
     for (let i = 0; i <= totalBars; i++) {
-      const x = PIANO_KEY_WIDTH + (i * barWidth);
+      const x = PIANO_KEY_WIDTH + i * barWidth;
 
       // Draw bar number
-      ctx.fillText(`${i+1}`, x, HEADER_HEIGHT - 10);
+      ctx.fillText(`${i + 1}`, x, HEADER_HEIGHT - 10);
 
       // Draw bar line
       ctx.strokeStyle = i % 4 === 0 ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.15)';
@@ -566,7 +592,7 @@ function Visualisation({ data, type }) {
       // Draw beat lines within each bar
       if (i < totalBars) {
         for (let beat = 1; beat < beatsPerBar; beat++) {
-          const beatX = x + (beat * timeScale);
+          const beatX = x + beat * timeScale;
           ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
           ctx.lineWidth = 1;
           ctx.beginPath();
@@ -578,13 +604,14 @@ function Visualisation({ data, type }) {
     }
 
     // Draw piano keys
-    const allNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    // Note names are not currently used but kept for reference
+    // const allNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
     for (let i = lowestNote; i <= highestNote; i++) {
       const note = i % 12;
       const octave = Math.floor(i / 12) - 1;
       const isBlackKey = [1, 3, 6, 8, 10].includes(note);
-      const y = height - ((i - lowestNote) * keyHeight) - keyHeight;
+      const y = height - (i - lowestNote) * keyHeight - keyHeight;
 
       // Draw key background
       if (isBlackKey) {
@@ -620,7 +647,7 @@ function Visualisation({ data, type }) {
     // Draw chord blocks
     chords.forEach((chord, chordIndex) => {
       const chordDuration = chord.duration * 4; // Convert from bars to beats
-      const chordStartX = PIANO_KEY_WIDTH + (chord.position * 4 * timeScale); // Convert position from bars to beats
+      const chordStartX = PIANO_KEY_WIDTH + chord.position * 4 * timeScale; // Convert position from bars to beats
       const chordWidth = chordDuration * timeScale;
 
       // Draw chord label at the top
@@ -629,7 +656,12 @@ function Visualisation({ data, type }) {
       ctx.fillRect(chordStartX, HEADER_HEIGHT, chordWidth, 20);
 
       // Add a subtle gradient to the chord label
-      const gradient = ctx.createLinearGradient(chordStartX, HEADER_HEIGHT, chordStartX, HEADER_HEIGHT + 20);
+      const gradient = ctx.createLinearGradient(
+        chordStartX,
+        HEADER_HEIGHT,
+        chordStartX,
+        HEADER_HEIGHT + 20
+      );
       gradient.addColorStop(0, `rgba(${hexToRgb(primaryColor)}, 0.3)`);
       gradient.addColorStop(1, `rgba(${hexToRgb(primaryColor)}, 0.1)`);
       ctx.fillStyle = gradient;
@@ -646,8 +678,11 @@ function Visualisation({ data, type }) {
       ctx.shadowOffsetX = 1;
       ctx.shadowOffsetY = 1;
 
-      ctx.fillText(`${chord.symbol || chord.root.slice(0, -1) + chord.type} (${chord.degree})`,
-                  chordStartX + (chordWidth / 2), HEADER_HEIGHT + 14);
+      ctx.fillText(
+        `${chord.symbol || chord.root.slice(0, -1) + chord.type} (${chord.degree})`,
+        chordStartX + chordWidth / 2,
+        HEADER_HEIGHT + 14
+      );
 
       // Reset shadow
       ctx.shadowColor = 'transparent';
@@ -658,7 +693,7 @@ function Visualisation({ data, type }) {
       // Draw each note in the chord
       chord.notes.forEach((note, noteIndex) => {
         const midiNumber = noteNameToMidiNumber(note);
-        const y = height - ((midiNumber - lowestNote) * keyHeight) - keyHeight;
+        const y = height - (midiNumber - lowestNote) * keyHeight - keyHeight;
 
         // Draw note rectangle with a gradient
         const noteColor = `rgba(${hexToRgb(secondaryColor)}, 0.7)`;
@@ -682,7 +717,7 @@ function Visualisation({ data, type }) {
           ctx.fillStyle = '#ffffff';
           ctx.font = 'bold 10px Arial';
           ctx.textAlign = 'center';
-          ctx.fillText(note, chordStartX + (chordWidth / 2), y + (keyHeight / 2) + 3);
+          ctx.fillText(note, chordStartX + chordWidth / 2, y + keyHeight / 2 + 3);
         }
 
         // Store note data for hover interaction
@@ -694,7 +729,7 @@ function Visualisation({ data, type }) {
           height: keyHeight - 2,
           note: note,
           chordIndex: chordIndex,
-          noteIndex: noteIndex
+          noteIndex: noteIndex,
         });
       });
     });
@@ -702,9 +737,9 @@ function Visualisation({ data, type }) {
     // Draw melody notes
     melodyNotes.forEach((note, index) => {
       const midiNumber = noteNameToMidiNumber(note.pitch);
-      const x = PIANO_KEY_WIDTH + (note.startTime * timeScale);
+      const x = PIANO_KEY_WIDTH + note.startTime * timeScale;
       const noteWidth = Math.max(note.duration * timeScale, 5); // Minimum width for visibility
-      const y = height - ((midiNumber - lowestNote) * keyHeight) - keyHeight;
+      const y = height - (midiNumber - lowestNote) * keyHeight - keyHeight;
 
       // Draw note rectangle with base color
       const noteColor = `rgba(${hexToRgb(primaryColor)}, ${note.velocity})`;
@@ -728,21 +763,25 @@ function Visualisation({ data, type }) {
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 10px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(note.pitch, x + (noteWidth / 2), y + (keyHeight / 2) + 3);
+        ctx.fillText(note.pitch, x + noteWidth / 2, y + keyHeight / 2 + 3);
       }
 
       // Store note data for hover interaction
       note.visualData = {
-        x, y, width: noteWidth, height: keyHeight, index
+        x,
+        y,
+        width: noteWidth,
+        height: keyHeight,
+        index,
       };
     });
 
     // Draw bass notes
     bassNotes.forEach((note, index) => {
       const midiNumber = noteNameToMidiNumber(note.pitch);
-      const x = PIANO_KEY_WIDTH + (note.startTime * timeScale);
+      const x = PIANO_KEY_WIDTH + note.startTime * timeScale;
       const noteWidth = Math.max(note.duration * timeScale, 5); // Minimum width for visibility
-      const y = height - ((midiNumber - lowestNote) * keyHeight) - keyHeight;
+      const y = height - (midiNumber - lowestNote) * keyHeight - keyHeight;
 
       // Draw note rectangle with base color
       const noteColor = `rgba(${hexToRgb(accentColor)}, ${note.velocity})`;
@@ -766,17 +805,26 @@ function Visualisation({ data, type }) {
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 10px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(note.pitch, x + (noteWidth / 2), y + (keyHeight / 2) + 3);
+        ctx.fillText(note.pitch, x + noteWidth / 2, y + keyHeight / 2 + 3);
       }
 
       // Store note data for hover interaction
       note.visualData = {
-        x, y, width: noteWidth, height: keyHeight, index
+        x,
+        y,
+        width: noteWidth,
+        height: keyHeight,
+        index,
       };
     });
 
     // Draw info overlay
-    const infoGradient = ctx.createLinearGradient(PIANO_KEY_WIDTH + 10, height - 30, PIANO_KEY_WIDTH + 10, height - 5);
+    const infoGradient = ctx.createLinearGradient(
+      PIANO_KEY_WIDTH + 10,
+      height - 30,
+      PIANO_KEY_WIDTH + 10,
+      height - 5
+    );
     infoGradient.addColorStop(0, `rgba(${hexToRgb(theme.colors.gray[900])}, 0.9)`);
     infoGradient.addColorStop(1, `rgba(${hexToRgb(theme.colors.gray[800])}, 0.9)`);
     ctx.fillStyle = infoGradient;
@@ -791,7 +839,11 @@ function Visualisation({ data, type }) {
     ctx.fillStyle = textColor;
     ctx.font = '12px Arial';
     ctx.textAlign = 'left';
-    ctx.fillText(`Key: ${composition.key} | Tempo: ${composition.tempo} BPM | Melody: ${melodyNotes.length} notes | Chords: ${chords.length} | Bass: ${bassNotes.length} notes`, PIANO_KEY_WIDTH + 20, height - 15);
+    ctx.fillText(
+      `Key: ${composition.key} | Tempo: ${composition.tempo} BPM | Melody: ${melodyNotes.length} notes | Chords: ${chords.length} | Bass: ${bassNotes.length} notes`,
+      PIANO_KEY_WIDTH + 20,
+      height - 15
+    );
   };
 
   // Draw a chord progression visualization as a DAW piano roll
@@ -830,7 +882,8 @@ function Visualisation({ data, type }) {
     const headerColor = theme.colors.gray[800];
     const textColor = theme.colors.gray[100];
     const primaryColor = theme.colors.primary[500];
-    const secondaryColor = theme.colors.secondary[500];
+    // Secondary color is defined for potential future use
+    // const secondaryColor = theme.colors.secondary[500];
 
     // Draw background
     ctx.fillStyle = bgColor;
@@ -850,10 +903,10 @@ function Visualisation({ data, type }) {
     const totalBars = Math.ceil(totalDuration / beatsPerBar);
 
     for (let i = 0; i <= totalBars; i++) {
-      const x = PIANO_KEY_WIDTH + (i * barWidth);
+      const x = PIANO_KEY_WIDTH + i * barWidth;
 
       // Draw bar number
-      ctx.fillText(`${i+1}`, x, HEADER_HEIGHT - 10);
+      ctx.fillText(`${i + 1}`, x, HEADER_HEIGHT - 10);
 
       // Draw bar line
       ctx.strokeStyle = i % 4 === 0 ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.15)';
@@ -866,7 +919,7 @@ function Visualisation({ data, type }) {
       // Draw beat lines within each bar
       if (i < totalBars) {
         for (let beat = 1; beat < beatsPerBar; beat++) {
-          const beatX = x + (beat * timeScale);
+          const beatX = x + beat * timeScale;
           ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
           ctx.lineWidth = 1;
           ctx.beginPath();
@@ -878,13 +931,14 @@ function Visualisation({ data, type }) {
     }
 
     // Draw piano keys
-    const allNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    // Note names are not currently used but kept for reference
+    // const allNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
     for (let i = lowestNote; i <= highestNote; i++) {
       const note = i % 12;
       const octave = Math.floor(i / 12) - 1;
       const isBlackKey = [1, 3, 6, 8, 10].includes(note);
-      const y = height - ((i - lowestNote) * keyHeight) - keyHeight;
+      const y = height - (i - lowestNote) * keyHeight - keyHeight;
 
       // Draw key background
       if (isBlackKey) {
@@ -922,7 +976,7 @@ function Visualisation({ data, type }) {
 
     chords.forEach((chord, chordIndex) => {
       const chordDuration = chord.duration * 4; // Convert from bars to beats
-      const chordStartX = PIANO_KEY_WIDTH + (currentBeat * timeScale);
+      const chordStartX = PIANO_KEY_WIDTH + currentBeat * timeScale;
       const chordWidth = chordDuration * timeScale;
 
       // Draw chord label at the top
@@ -931,7 +985,12 @@ function Visualisation({ data, type }) {
       ctx.fillRect(chordStartX, HEADER_HEIGHT, chordWidth, 20);
 
       // Add a subtle gradient to the chord label
-      const gradient = ctx.createLinearGradient(chordStartX, HEADER_HEIGHT, chordStartX, HEADER_HEIGHT + 20);
+      const gradient = ctx.createLinearGradient(
+        chordStartX,
+        HEADER_HEIGHT,
+        chordStartX,
+        HEADER_HEIGHT + 20
+      );
       gradient.addColorStop(0, `rgba(${hexToRgb(primaryColor)}, 0.3)`);
       gradient.addColorStop(1, `rgba(${hexToRgb(primaryColor)}, 0.1)`);
       ctx.fillStyle = gradient;
@@ -948,8 +1007,11 @@ function Visualisation({ data, type }) {
       ctx.shadowOffsetX = 1;
       ctx.shadowOffsetY = 1;
 
-      ctx.fillText(`${chord.symbol || chord.root.slice(0, -1) + chord.type} (${chord.degree})`,
-                  chordStartX + (chordWidth / 2), HEADER_HEIGHT + 14);
+      ctx.fillText(
+        `${chord.symbol || chord.root.slice(0, -1) + chord.type} (${chord.degree})`,
+        chordStartX + chordWidth / 2,
+        HEADER_HEIGHT + 14
+      );
 
       // Reset shadow
       ctx.shadowColor = 'transparent';
@@ -968,10 +1030,10 @@ function Visualisation({ data, type }) {
       // Draw each note in the chord
       chord.notes.forEach((note, noteIndex) => {
         const midiNumber = noteNameToMidiNumber(note);
-        const y = height - ((midiNumber - lowestNote) * keyHeight) - keyHeight;
+        const y = height - (midiNumber - lowestNote) * keyHeight - keyHeight;
 
         // Draw note rectangle with a gradient
-        const noteColor = getColorForChord(chord.type, 0.8 + (noteIndex * 0.05));
+        const noteColor = getColorForChord(chord.type, 0.8 + noteIndex * 0.05);
         ctx.fillStyle = noteColor;
         ctx.fillRect(chordStartX + 2, y + 1, chordWidth - 4, keyHeight - 2);
 
@@ -1010,7 +1072,7 @@ function Visualisation({ data, type }) {
           ctx.fillStyle = textColor;
           ctx.font = 'bold 10px Arial';
           ctx.textAlign = 'center';
-          ctx.fillText(note, chordStartX + (chordWidth / 2), y + (keyHeight / 2) + 3);
+          ctx.fillText(note, chordStartX + chordWidth / 2, y + keyHeight / 2 + 3);
 
           // Reset shadow
           ctx.shadowColor = 'transparent';
@@ -1028,7 +1090,7 @@ function Visualisation({ data, type }) {
           height: keyHeight - 2,
           note: note,
           chordIndex: chordIndex,
-          noteIndex: noteIndex
+          noteIndex: noteIndex,
         });
       });
 
@@ -1036,7 +1098,12 @@ function Visualisation({ data, type }) {
     });
 
     // Draw info overlay
-    const infoGradient = ctx.createLinearGradient(PIANO_KEY_WIDTH + 10, height - 30, PIANO_KEY_WIDTH + 10, height - 5);
+    const infoGradient = ctx.createLinearGradient(
+      PIANO_KEY_WIDTH + 10,
+      height - 30,
+      PIANO_KEY_WIDTH + 10,
+      height - 5
+    );
     infoGradient.addColorStop(0, `rgba(${hexToRgb(theme.colors.gray[900])}, 0.9)`);
     infoGradient.addColorStop(1, `rgba(${hexToRgb(theme.colors.gray[800])}, 0.9)`);
     ctx.fillStyle = infoGradient;
@@ -1051,11 +1118,15 @@ function Visualisation({ data, type }) {
     ctx.fillStyle = textColor;
     ctx.font = '12px Arial';
     ctx.textAlign = 'left';
-    ctx.fillText(`Key: ${progression.key} | Chords: ${chords.length} | Duration: ${totalBars} bars`, PIANO_KEY_WIDTH + 20, height - 15);
+    ctx.fillText(
+      `Key: ${progression.key} | Chords: ${chords.length} | Duration: ${totalBars} bars`,
+      PIANO_KEY_WIDTH + 20,
+      height - 15
+    );
   };
 
   // Helper function to convert note name to MIDI number
-  const noteNameToMidiNumber = (noteName) => {
+  const noteNameToMidiNumber = noteName => {
     const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const note = noteName.slice(0, -1);
     const octave = parseInt(noteName.slice(-1));
@@ -1073,12 +1144,12 @@ function Visualisation({ data, type }) {
     const accentColor = theme.colors.accent;
 
     // Extract RGB components from hex colors
-    const extractRGB = (hexColor) => {
+    const extractRGB = hexColor => {
       const hex = hexColor.replace('#', '');
       return {
         r: parseInt(hex.substring(0, 2), 16),
         g: parseInt(hex.substring(2, 4), 16),
-        b: parseInt(hex.substring(4, 6), 16)
+        b: parseInt(hex.substring(4, 6), 16),
       };
     };
 
@@ -1109,25 +1180,25 @@ function Visualisation({ data, type }) {
   const getColorForChord = (chordType, alpha = 0.7) => {
     // Use theme colors for different chord types
     const colors = {
-      'maj': `rgba(${hexToRgb(theme.colors.primary[400])}, ${alpha})`,
-      'min': `rgba(${hexToRgb(theme.colors.secondary[400])}, ${alpha})`,
-      '7': `rgba(${hexToRgb(theme.colors.accent[400])}, ${alpha})`,
-      'maj7': `rgba(${hexToRgb(theme.colors.primary[600])}, ${alpha})`,
-      'min7': `rgba(${hexToRgb(theme.colors.secondary[600])}, ${alpha})`,
-      'dim': `rgba(${hexToRgb(theme.colors.error ? theme.colors.error[500] : '#ef4444')}, ${alpha})`,
-      'aug': `rgba(${hexToRgb(theme.colors.accent[600])}, ${alpha})`,
-      'sus4': `rgba(${hexToRgb(theme.colors.primary[300])}, ${alpha})`,
-      'sus2': `rgba(${hexToRgb(theme.colors.secondary[300])}, ${alpha})`,
-      '9': `rgba(${hexToRgb(theme.colors.accent[300])}, ${alpha})`,
-      '11': `rgba(${hexToRgb(theme.colors.primary[500])}, ${alpha})`,
-      '13': `rgba(${hexToRgb(theme.colors.secondary[500])}, ${alpha})`,
+      maj: `rgba(${hexToRgb(theme.colors.primary[400])}, ${alpha})`,
+      min: `rgba(${hexToRgb(theme.colors.secondary[400])}, ${alpha})`,
+      7: `rgba(${hexToRgb(theme.colors.accent[400])}, ${alpha})`,
+      maj7: `rgba(${hexToRgb(theme.colors.primary[600])}, ${alpha})`,
+      min7: `rgba(${hexToRgb(theme.colors.secondary[600])}, ${alpha})`,
+      dim: `rgba(${hexToRgb(theme.colors.error ? theme.colors.error[500] : '#ef4444')}, ${alpha})`,
+      aug: `rgba(${hexToRgb(theme.colors.accent[600])}, ${alpha})`,
+      sus4: `rgba(${hexToRgb(theme.colors.primary[300])}, ${alpha})`,
+      sus2: `rgba(${hexToRgb(theme.colors.secondary[300])}, ${alpha})`,
+      9: `rgba(${hexToRgb(theme.colors.accent[300])}, ${alpha})`,
+      11: `rgba(${hexToRgb(theme.colors.primary[500])}, ${alpha})`,
+      13: `rgba(${hexToRgb(theme.colors.secondary[500])}, ${alpha})`,
     };
 
     return colors[chordType] || `rgba(${hexToRgb(theme.colors.gray[400])}, ${alpha})`;
   };
 
   // Helper function to convert hex to rgb
-  const hexToRgb = (hex) => {
+  const hexToRgb = hex => {
     // Remove # if present
     hex = hex.replace('#', '');
 
@@ -1139,9 +1210,10 @@ function Visualisation({ data, type }) {
     return `${r}, ${g}, ${b}`;
   };
 
-  // Use a darker canvas background for dark mode
-  const canvasBgColor = useColorModeValue('#f0f0f0', '#1A202C');
-  const canvasBorderColor = useColorModeValue('#ddd', '#4A5568');
+  // These color values are not currently used as we're using theme colors directly
+  // Keeping them for reference in case we need to revert
+  // const canvasBgColor = useColorModeValue('#f0f0f0', '#1A202C');
+  // const canvasBorderColor = useColorModeValue('#ddd', '#4A5568');
 
   // Render tooltip content based on hovered note
   const renderTooltipContent = () => {
@@ -1174,7 +1246,9 @@ function Visualisation({ data, type }) {
         <VStack align="start" spacing={1} p={2}>
           <HStack>
             <Badge colorScheme="blue">Chord:</Badge>
-            <Text>{chord.symbol || `${chord.root.slice(0, -1)}${chord.type}`} ({chord.degree})</Text>
+            <Text>
+              {chord.symbol || `${chord.root.slice(0, -1)}${chord.type}`} ({chord.degree})
+            </Text>
           </HStack>
           <HStack>
             <Badge colorScheme="green">Note:</Badge>
@@ -1233,7 +1307,9 @@ function Visualisation({ data, type }) {
             </HStack>
             <HStack>
               <Badge colorScheme="blue">Chord:</Badge>
-              <Text>{chord.symbol || `${chord.root.slice(0, -1)}${chord.type}`} ({chord.degree})</Text>
+              <Text>
+                {chord.symbol || `${chord.root.slice(0, -1)}${chord.type}`} ({chord.degree})
+              </Text>
             </HStack>
             <HStack>
               <Badge colorScheme="green">Note:</Badge>
@@ -1293,10 +1369,19 @@ function Visualisation({ data, type }) {
   };
 
   return (
-    <Card p={6} variant="elevated" bg="rgba(30, 41, 59, 0.5)" backdropFilter="blur(12px)" border="1px solid rgba(255, 255, 255, 0.1)" boxShadow="0 8px 32px 0 rgba(0, 0, 0, 0.37)">
+    <Card
+      p={6}
+      variant="elevated"
+      bg="rgba(30, 41, 59, 0.5)"
+      backdropFilter="blur(12px)"
+      border="1px solid rgba(255, 255, 255, 0.1)"
+      boxShadow="0 8px 32px 0 rgba(0, 0, 0, 0.37)"
+    >
       <CardHeader pb={4}>
         <HStack justifyContent="space-between" alignItems="center">
-          <Heading size="lg" color="primary.400">Piano Roll Visualization</Heading>
+          <Heading size="lg" color="primary.400">
+            Piano Roll Visualization
+          </Heading>
           <HStack spacing={2} position="relative" zIndex={2}>
             <InstrumentSelector
               type={type}
@@ -1323,7 +1408,7 @@ function Visualisation({ data, type }) {
           overflow="hidden"
           boxShadow="lg"
           transition="box-shadow 0.3s ease"
-          _hover={{ boxShadow: "xl" }}
+          _hover={{ boxShadow: 'xl' }}
           bg="rgba(15, 23, 42, 0.3)"
           p={2}
           border="1px solid"
@@ -1343,7 +1428,7 @@ function Visualisation({ data, type }) {
             style={{
               aspectRatio: '2/1',
               maxWidth: '100%',
-              objectFit: 'contain'
+              objectFit: 'contain',
             }}
           />
 

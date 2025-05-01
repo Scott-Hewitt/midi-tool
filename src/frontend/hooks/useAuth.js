@@ -1,6 +1,6 @@
 /**
  * Authentication Hook
- * 
+ *
  * Custom hook for authentication state and methods.
  * Uses the AuthController to handle authentication logic.
  */
@@ -8,12 +8,12 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../../backend/services/firebase';
-import { 
-  registerUser, 
-  loginWithEmail, 
-  loginWithGoogle, 
-  logoutUser, 
-  getUserData 
+import {
+  registerUser,
+  loginWithEmail,
+  loginWithGoogle,
+  logoutUser,
+  getUserData,
 } from '../../backend/controllers/AuthController';
 
 // Create the authentication context
@@ -46,12 +46,8 @@ export function AuthProvider({ children }) {
    * @returns {Promise<Object>} - User data
    */
   async function signup(email, password, displayName) {
-    try {
-      const user = await registerUser(email, password, displayName);
-      return user;
-    } catch (error) {
-      throw error;
-    }
+    // Direct return without unnecessary try/catch
+    return registerUser(email, password, displayName);
   }
 
   /**
@@ -61,12 +57,8 @@ export function AuthProvider({ children }) {
    * @returns {Promise<Object>} - User data
    */
   async function login(email, password) {
-    try {
-      const user = await loginWithEmail(email, password);
-      return user;
-    } catch (error) {
-      throw error;
-    }
+    // Direct return without unnecessary try/catch
+    return loginWithEmail(email, password);
   }
 
   /**
@@ -74,12 +66,8 @@ export function AuthProvider({ children }) {
    * @returns {Promise<Object>} - User data
    */
   async function loginWithGoogleProvider() {
-    try {
-      const user = await loginWithGoogle();
-      return user;
-    } catch (error) {
-      throw error;
-    }
+    // Direct return without unnecessary try/catch
+    return loginWithGoogle();
   }
 
   /**
@@ -87,12 +75,8 @@ export function AuthProvider({ children }) {
    * @returns {Promise<void>}
    */
   async function logout() {
-    try {
-      await logoutUser();
-      setUserProfile(null);
-    } catch (error) {
-      throw error;
-    }
+    await logoutUser();
+    setUserProfile(null);
   }
 
   /**
@@ -108,14 +92,14 @@ export function AuthProvider({ children }) {
       }
       return userData;
     } catch (error) {
-      console.error("Error fetching user profile:", error);
+      console.error('Error fetching user profile:', error);
       return null;
     }
   }
 
   // Listen for auth state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async user => {
       setCurrentUser(user);
       if (user) {
         await fetchUserProfile(user.uid);
@@ -136,12 +120,8 @@ export function AuthProvider({ children }) {
     login,
     loginWithGoogle: loginWithGoogleProvider,
     logout,
-    fetchUserProfile
+    fetchUserProfile,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
 }

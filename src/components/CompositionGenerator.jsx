@@ -41,31 +41,57 @@ import {
   TabList,
   TabPanels,
   Tab,
-  TabPanel
+  TabPanel,
 } from '@chakra-ui/react';
 import { AccordionButton } from '@chakra-ui/react';
 
-// Import utility functions
 import { defaultScales } from '../utils/scales';
-import { rhythmPatterns, contourTypes, generateMotif, applyMotifVariation, generateArpeggios } from '../utils/patterns';
+import {
+  rhythmPatterns,
+  contourTypes,
+  generateMotif,
+  applyMotifVariation,
+  // generateArpeggios is not currently used
+} from '../utils/patterns';
 import { humanizeNotes, applyArticulation, applyDynamics } from '../utils/humanize';
-import { getKeys, getCommonProgressions, generateChordProgression, getChordNotes } from '../utils/tonalUtils';
+import {
+  // getKeys is not currently used
+  getCommonProgressions,
+  generateChordProgression,
+  // getChordNotes is not currently used
+} from '../utils/tonalUtils';
 import { applyVoiceLeading, noteToMidi, midiToNote } from '../utils/chords';
 
-// Import SoundFont utility functions
-import {
-  getAvailableInstruments
-} from '../utils/soundfontUtils';
+// SoundFont utilities are now managed in the Composition Studio
 
 // Use the default scales from the scales utility
 const scales = defaultScales;
 
-// Define keys with their full names for Tonal.js compatibility
 const keyOptions = [
-  'C major', 'C# major', 'D major', 'Eb major', 'E major', 'F major',
-  'F# major', 'G major', 'Ab major', 'A major', 'Bb major', 'B major',
-  'A minor', 'Bb minor', 'B minor', 'C minor', 'C# minor', 'D minor',
-  'Eb minor', 'E minor', 'F minor', 'F# minor', 'G minor', 'G# minor'
+  'C major',
+  'C# major',
+  'D major',
+  'Eb major',
+  'E major',
+  'F major',
+  'F# major',
+  'G major',
+  'Ab major',
+  'A major',
+  'Bb major',
+  'B major',
+  'A minor',
+  'Bb minor',
+  'B minor',
+  'C minor',
+  'C# minor',
+  'D minor',
+  'Eb minor',
+  'E minor',
+  'F minor',
+  'F# minor',
+  'G minor',
+  'G# minor',
 ];
 
 function CompositionGenerator({ onCompositionGenerated }) {
@@ -74,7 +100,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
   const [bars, setBars] = useState(4);
   const [isPlaying, setIsPlaying] = useState(false);
   const [composition, setComposition] = useState(null);
-  const [activePlayingPart, setActivePlayingPart] = useState(null);
+  // activePlayingPart is no longer used as playback is handled by PlaybackContext
+  const [, setActivePlayingPart] = useState(null);
 
   const [useVerseChorus, setUseVerseChorus] = useState(false);
   const [verseProgression, setVerseProgression] = useState('Pop I-V-vi-IV');
@@ -118,8 +145,6 @@ function CompositionGenerator({ onCompositionGenerated }) {
       audioContextRef.current = currentAudioContext;
     }
   }, []);
-
-
 
   const randomizeOptions = () => {
     const rhythmPatternKeys = Object.keys(rhythmPatterns);
@@ -196,7 +221,11 @@ function CompositionGenerator({ onCompositionGenerated }) {
         }
 
         // Generate chords for this section
-        sectionChords = generateChordProgression(selectedKey, sectionProgression, useExtendedChords);
+        sectionChords = generateChordProgression(
+          selectedKey,
+          sectionProgression,
+          useExtendedChords
+        );
 
         // Format the chords and add them to the overall progression
         sectionChords.forEach((chord, index) => {
@@ -205,10 +234,10 @@ function CompositionGenerator({ onCompositionGenerated }) {
             type: chord.type,
             notes: chord.notes,
             duration: chordDuration,
-            position: currentPosition + (index * chordDuration),
+            position: currentPosition + index * chordDuration,
             symbol: chord.symbol,
             degree: chord.degree,
-            section: section.toLowerCase() // Add section information
+            section: section.toLowerCase(), // Add section information
           });
         });
 
@@ -223,7 +252,12 @@ function CompositionGenerator({ onCompositionGenerated }) {
     } else {
       // Standard progression without verse/chorus structure
       // Get the progression pattern from available progressions
-      const progressionPattern = availableProgressions[selectedProgression] || ['I', 'IV', 'V', 'I'];
+      const progressionPattern = availableProgressions[selectedProgression] || [
+        'I',
+        'IV',
+        'V',
+        'I',
+      ];
       const chords = generateChordProgression(selectedKey, progressionPattern, useExtendedChords);
 
       // Format the chords
@@ -234,7 +268,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
         duration: chordDuration,
         position: index * chordDuration,
         symbol: chord.symbol,
-        degree: chord.degree
+        degree: chord.degree,
       }));
 
       // Apply voice leading if enabled
@@ -251,7 +285,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
     if (scale && scale.length > 0) {
       if (useVerseChorus) {
         // Generate melody for each section based on the chord progression
-        let sectionStartTime = 0;
+        // We track section changes to apply different motifs and patterns
         let currentSection = '';
         let sectionMotif = null;
 
@@ -266,8 +300,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
               sectionMotif = generateMotif(scale, 4);
             }
 
-            // Reset section start time
-            sectionStartTime = chord.position * 4; // Convert from bars to beats
+            // New section detected - position is tracked in chord.position
           }
 
           // Determine rhythm pattern and contour based on section
@@ -327,7 +360,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
                 const scaleNoteName = scale[scaleIndex].slice(0, -1);
                 if (!chordNoteNames.includes(scaleNoteName)) {
                   // Find a chord tone to use instead
-                  const randomChordNote = chordNoteNames[Math.floor(Math.random() * chordNoteNames.length)];
+                  const randomChordNote =
+                    chordNoteNames[Math.floor(Math.random() * chordNoteNames.length)];
                   // Find this note in the scale
                   const newIndex = scale.findIndex(note => note.slice(0, -1) === randomChordNote);
                   if (newIndex !== -1) {
@@ -339,16 +373,19 @@ function CompositionGenerator({ onCompositionGenerated }) {
               melodyNotes.push({
                 pitch: scale[adjustedScaleIndex],
                 duration: motifNote.duration * scaleFactor,
-                velocity: 0.7 + (Math.random() * 0.3),
+                velocity: 0.7 + Math.random() * 0.3,
                 startTime: chordTime,
-                section: currentSection
+                section: currentSection,
               });
 
               chordTime += motifNote.duration * scaleFactor;
             });
           } else {
             // Use pattern-based melody generation
-            const patternTotalDuration = sectionRhythmPattern.reduce((sum, duration) => sum + duration, 0);
+            const patternTotalDuration = sectionRhythmPattern.reduce(
+              (sum, duration) => sum + duration,
+              0
+            );
             const repetitions = Math.ceil(chordDurationBeats / patternTotalDuration);
 
             let chordTime = chord.position * 4; // Convert from bars to beats
@@ -358,18 +395,20 @@ function CompositionGenerator({ onCompositionGenerated }) {
             for (let rep = 0; rep < repetitions; rep++) {
               for (let j = 0; j < sectionRhythmPattern.length; j++) {
                 // Check if we've exceeded the chord duration
-                if (chordTime >= (chord.position * 4) + chordDurationBeats) break;
+                if (chordTime >= chord.position * 4 + chordDurationBeats) break;
 
                 // Get duration from pattern
                 const duration = sectionRhythmPattern[j];
 
                 // Use contour to influence note selection
-                const contourPosition = sectionContourFn(patternIndex / (sectionRhythmPattern.length * repetitions));
+                const contourPosition = sectionContourFn(
+                  patternIndex / (sectionRhythmPattern.length * repetitions)
+                );
 
                 // Calculate scale position based on contour and complexity
                 const scalePosition = Math.floor(
                   contourPosition * scale.length +
-                  (Math.random() * complexity / 5 - complexity / 10)
+                    ((Math.random() * complexity) / 5 - complexity / 10)
                 );
 
                 // Clamp to valid scale indices
@@ -385,7 +424,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
                   const scaleNoteName = scale[clampedPosition].slice(0, -1);
                   if (!chordNoteNames.includes(scaleNoteName)) {
                     // Find a chord tone to use instead
-                    const randomChordNote = chordNoteNames[Math.floor(Math.random() * chordNoteNames.length)];
+                    const randomChordNote =
+                      chordNoteNames[Math.floor(Math.random() * chordNoteNames.length)];
                     // Find this note in the scale
                     const newIndex = scale.findIndex(note => note.slice(0, -1) === randomChordNote);
                     if (newIndex !== -1) {
@@ -399,14 +439,14 @@ function CompositionGenerator({ onCompositionGenerated }) {
                 // Velocity (0-127 in MIDI, but normalized to 0-1 for Tone.js)
                 // Make chorus notes slightly louder
                 const velocityBase = currentSection === 'chorus' ? 0.8 : 0.7;
-                const velocity = velocityBase + (Math.random() * 0.3);
+                const velocity = velocityBase + Math.random() * 0.3;
 
                 melodyNotes.push({
                   pitch: note,
                   duration: duration,
                   velocity: velocity,
                   startTime: chordTime,
-                  section: currentSection
+                  section: currentSection,
                 });
 
                 chordTime += duration;
@@ -439,12 +479,9 @@ function CompositionGenerator({ onCompositionGenerated }) {
         }
 
         // Recombine all notes
-        melodyNotes = [
-          ...introNotes,
-          ...verseNotes,
-          ...chorusNotes,
-          ...outroNotes
-        ].sort((a, b) => a.startTime - b.startTime);
+        melodyNotes = [...introNotes, ...verseNotes, ...chorusNotes, ...outroNotes].sort(
+          (a, b) => a.startTime - b.startTime
+        );
       } else {
         // Standard melody generation without verse/chorus structure
         // Get the selected rhythm pattern
@@ -477,8 +514,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
               melodyNotes.push({
                 pitch: scale[scaleIndex],
                 duration: motifNote.duration,
-                velocity: 0.7 + (Math.random() * 0.3),
-                startTime: currentTime
+                velocity: 0.7 + Math.random() * 0.3,
+                startTime: currentTime,
               });
               currentTime += motifNote.duration;
             });
@@ -493,12 +530,14 @@ function CompositionGenerator({ onCompositionGenerated }) {
               const duration = selectedPattern[j];
 
               // Use contour to influence note selection
-              const contourPosition = contourFn(patternIndex / (totalPatterns * selectedPattern.length));
+              const contourPosition = contourFn(
+                patternIndex / (totalPatterns * selectedPattern.length)
+              );
 
               // Calculate scale position based on contour and complexity
               const scalePosition = Math.floor(
                 contourPosition * scale.length +
-                (Math.random() * complexity / 5 - complexity / 10)
+                  ((Math.random() * complexity) / 5 - complexity / 10)
               );
 
               // Clamp to valid scale indices
@@ -506,13 +545,13 @@ function CompositionGenerator({ onCompositionGenerated }) {
               const note = scale[clampedPosition];
 
               // Velocity (0-127 in MIDI, but normalized to 0-1 for Tone.js)
-              const velocity = 0.7 + (Math.random() * 0.3); // Between 0.7 and 1.0
+              const velocity = 0.7 + Math.random() * 0.3; // Between 0.7 and 1.0
 
               melodyNotes.push({
                 pitch: note,
                 duration: duration,
                 velocity: velocity,
-                startTime: currentTime
+                startTime: currentTime,
               });
 
               currentTime += duration;
@@ -541,7 +580,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
         melodyNotes = humanizeNotes(melodyNotes, {
           timingVariation: 0.02,
           velocityVariation: 0.1,
-          durationVariation: 0.05
+          durationVariation: 0.05,
         });
       }
     } else {
@@ -554,7 +593,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
           pitch: defaultScale[randomIndex],
           duration: 1, // Quarter note
           velocity: 0.8,
-          startTime: currentTime
+          startTime: currentTime,
         });
         currentTime += 1;
       }
@@ -566,34 +605,38 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
     // Define bass patterns
     const bassPatterns = {
-      'basic': (chord, duration) => {
+      basic: (chord, duration) => {
         // Just the root note for the whole chord duration
         // Ensure the root note is valid
         if (!chord.root) {
           console.warn('No root note found for chord:', chord);
           // Default to C if no root is available
-          return [{
-            pitch: `C${bassOctave}`,
-            duration: duration * 4,
-            velocity: 0.9,
-            startTime: 0,
-            section: chord.section
-          }];
+          return [
+            {
+              pitch: `C${bassOctave}`,
+              duration: duration * 4,
+              velocity: 0.9,
+              startTime: 0,
+              section: chord.section,
+            },
+          ];
         }
 
         // Extract just the note name without any octave information
         // This is important because chord.root might already include an octave
         const rootNoteName = chord.root.replace(/\d+$/, '');
 
-        return [{
-          pitch: `${rootNoteName}${bassOctave}`,
-          duration: duration * 4,
-          velocity: 0.9,
-          startTime: 0,
-          section: chord.section
-        }];
+        return [
+          {
+            pitch: `${rootNoteName}${bassOctave}`,
+            duration: duration * 4,
+            velocity: 0.9,
+            startTime: 0,
+            section: chord.section,
+          },
+        ];
       },
-      'walking': (chord, duration) => {
+      walking: (chord, duration) => {
         // Walking bass - root, fifth, octave, fifth
         const notes = [];
 
@@ -620,7 +663,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
           duration: 1,
           velocity: 0.9,
           startTime: 0,
-          section: chord.section
+          section: chord.section,
         });
 
         // Use midiToNote to get the fifth note (7 semitones up)
@@ -630,17 +673,19 @@ function CompositionGenerator({ onCompositionGenerated }) {
           duration: 1,
           velocity: 0.8,
           startTime: 1,
-          section: chord.section
+          section: chord.section,
         });
 
         // Use midiToNote to get the octave note (12 semitones up)
-        const octaveNote = midiToNote ? midiToNote(rootMidi + 12) : `${rootNoteName}${bassOctave + 1}`;
+        const octaveNote = midiToNote
+          ? midiToNote(rootMidi + 12)
+          : `${rootNoteName}${bassOctave + 1}`;
         notes.push({
           pitch: octaveNote,
           duration: 1,
           velocity: 0.85,
           startTime: 2,
-          section: chord.section
+          section: chord.section,
         });
 
         // Use the fifth note again
@@ -649,12 +694,12 @@ function CompositionGenerator({ onCompositionGenerated }) {
           duration: 1,
           velocity: 0.8,
           startTime: 3,
-          section: chord.section
+          section: chord.section,
         });
 
         return notes;
       },
-      'arpeggio': (chord, duration) => {
+      arpeggio: (chord, duration) => {
         // Arpeggiated bass - use chord notes
         const notes = [];
         const beatsPerChord = duration * 4;
@@ -693,7 +738,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
               duration: 1 / notesPerBeat,
               velocity: 0.85 + (i % 4 === 0 ? 0.1 : 0),
               startTime: i / notesPerBeat,
-              section: chord.section
+              section: chord.section,
             });
           } catch (error) {
             console.error(`Error processing chord note ${chordNote}:`, error);
@@ -708,7 +753,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
         return notes;
       },
-      'octaves': (chord, duration) => {
+      octaves: (chord, duration) => {
         // Alternating octaves - root, octave down, root, octave down
         const notes = [];
 
@@ -726,7 +771,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
           duration: 1,
           velocity: 0.9,
           startTime: 0,
-          section: chord.section
+          section: chord.section,
         });
 
         notes.push({
@@ -734,7 +779,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
           duration: 1,
           velocity: 0.85,
           startTime: 1,
-          section: chord.section
+          section: chord.section,
         });
 
         notes.push({
@@ -742,7 +787,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
           duration: 1,
           velocity: 0.9,
           startTime: 2,
-          section: chord.section
+          section: chord.section,
         });
 
         notes.push({
@@ -750,12 +795,12 @@ function CompositionGenerator({ onCompositionGenerated }) {
           duration: 1,
           velocity: 0.85,
           startTime: 3,
-          section: chord.section
+          section: chord.section,
         });
 
         return notes;
       },
-      'fifths': (chord, duration) => {
+      fifths: (chord, duration) => {
         // Root and fifth pattern
         const notes = [];
 
@@ -782,7 +827,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
           duration: 2,
           velocity: 0.9,
           startTime: 0,
-          section: chord.section
+          section: chord.section,
         });
 
         // Use midiToNote to get the fifth note (7 semitones up)
@@ -792,12 +837,12 @@ function CompositionGenerator({ onCompositionGenerated }) {
           duration: 2,
           velocity: 0.85,
           startTime: 2,
-          section: chord.section
+          section: chord.section,
         });
 
         return notes;
       },
-      'groove': (chord, duration) => {
+      groove: (chord, duration) => {
         // Groove bass - syncopated rhythm with root and fifth
         const notes = [];
 
@@ -824,7 +869,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
           duration: 0.75,
           velocity: 0.95,
           startTime: 0,
-          section: chord.section
+          section: chord.section,
         });
 
         notes.push({
@@ -832,7 +877,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
           duration: 0.25,
           velocity: 0.7,
           startTime: 1,
-          section: chord.section
+          section: chord.section,
         });
 
         // Use midiToNote to get the fifth note (7 semitones up)
@@ -842,7 +887,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
           duration: 0.5,
           velocity: 0.8,
           startTime: 1.5,
-          section: chord.section
+          section: chord.section,
         });
 
         notes.push({
@@ -850,7 +895,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
           duration: 1,
           velocity: 0.9,
           startTime: 2,
-          section: chord.section
+          section: chord.section,
         });
 
         notes.push({
@@ -858,7 +903,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
           duration: 0.5,
           velocity: 0.75,
           startTime: 3,
-          section: chord.section
+          section: chord.section,
         });
 
         notes.push({
@@ -866,11 +911,11 @@ function CompositionGenerator({ onCompositionGenerated }) {
           duration: 0.5,
           velocity: 0.85,
           startTime: 3.5,
-          section: chord.section
+          section: chord.section,
         });
 
         return notes;
-      }
+      },
     };
 
     if (useVerseChorus) {
@@ -906,7 +951,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
             duration: note.duration,
             velocity: note.velocity,
             startTime: currentTime + note.startTime,
-            section: note.section
+            section: note.section,
           });
         });
 
@@ -927,12 +972,9 @@ function CompositionGenerator({ onCompositionGenerated }) {
       outroBass = applyDynamics(outroBass, 'diminuendo');
 
       // Recombine all notes
-      bassNotes = [
-        ...introBass,
-        ...verseBass,
-        ...chorusBass,
-        ...outroBass
-      ].sort((a, b) => a.startTime - b.startTime);
+      bassNotes = [...introBass, ...verseBass, ...chorusBass, ...outroBass].sort(
+        (a, b) => a.startTime - b.startTime
+      );
     } else {
       // Standard bass generation without verse/chorus structure
       // Select the bass pattern to use
@@ -949,7 +991,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
             pitch: note.pitch,
             duration: note.duration,
             velocity: note.velocity,
-            startTime: currentTime + note.startTime
+            startTime: currentTime + note.startTime,
           });
         });
 
@@ -963,7 +1005,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
       bassNotes = humanizeNotes(bassNotes, {
         timingVariation: 0.01,
         velocityVariation: 0.05,
-        durationVariation: 0.02
+        durationVariation: 0.02,
       });
     }
 
@@ -981,7 +1023,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
         useMotif: useMotif,
         motifVariation: motifVariation,
         articulation: melodyArticulation,
-        dynamics: melodyDynamics
+        dynamics: melodyDynamics,
       },
       chord: {
         progression: formattedChords,
@@ -991,16 +1033,16 @@ function CompositionGenerator({ onCompositionGenerated }) {
         inversion: inversion,
         useExtendedChords: useExtendedChords,
         verseProgression: useVerseChorus ? verseProgression : null,
-        chorusProgression: useVerseChorus ? chorusProgression : null
+        chorusProgression: useVerseChorus ? chorusProgression : null,
       },
       bass: {
         notes: bassNotes,
         instrument: 'electric_bass_finger',
         pattern: bassPattern,
         octave: bassOctave,
-        complexity: bassComplexity
+        complexity: bassComplexity,
       },
-      humanize: humanize
+      humanize: humanize,
     };
 
     setComposition(compositionData);
@@ -1014,7 +1056,9 @@ function CompositionGenerator({ onCompositionGenerated }) {
   };
 
   // Play the melody part
-  const playMelody = async () => {
+  // This function is not currently used in the UI as playback has been moved to the PlaybackContext
+  // Keeping it for reference or future use
+  const _playMelodyLegacy = async () => {
     if (!composition || !composition.melody || !composition.melody.notes) {
       return;
     }
@@ -1045,7 +1089,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
   };
 
   // Play melody using Tone.js
-  const playMelodyWithToneJs = async (notes) => {
+  const playMelodyWithToneJs = async notes => {
     try {
       // Initialize Tone.js on user interaction
       const success = await initializeTone();
@@ -1065,8 +1109,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
       const now = Tone.now();
       notes.forEach(note => {
-        const durationSeconds = note.duration * 60 / tempo;
-        const startTime = now + (note.startTime * 60 / tempo);
+        const durationSeconds = (note.duration * 60) / tempo;
+        const startTime = now + (note.startTime * 60) / tempo;
 
         melodySynthRef.current.triggerAttackRelease(
           note.pitch,
@@ -1081,10 +1125,13 @@ function CompositionGenerator({ onCompositionGenerated }) {
         0
       );
 
-      setTimeout(() => {
-        setIsPlaying(false);
-        setActivePlayingPart(null);
-      }, (totalDuration * 60 / tempo * 1000) + 500);
+      setTimeout(
+        () => {
+          setIsPlaying(false);
+          setActivePlayingPart(null);
+        },
+        ((totalDuration * 60) / tempo) * 1000 + 500
+      );
     } catch (error) {
       console.error('Error playing melody with Tone.js:', error);
       setIsPlaying(false);
@@ -1093,7 +1140,9 @@ function CompositionGenerator({ onCompositionGenerated }) {
   };
 
   // Play the chord part
-  const playChords = async () => {
+  // This function is not currently used in the UI as playback has been moved to the PlaybackContext
+  // Keeping it for reference or future use
+  const _playChordsLegacy = async () => {
     if (!composition || !composition.chord || !composition.chord.progression) {
       return;
     }
@@ -1124,7 +1173,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
   };
 
   // Play chords using Tone.js
-  const playChordsWithToneJs = async (chords) => {
+  const playChordsWithToneJs = async chords => {
     try {
       // Initialize Tone.js on user interaction
       const success = await initializeTone();
@@ -1143,16 +1192,19 @@ function CompositionGenerator({ onCompositionGenerated }) {
       Tone.Transport.bpm.value = tempo;
 
       const now = Tone.now();
-      const secondsPerBar = 60 / tempo * 4; // 4 beats per bar
+      const secondsPerBar = (60 / tempo) * 4; // 4 beats per bar
 
-      chords.forEach((chord, index) => {
-        const startTime = now + (chord.position * secondsPerBar);
+      chords.forEach(chord => {
+        const startTime = now + chord.position * secondsPerBar;
         const duration = chord.duration * secondsPerBar;
 
         chordSynthRef.current.triggerAttackRelease(chord.notes, duration, startTime);
       });
 
-      const totalDuration = chords.reduce((sum, chord) => Math.max(sum, chord.position + chord.duration), 0) * secondsPerBar * 1000;
+      const totalDuration =
+        chords.reduce((sum, chord) => Math.max(sum, chord.position + chord.duration), 0) *
+        secondsPerBar *
+        1000;
 
       setTimeout(() => {
         setIsPlaying(false);
@@ -1166,7 +1218,9 @@ function CompositionGenerator({ onCompositionGenerated }) {
   };
 
   // Play the bass part
-  const playBass = async () => {
+  // This function is not currently used in the UI as playback has been moved to the PlaybackContext
+  // Keeping it for reference or future use
+  const _playBassLegacy = async () => {
     if (!composition || !composition.bass || !composition.bass.notes) {
       return;
     }
@@ -1197,7 +1251,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
   };
 
   // Play bass using Tone.js
-  const playBassWithToneJs = async (notes) => {
+  const playBassWithToneJs = async notes => {
     try {
       // Initialize Tone.js on user interaction
       const success = await initializeTone();
@@ -1217,8 +1271,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
       const now = Tone.now();
       notes.forEach(note => {
-        const durationSeconds = note.duration * 60 / tempo;
-        const startTime = now + (note.startTime * 60 / tempo);
+        const durationSeconds = (note.duration * 60) / tempo;
+        const startTime = now + (note.startTime * 60) / tempo;
 
         bassSynthRef.current.triggerAttackRelease(
           note.pitch,
@@ -1233,10 +1287,13 @@ function CompositionGenerator({ onCompositionGenerated }) {
         0
       );
 
-      setTimeout(() => {
-        setIsPlaying(false);
-        setActivePlayingPart(null);
-      }, (totalDuration * 60 / tempo * 1000) + 500);
+      setTimeout(
+        () => {
+          setIsPlaying(false);
+          setActivePlayingPart(null);
+        },
+        ((totalDuration * 60) / tempo) * 1000 + 500
+      );
     } catch (error) {
       console.error('Error playing bass with Tone.js:', error);
       setIsPlaying(false);
@@ -1245,7 +1302,9 @@ function CompositionGenerator({ onCompositionGenerated }) {
   };
 
   // Play the full composition
-  const playComposition = async () => {
+  // This function is not currently used in the UI as playback has been moved to the PlaybackContext
+  // Keeping it for reference or future use
+  const _playCompositionLegacy = async () => {
     if (!composition) {
       return;
     }
@@ -1277,16 +1336,19 @@ function CompositionGenerator({ onCompositionGenerated }) {
         (max, note) => Math.max(max, note.startTime + note.duration),
         0
       );
-      setTimeout(resolve, (totalDuration * 60 / tempo * 1000) + 500);
+      setTimeout(resolve, ((totalDuration * 60) / tempo) * 1000 + 500);
     });
 
     const chordPromise = new Promise(resolve => {
       playChordsWithToneJs(composition.chord.progression);
-      const secondsPerBar = 60 / tempo * 4;
-      const totalDuration = composition.chord.progression.reduce(
-        (sum, chord) => Math.max(sum, chord.position + chord.duration),
-        0
-      ) * secondsPerBar * 1000;
+      const secondsPerBar = (60 / tempo) * 4;
+      const totalDuration =
+        composition.chord.progression.reduce(
+          (sum, chord) => Math.max(sum, chord.position + chord.duration),
+          0
+        ) *
+        secondsPerBar *
+        1000;
       setTimeout(resolve, totalDuration + 500);
     });
 
@@ -1296,7 +1358,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
         (max, note) => Math.max(max, note.startTime + note.duration),
         0
       );
-      setTimeout(resolve, (totalDuration * 60 / tempo * 1000) + 500);
+      setTimeout(resolve, ((totalDuration * 60) / tempo) * 1000 + 500);
     });
 
     // Wait for all parts to finish
@@ -1319,9 +1381,18 @@ function CompositionGenerator({ onCompositionGenerated }) {
   };
 
   return (
-    <Card p={6} variant="elevated" bg="rgba(30, 41, 59, 0.5)" backdropFilter="blur(12px)" border="1px solid rgba(255, 255, 255, 0.1)" boxShadow="0 8px 32px 0 rgba(0, 0, 0, 0.37)">
+    <Card
+      p={6}
+      variant="elevated"
+      bg="rgba(30, 41, 59, 0.5)"
+      backdropFilter="blur(12px)"
+      border="1px solid rgba(255, 255, 255, 0.1)"
+      boxShadow="0 8px 32px 0 rgba(0, 0, 0, 0.37)"
+    >
       <CardHeader pb={4}>
-        <Heading size="lg" color="primary.400">Composition Generator</Heading>
+        <Heading size="lg" color="primary.400">
+          Composition Generator
+        </Heading>
       </CardHeader>
 
       <CardBody>
@@ -1332,13 +1403,15 @@ function CompositionGenerator({ onCompositionGenerated }) {
               <FormLabel>Key</FormLabel>
               <Select
                 value={selectedKey}
-                onChange={(e) => setSelectedKey(e.target.value)}
+                onChange={e => setSelectedKey(e.target.value)}
                 bg="rgba(255, 255, 255, 0.1)"
                 borderColor="rgba(255, 255, 255, 0.15)"
-                _hover={{ borderColor: "primary.400" }}
+                _hover={{ borderColor: 'primary.400' }}
               >
                 {keyOptions.map(key => (
-                  <option key={key} value={key}>{key}</option>
+                  <option key={key} value={key}>
+                    {key}
+                  </option>
                 ))}
               </Select>
             </FormControl>
@@ -1349,7 +1422,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
                 min={60}
                 max={180}
                 value={tempo}
-                onChange={(val) => setTempo(val)}
+                onChange={val => setTempo(val)}
                 focusThumbOnChange={false}
               >
                 <SliderTrack bg="rgba(255, 255, 255, 0.1)">
@@ -1365,7 +1438,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
                 min={1}
                 max={16}
                 value={bars}
-                onChange={(valueString) => setBars(parseInt(valueString))}
+                onChange={valueString => setBars(parseInt(valueString))}
                 bg="rgba(255, 255, 255, 0.1)"
                 borderColor="rgba(255, 255, 255, 0.15)"
               >
@@ -1397,13 +1470,19 @@ function CompositionGenerator({ onCompositionGenerated }) {
                     <Flex align="center">
                       <Checkbox
                         isChecked={autoRandomize}
-                        onChange={(e) => setAutoRandomize(e.target.checked)}
+                        onChange={e => setAutoRandomize(e.target.checked)}
                         colorScheme="primary"
                         mr={2}
                       />
                       <Text>Automatically randomize advanced options when generating</Text>
-                      <Tooltip label="When enabled, advanced options will be randomized each time you generate a new composition" hasArrow placement="top">
-                        <Box as="span" ml={1} color="gray.300" fontSize="sm">ⓘ</Box>
+                      <Tooltip
+                        label="When enabled, advanced options will be randomized each time you generate a new composition"
+                        hasArrow
+                        placement="top"
+                      >
+                        <Box as="span" ml={1} color="gray.300" fontSize="sm">
+                          ⓘ
+                        </Box>
                       </Tooltip>
                     </Flex>
                   </FormControl>
@@ -1413,13 +1492,19 @@ function CompositionGenerator({ onCompositionGenerated }) {
                     <Flex align="center">
                       <Checkbox
                         isChecked={humanize}
-                        onChange={(e) => setHumanize(e.target.checked)}
+                        onChange={e => setHumanize(e.target.checked)}
                         colorScheme="primary"
                         mr={2}
                       />
                       <Text>Apply humanization to all parts</Text>
-                      <Tooltip label="Adds subtle timing and velocity variations to make the music sound more natural" hasArrow placement="top">
-                        <Box as="span" ml={1} color="gray.300" fontSize="sm">ⓘ</Box>
+                      <Tooltip
+                        label="Adds subtle timing and velocity variations to make the music sound more natural"
+                        hasArrow
+                        placement="top"
+                      >
+                        <Box as="span" ml={1} color="gray.300" fontSize="sm">
+                          ⓘ
+                        </Box>
                       </Tooltip>
                     </Flex>
                   </FormControl>
@@ -1427,7 +1512,9 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
                 {/* Melody Tab */}
                 <TabPanel>
-                  <Heading size="sm" mb={3}>Melody Options</Heading>
+                  <Heading size="sm" mb={3}>
+                    Melody Options
+                  </Heading>
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                     <FormControl>
                       <FormLabel>Complexity: {complexity}</FormLabel>
@@ -1435,7 +1522,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
                         min={1}
                         max={10}
                         value={complexity}
-                        onChange={(val) => setComplexity(val)}
+                        onChange={val => setComplexity(val)}
                         focusThumbOnChange={false}
                       >
                         <SliderTrack bg="rgba(255, 255, 255, 0.1)">
@@ -1449,13 +1536,15 @@ function CompositionGenerator({ onCompositionGenerated }) {
                       <FormLabel>Rhythm Pattern</FormLabel>
                       <Select
                         value={rhythmPattern}
-                        onChange={(e) => setRhythmPattern(e.target.value)}
+                        onChange={e => setRhythmPattern(e.target.value)}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
-                        _hover={{ borderColor: "primary.400" }}
+                        _hover={{ borderColor: 'primary.400' }}
                       >
                         {Object.keys(rhythmPatterns).map(pattern => (
-                          <option key={pattern} value={pattern}>{pattern}</option>
+                          <option key={pattern} value={pattern}>
+                            {pattern}
+                          </option>
                         ))}
                       </Select>
                     </FormControl>
@@ -1464,13 +1553,15 @@ function CompositionGenerator({ onCompositionGenerated }) {
                       <FormLabel>Melodic Contour</FormLabel>
                       <Select
                         value={contourType}
-                        onChange={(e) => setContourType(e.target.value)}
+                        onChange={e => setContourType(e.target.value)}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
-                        _hover={{ borderColor: "primary.400" }}
+                        _hover={{ borderColor: 'primary.400' }}
                       >
                         {Object.keys(contourTypes).map(contour => (
-                          <option key={contour} value={contour}>{contour}</option>
+                          <option key={contour} value={contour}>
+                            {contour}
+                          </option>
                         ))}
                       </Select>
                     </FormControl>
@@ -1479,10 +1570,10 @@ function CompositionGenerator({ onCompositionGenerated }) {
                       <FormLabel>Articulation</FormLabel>
                       <Select
                         value={melodyArticulation}
-                        onChange={(e) => setMelodyArticulation(e.target.value)}
+                        onChange={e => setMelodyArticulation(e.target.value)}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
-                        _hover={{ borderColor: "primary.400" }}
+                        _hover={{ borderColor: 'primary.400' }}
                       >
                         <option value="none">None</option>
                         <option value="legato">Legato</option>
@@ -1496,10 +1587,10 @@ function CompositionGenerator({ onCompositionGenerated }) {
                       <FormLabel>Dynamics</FormLabel>
                       <Select
                         value={melodyDynamics}
-                        onChange={(e) => setMelodyDynamics(e.target.value)}
+                        onChange={e => setMelodyDynamics(e.target.value)}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
-                        _hover={{ borderColor: "primary.400" }}
+                        _hover={{ borderColor: 'primary.400' }}
                       >
                         <option value="none">None</option>
                         <option value="crescendo">Crescendo</option>
@@ -1515,11 +1606,17 @@ function CompositionGenerator({ onCompositionGenerated }) {
                         <FormLabel mb={0}>Use Motif</FormLabel>
                         <Checkbox
                           isChecked={useMotif}
-                          onChange={(e) => setUseMotif(e.target.checked)}
+                          onChange={e => setUseMotif(e.target.checked)}
                           colorScheme="primary"
                         />
-                        <Tooltip label="Uses a short musical idea that repeats with variations" hasArrow placement="top">
-                          <Box as="span" ml={1} color="gray.300" fontSize="sm">ⓘ</Box>
+                        <Tooltip
+                          label="Uses a short musical idea that repeats with variations"
+                          hasArrow
+                          placement="top"
+                        >
+                          <Box as="span" ml={1} color="gray.300" fontSize="sm">
+                            ⓘ
+                          </Box>
                         </Tooltip>
                       </Flex>
                     </FormControl>
@@ -1529,10 +1626,10 @@ function CompositionGenerator({ onCompositionGenerated }) {
                         <FormLabel>Motif Variation</FormLabel>
                         <Select
                           value={motifVariation}
-                          onChange={(e) => setMotifVariation(e.target.value)}
+                          onChange={e => setMotifVariation(e.target.value)}
                           bg="rgba(255, 255, 255, 0.1)"
                           borderColor="rgba(255, 255, 255, 0.15)"
-                          _hover={{ borderColor: "primary.400" }}
+                          _hover={{ borderColor: 'primary.400' }}
                         >
                           <option value="transpose">Transpose</option>
                           <option value="invert">Invert</option>
@@ -1547,19 +1644,23 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
                 {/* Chords Tab */}
                 <TabPanel>
-                  <Heading size="sm" mb={3}>Chord Options</Heading>
+                  <Heading size="sm" mb={3}>
+                    Chord Options
+                  </Heading>
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                     <FormControl>
                       <FormLabel>Chord Progression</FormLabel>
                       <Select
                         value={selectedProgression}
-                        onChange={(e) => setSelectedProgression(e.target.value)}
+                        onChange={e => setSelectedProgression(e.target.value)}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
-                        _hover={{ borderColor: "primary.400" }}
+                        _hover={{ borderColor: 'primary.400' }}
                       >
                         {Object.keys(availableProgressions).map(prog => (
-                          <option key={prog} value={prog}>{prog}</option>
+                          <option key={prog} value={prog}>
+                            {prog}
+                          </option>
                         ))}
                       </Select>
                     </FormControl>
@@ -1571,7 +1672,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
                         max={4}
                         step={0.5}
                         value={chordDuration}
-                        onChange={(valueString) => setChordDuration(parseFloat(valueString))}
+                        onChange={valueString => setChordDuration(parseFloat(valueString))}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
                       >
@@ -1588,11 +1689,17 @@ function CompositionGenerator({ onCompositionGenerated }) {
                         <FormLabel mb={0}>Use Voice Leading</FormLabel>
                         <Checkbox
                           isChecked={useVoiceLeading}
-                          onChange={(e) => setUseVoiceLeading(e.target.checked)}
+                          onChange={e => setUseVoiceLeading(e.target.checked)}
                           colorScheme="primary"
                         />
-                        <Tooltip label="Creates smoother transitions between chords" hasArrow placement="top">
-                          <Box as="span" ml={1} color="gray.300" fontSize="sm">ⓘ</Box>
+                        <Tooltip
+                          label="Creates smoother transitions between chords"
+                          hasArrow
+                          placement="top"
+                        >
+                          <Box as="span" ml={1} color="gray.300" fontSize="sm">
+                            ⓘ
+                          </Box>
                         </Tooltip>
                       </Flex>
                     </FormControl>
@@ -1602,11 +1709,17 @@ function CompositionGenerator({ onCompositionGenerated }) {
                         <FormLabel mb={0}>Use Inversions</FormLabel>
                         <Checkbox
                           isChecked={useInversions}
-                          onChange={(e) => setUseInversions(e.target.checked)}
+                          onChange={e => setUseInversions(e.target.checked)}
                           colorScheme="primary"
                         />
-                        <Tooltip label="Changes which note of the chord is in the bass" hasArrow placement="top">
-                          <Box as="span" ml={1} color="gray.300" fontSize="sm">ⓘ</Box>
+                        <Tooltip
+                          label="Changes which note of the chord is in the bass"
+                          hasArrow
+                          placement="top"
+                        >
+                          <Box as="span" ml={1} color="gray.300" fontSize="sm">
+                            ⓘ
+                          </Box>
                         </Tooltip>
                       </Flex>
                     </FormControl>
@@ -1616,10 +1729,10 @@ function CompositionGenerator({ onCompositionGenerated }) {
                         <FormLabel>Inversion</FormLabel>
                         <Select
                           value={inversion}
-                          onChange={(e) => setInversion(parseInt(e.target.value))}
+                          onChange={e => setInversion(parseInt(e.target.value))}
                           bg="rgba(255, 255, 255, 0.1)"
                           borderColor="rgba(255, 255, 255, 0.15)"
-                          _hover={{ borderColor: "primary.400" }}
+                          _hover={{ borderColor: 'primary.400' }}
                         >
                           <option value="0">Root Position</option>
                           <option value="1">First Inversion</option>
@@ -1634,11 +1747,17 @@ function CompositionGenerator({ onCompositionGenerated }) {
                         <FormLabel mb={0}>Use Extended Chords</FormLabel>
                         <Checkbox
                           isChecked={useExtendedChords}
-                          onChange={(e) => setUseExtendedChords(e.target.checked)}
+                          onChange={e => setUseExtendedChords(e.target.checked)}
                           colorScheme="primary"
                         />
-                        <Tooltip label="Adds 7ths, 9ths, and other extensions to chords" hasArrow placement="top">
-                          <Box as="span" ml={1} color="gray.300" fontSize="sm">ⓘ</Box>
+                        <Tooltip
+                          label="Adds 7ths, 9ths, and other extensions to chords"
+                          hasArrow
+                          placement="top"
+                        >
+                          <Box as="span" ml={1} color="gray.300" fontSize="sm">
+                            ⓘ
+                          </Box>
                         </Tooltip>
                       </Flex>
                     </FormControl>
@@ -1648,11 +1767,17 @@ function CompositionGenerator({ onCompositionGenerated }) {
                         <FormLabel mb={0}>Auto-Randomize Options</FormLabel>
                         <Checkbox
                           isChecked={autoRandomize}
-                          onChange={(e) => setAutoRandomize(e.target.checked)}
+                          onChange={e => setAutoRandomize(e.target.checked)}
                           colorScheme="primary"
                         />
-                        <Tooltip label="Automatically applies random advanced options for variety" hasArrow placement="top">
-                          <Box as="span" ml={1} color="gray.300" fontSize="sm">ⓘ</Box>
+                        <Tooltip
+                          label="Automatically applies random advanced options for variety"
+                          hasArrow
+                          placement="top"
+                        >
+                          <Box as="span" ml={1} color="gray.300" fontSize="sm">
+                            ⓘ
+                          </Box>
                         </Tooltip>
                       </Flex>
                     </FormControl>
@@ -1661,16 +1786,18 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
                 {/* Bass Tab */}
                 <TabPanel>
-                  <Heading size="sm" mb={3}>Bass Options</Heading>
+                  <Heading size="sm" mb={3}>
+                    Bass Options
+                  </Heading>
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                     <FormControl>
                       <FormLabel>Bass Pattern</FormLabel>
                       <Select
                         value={bassPattern}
-                        onChange={(e) => setBassPattern(e.target.value)}
+                        onChange={e => setBassPattern(e.target.value)}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
-                        _hover={{ borderColor: "primary.400" }}
+                        _hover={{ borderColor: 'primary.400' }}
                       >
                         <option value="basic">Basic (Root Notes)</option>
                         <option value="walking">Walking Bass</option>
@@ -1687,7 +1814,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
                         min={1}
                         max={4}
                         value={bassOctave}
-                        onChange={(valueString) => setBassOctave(parseInt(valueString))}
+                        onChange={valueString => setBassOctave(parseInt(valueString))}
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
                       >
@@ -1705,7 +1832,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
                         min={1}
                         max={10}
                         value={bassComplexity}
-                        onChange={(val) => setBassComplexity(val)}
+                        onChange={val => setBassComplexity(val)}
                         focusThumbOnChange={false}
                       >
                         <SliderTrack bg="rgba(255, 255, 255, 0.1)">
@@ -1719,18 +1846,26 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
                 {/* Structure Tab */}
                 <TabPanel>
-                  <Heading size="sm" mb={3}>Musical Structure</Heading>
+                  <Heading size="sm" mb={3}>
+                    Musical Structure
+                  </Heading>
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                     <FormControl>
                       <Flex align="center">
                         <FormLabel mb={0}>Use Verse/Chorus Structure</FormLabel>
                         <Checkbox
                           isChecked={useVerseChorus}
-                          onChange={(e) => setUseVerseChorus(e.target.checked)}
+                          onChange={e => setUseVerseChorus(e.target.checked)}
                           colorScheme="primary"
                         />
-                        <Tooltip label="Creates a more complex song structure with verses and choruses" hasArrow placement="top">
-                          <Box as="span" ml={1} color="gray.300" fontSize="sm">ⓘ</Box>
+                        <Tooltip
+                          label="Creates a more complex song structure with verses and choruses"
+                          hasArrow
+                          placement="top"
+                        >
+                          <Box as="span" ml={1} color="gray.300" fontSize="sm">
+                            ⓘ
+                          </Box>
                         </Tooltip>
                       </Flex>
                     </FormControl>
@@ -1741,15 +1876,21 @@ function CompositionGenerator({ onCompositionGenerated }) {
                           <FormLabel>Song Structure</FormLabel>
                           <Select
                             value={structure}
-                            onChange={(e) => setStructure(e.target.value)}
+                            onChange={e => setStructure(e.target.value)}
                             bg="rgba(255, 255, 255, 0.1)"
                             borderColor="rgba(255, 255, 255, 0.15)"
-                            _hover={{ borderColor: "primary.400" }}
+                            _hover={{ borderColor: 'primary.400' }}
                           >
                             <option value="verse-chorus">Verse-Chorus</option>
-                            <option value="verse-chorus-verse-chorus">Verse-Chorus-Verse-Chorus</option>
-                            <option value="intro-verse-chorus-verse-chorus-outro">Intro-Verse-Chorus-Verse-Chorus-Outro</option>
-                            <option value="verse-verse-chorus-verse">Verse-Verse-Chorus-Verse</option>
+                            <option value="verse-chorus-verse-chorus">
+                              Verse-Chorus-Verse-Chorus
+                            </option>
+                            <option value="intro-verse-chorus-verse-chorus-outro">
+                              Intro-Verse-Chorus-Verse-Chorus-Outro
+                            </option>
+                            <option value="verse-verse-chorus-verse">
+                              Verse-Verse-Chorus-Verse
+                            </option>
                             <option value="chorus-verse-chorus">Chorus-Verse-Chorus</option>
                           </Select>
                         </FormControl>
@@ -1758,13 +1899,15 @@ function CompositionGenerator({ onCompositionGenerated }) {
                           <FormLabel>Verse Progression</FormLabel>
                           <Select
                             value={verseProgression}
-                            onChange={(e) => setVerseProgression(e.target.value)}
+                            onChange={e => setVerseProgression(e.target.value)}
                             bg="rgba(255, 255, 255, 0.1)"
                             borderColor="rgba(255, 255, 255, 0.15)"
-                            _hover={{ borderColor: "primary.400" }}
+                            _hover={{ borderColor: 'primary.400' }}
                           >
                             {Object.keys(availableProgressions).map(prog => (
-                              <option key={prog} value={prog}>{prog}</option>
+                              <option key={prog} value={prog}>
+                                {prog}
+                              </option>
                             ))}
                           </Select>
                         </FormControl>
@@ -1773,22 +1916,30 @@ function CompositionGenerator({ onCompositionGenerated }) {
                           <FormLabel>Chorus Progression</FormLabel>
                           <Select
                             value={chorusProgression}
-                            onChange={(e) => setChorusProgression(e.target.value)}
+                            onChange={e => setChorusProgression(e.target.value)}
                             bg="rgba(255, 255, 255, 0.1)"
                             borderColor="rgba(255, 255, 255, 0.15)"
-                            _hover={{ borderColor: "primary.400" }}
+                            _hover={{ borderColor: 'primary.400' }}
                           >
                             {Object.keys(availableProgressions).map(prog => (
-                              <option key={prog} value={prog}>{prog}</option>
+                              <option key={prog} value={prog}>
+                                {prog}
+                              </option>
                             ))}
                           </Select>
                         </FormControl>
 
-                        <Box gridColumn="span 2" p={4} bg="rgba(255, 255, 255, 0.05)" borderRadius="md">
+                        <Box
+                          gridColumn="span 2"
+                          p={4}
+                          bg="rgba(255, 255, 255, 0.05)"
+                          borderRadius="md"
+                        >
                           <Text fontSize="sm" color="gray.300">
-                            Using verse/chorus structure will create a more complex composition with different
-                            chord progressions for verses and choruses. The melody and bass will adapt to these
-                            changes, creating a more interesting and dynamic piece of music.
+                            Using verse/chorus structure will create a more complex composition with
+                            different chord progressions for verses and choruses. The melody and
+                            bass will adapt to these changes, creating a more interesting and
+                            dynamic piece of music.
                           </Text>
                         </Box>
                       </>
@@ -1808,14 +1959,15 @@ function CompositionGenerator({ onCompositionGenerated }) {
               }}
               colorScheme="primary"
               size="lg"
-              leftIcon={<Box as="span" className="icon">🎼</Box>}
+              leftIcon={
+                <Box as="span" className="icon">
+                  🎼
+                </Box>
+              }
             >
               Generate Composition
             </Button>
-
           </HStack>
-
-
 
           {/* Composition Info */}
           {composition && (
@@ -1828,14 +1980,46 @@ function CompositionGenerator({ onCompositionGenerated }) {
               borderColor="primary.500"
               boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
             >
-              <Heading size="md" mb={4} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Generated Composition</Heading>
+              <Heading size="md" mb={4} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                Generated Composition
+              </Heading>
               <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={3}>
-                <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Key:</Badge> {composition.key}</Text>
-                <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Tempo:</Badge> {composition.tempo} BPM</Text>
-                <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Length:</Badge> {composition.bars} bars</Text>
-                <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Melody Notes:</Badge> {composition.melody.notes.length}</Text>
-                <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Chords:</Badge> {composition.chord.progression.length}</Text>
-                <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Bass Notes:</Badge> {composition.bass.notes.length}</Text>
+                <Text fontWeight="medium">
+                  <Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                    Key:
+                  </Badge>{' '}
+                  {composition.key}
+                </Text>
+                <Text fontWeight="medium">
+                  <Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                    Tempo:
+                  </Badge>{' '}
+                  {composition.tempo} BPM
+                </Text>
+                <Text fontWeight="medium">
+                  <Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                    Length:
+                  </Badge>{' '}
+                  {composition.bars} bars
+                </Text>
+                <Text fontWeight="medium">
+                  <Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                    Melody Notes:
+                  </Badge>{' '}
+                  {composition.melody.notes.length}
+                </Text>
+                <Text fontWeight="medium">
+                  <Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                    Chords:
+                  </Badge>{' '}
+                  {composition.chord.progression.length}
+                </Text>
+                <Text fontWeight="medium">
+                  <Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+                    Bass Notes:
+                  </Badge>{' '}
+                  {composition.bass.notes.length}
+                </Text>
               </SimpleGrid>
             </Box>
           )}

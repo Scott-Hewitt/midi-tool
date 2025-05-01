@@ -1,18 +1,19 @@
 /**
  * MIDI Export Utilities
- * 
+ *
  * Provides functions for exporting MIDI files and saving them to Firebase.
  * Uses the MidiFileController to handle storage operations.
  */
 
-import { exportAndDownloadMIDI as jzzExportAndDownloadMIDI } from '../jzzMidi';
+import { exportAndDownloadMIDI as jzzExportAndDownloadMIDI } from '../jzzMidi.js';
+import { exportAndDownloadMIDI as simpleMidiExportAndDownloadMIDI } from '../simpleMidi';
 import { generateAndSaveMidiFile } from '../../controllers/MidiFileController';
 
 /**
  * Export MIDI file and download it
  * This function delegates to the jzzMidi implementation which handles both
  * generating the MIDI data and triggering the download.
- * 
+ *
  * @param {Object} melodyData - Melody data
  * @param {Object} chordData - Chord progression data
  * @param {string} fileName - File name
@@ -27,10 +28,20 @@ export const exportAndDownloadMIDI = async (melodyData, chordData, fileName, opt
       return false;
     }
 
-    // Generate MIDI data and download it
-    const success = await jzzExportAndDownloadMIDI(melodyData, chordData, fileName, options);
+    // Try to generate MIDI data and download it using JZZ
+    try {
+      const success = await jzzExportAndDownloadMIDI(melodyData, chordData, fileName, options);
+      if (success) {
+        return true;
+      }
 
-    return success;
+      // If JZZ fails, fall back to simpleMidi
+      console.warn('JZZ MIDI export failed, falling back to simpleMidi');
+      return await simpleMidiExportAndDownloadMIDI(melodyData, chordData, fileName, options);
+    } catch (error) {
+      console.error('Error in JZZ MIDI export, falling back to simpleMidi:', error);
+      return await simpleMidiExportAndDownloadMIDI(melodyData, chordData, fileName, options);
+    }
   } catch (error) {
     console.error('Error exporting MIDI:', error);
     return false;
@@ -48,11 +59,11 @@ export const exportAndDownloadMIDI = async (melodyData, chordData, fileName, opt
  * @returns {Promise<string|null>} - The ID of the saved file or null if failed
  */
 export const exportAndSaveMIDI = async (
-  melodyData, 
-  chordData, 
-  fileName, 
-  options = {}, 
-  userId, 
+  melodyData,
+  chordData,
+  fileName,
+  options = {},
+  userId,
   isPublic = false
 ) => {
   try {
@@ -70,11 +81,11 @@ export const exportAndSaveMIDI = async (
 
     // Generate and save MIDI file
     const fileId = await generateAndSaveMidiFile(
-      melodyData, 
-      chordData, 
-      fileName, 
-      options, 
-      userId, 
+      melodyData,
+      chordData,
+      fileName,
+      options,
+      userId,
       isPublic
     );
 

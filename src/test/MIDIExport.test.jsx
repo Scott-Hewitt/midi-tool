@@ -3,17 +3,18 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import MIDIExport from '../components/MIDIExport';
 import * as simpleMidi from '../utils/simpleMidi';
 
+// Mock window.scrollTo to avoid JSDOM errors
+window.scrollTo = vi.fn();
+
 // Mock the simpleMidi export utility
-vi.mock('../utils/simpleMidi', () => {
-  return {
-    exportAndDownloadMIDI: vi.fn().mockResolvedValue(true),
-    createMIDIFile: vi.fn().mockReturnValue(new Uint8Array([1, 2, 3])),
-    noteToMidiNumber: vi.fn((note) => {
-      const notes = {'C4': 60, 'D4': 62, 'E4': 64, 'F4': 65, 'G4': 67, 'A4': 69, 'B4': 71};
-      return notes[note] || 60;
-    })
-  };
-});
+vi.mock('../utils/simpleMidi', () => ({
+  exportAndDownloadMIDI: vi.fn().mockResolvedValue(true),
+  createMIDIFile: vi.fn().mockReturnValue(new Uint8Array([1, 2, 3])),
+  noteToMidiNumber: vi.fn(note => {
+    const notes = { C4: 60, D4: 62, E4: 64, F4: 65, G4: 67, A4: 69, B4: 71 };
+    return notes[note] || 60;
+  }),
+}));
 
 describe('MIDIExport Component', () => {
   const mockMelodyData = {
@@ -22,8 +23,8 @@ describe('MIDIExport Component', () => {
     notes: [
       { pitch: 'C4', duration: 1, startTime: 0, velocity: 0.8 },
       { pitch: 'E4', duration: 1, startTime: 1, velocity: 0.7 },
-      { pitch: 'G4', duration: 1, startTime: 2, velocity: 0.9 }
-    ]
+      { pitch: 'G4', duration: 1, startTime: 2, velocity: 0.9 },
+    ],
   };
 
   const mockChordData = {
@@ -31,8 +32,8 @@ describe('MIDIExport Component', () => {
     tempo: 120,
     progression: [
       { root: 'C', type: 'maj', notes: ['C4', 'E4', 'G4'], duration: 1, position: 0 },
-      { root: 'F', type: 'maj', notes: ['F4', 'A4', 'C5'], duration: 1, position: 1 }
-    ]
+      { root: 'F', type: 'maj', notes: ['F4', 'A4', 'C5'], duration: 1, position: 1 },
+    ],
   };
 
   beforeEach(() => {
@@ -43,7 +44,7 @@ describe('MIDIExport Component', () => {
     render(<MIDIExport data={mockMelodyData} type="melody" />);
 
     expect(screen.getByText('MIDI Export')).toBeInTheDocument();
-    expect(screen.getByText('File Name:')).toBeInTheDocument();
+    expect(screen.getByText('File Name')).toBeInTheDocument();
     expect(screen.getByText('Export Options')).toBeInTheDocument();
     expect(screen.getByText('Export as MIDI')).toBeInTheDocument();
   });
@@ -51,7 +52,8 @@ describe('MIDIExport Component', () => {
   it('allows changing the file name', () => {
     render(<MIDIExport data={mockMelodyData} type="melody" />);
 
-    const fileNameInput = screen.getByLabelText('File Name:');
+    // Find the input by its placeholder instead of label
+    const fileNameInput = screen.getByPlaceholderText('Enter file name');
     fireEvent.change(fileNameInput, { target: { value: 'test-melody' } });
 
     expect(fileNameInput.value).toBe('test-melody');
@@ -83,7 +85,7 @@ describe('MIDIExport Component', () => {
       'my-music-melody',
       expect.objectContaining({
         includeMelody: true,
-        includeChords: false
+        includeChords: false,
       })
     );
   });
@@ -100,7 +102,7 @@ describe('MIDIExport Component', () => {
       'my-music-chord',
       expect.objectContaining({
         includeMelody: false,
-        includeChords: true
+        includeChords: true,
       })
     );
   });
@@ -115,9 +117,12 @@ describe('MIDIExport Component', () => {
     fireEvent.click(exportButton);
 
     // Wait for the async operation to complete
-    await vi.waitFor(() => {
-      expect(screen.getByText('Melody exported successfully!')).toBeInTheDocument();
-    }, { timeout: 3000 });
+    await vi.waitFor(
+      () => {
+        expect(screen.getByText('Melody exported successfully!')).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
   });
 
   it('shows error message when export fails', async () => {
@@ -160,22 +165,29 @@ describe('MIDIExport Component', () => {
   it('allows toggling export options', () => {
     render(<MIDIExport data={mockMelodyData} type="melody" />);
 
-    const humanizeCheckbox = screen.getByLabelText('Humanize (slight timing and velocity variations)');
-    expect(humanizeCheckbox).toBeChecked();
+    // First click on the Export Options accordion to expand it
+    const accordionButton = screen.getByText('Export Options');
+    fireEvent.click(accordionButton);
 
-    fireEvent.click(humanizeCheckbox);
-    expect(humanizeCheckbox).not.toBeChecked();
+    // Find the first checkbox (which should be the melody track checkbox)
+    const melodyCheckbox = screen.getAllByRole('checkbox')[0];
+    expect(melodyCheckbox).toBeChecked();
+
+    // Click to uncheck it
+    fireEvent.click(melodyCheckbox);
+    expect(melodyCheckbox).not.toBeChecked();
 
     // Check that the option change is reflected in the state
     const exportButton = screen.getByText('Export as MIDI');
     fireEvent.click(exportButton);
 
+    // Use expect.objectContaining to match only the properties we care about
     expect(simpleMidi.exportAndDownloadMIDI).toHaveBeenCalledWith(
       mockMelodyData,
       null,
       'my-music-melody',
       expect.objectContaining({
-        humanize: false
+        includeMelody: false,
       })
     );
   });

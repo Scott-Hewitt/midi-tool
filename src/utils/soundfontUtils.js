@@ -21,7 +21,7 @@ export const loadInstrument = async (instrumentName = 'acoustic_grand_piano', au
     const instrument = await Soundfont.instrument(ctx, instrumentName, {
       format: 'mp3',
       soundfont: 'MusyngKite',
-      gain: 3.0
+      gain: 3.0,
     });
 
     instrumentCache[cacheKey] = instrument;
@@ -37,36 +37,34 @@ export const loadInstrument = async (instrumentName = 'acoustic_grand_piano', au
  * Get a list of available instrument names
  * @returns {Object} - Object with instrument names and their display names
  */
-export const getAvailableInstruments = () => {
-  return {
-    'acoustic_grand_piano': 'Piano',
-    'electric_piano_1': 'Electric Piano',
-    'electric_guitar_clean': 'Electric Guitar',
-    'acoustic_guitar_nylon': 'Acoustic Guitar',
-    'acoustic_guitar_steel': 'Steel Guitar',
-    'electric_bass_finger': 'Bass Guitar',
-    'violin': 'Violin',
-    'cello': 'Cello',
-    'flute': 'Flute',
-    'clarinet': 'Clarinet',
-    'saxophone': 'Saxophone',
-    'trumpet': 'Trumpet',
-    'french_horn': 'French Horn',
-    'trombone': 'Trombone',
-    'choir_aahs': 'Choir',
-    'string_ensemble_1': 'String Ensemble',
-    'synth_strings_1': 'Synth Strings',
-    'synth_pad_2_warm': 'Warm Pad',
-    'church_organ': 'Church Organ'
-  };
-};
+export const getAvailableInstruments = () => ({
+  acoustic_grand_piano: 'Piano',
+  electric_piano_1: 'Electric Piano',
+  electric_guitar_clean: 'Electric Guitar',
+  acoustic_guitar_nylon: 'Acoustic Guitar',
+  acoustic_guitar_steel: 'Steel Guitar',
+  electric_bass_finger: 'Bass Guitar',
+  violin: 'Violin',
+  cello: 'Cello',
+  flute: 'Flute',
+  clarinet: 'Clarinet',
+  saxophone: 'Saxophone',
+  trumpet: 'Trumpet',
+  french_horn: 'French Horn',
+  trombone: 'Trombone',
+  choir_aahs: 'Choir',
+  string_ensemble_1: 'String Ensemble',
+  synth_strings_1: 'Synth Strings',
+  synth_pad_2_warm: 'Warm Pad',
+  church_organ: 'Church Organ',
+});
 
 /**
  * Map General MIDI program number to SoundFont instrument name
  * @param {number} program - MIDI program number (0-127)
  * @returns {string} - SoundFont instrument name
  */
-export const midiProgramToInstrumentName = (program) => {
+export const midiProgramToInstrumentName = program => {
   const instrumentMap = {
     0: 'acoustic_grand_piano',
     1: 'bright_acoustic_piano',
@@ -195,7 +193,7 @@ export const midiProgramToInstrumentName = (program) => {
     124: 'telephone_ring',
     125: 'helicopter',
     126: 'applause',
-    127: 'gunshot'
+    127: 'gunshot',
   };
 
   return instrumentMap[program] || 'acoustic_grand_piano';
@@ -218,7 +216,7 @@ export const playMelodyWithSoundFont = async (instrument, notes, tempo = 120) =>
 
   // Schedule all notes
   const scheduledNotes = notes.map(note => {
-    const startTime = now + (note.startTime * secondsPerBeat);
+    const startTime = now + note.startTime * secondsPerBeat;
     const duration = note.duration * secondsPerBeat;
     const velocity = note.velocity || 1.0;
 
@@ -276,7 +274,7 @@ export const playChordProgressionWithSoundFont = async (instrument, chords, temp
 
   // Schedule all chords
   const scheduledChords = chords.flatMap(chord => {
-    const startTime = now + (chord.position * 4 * secondsPerBeat); // 4 beats per bar
+    const startTime = now + chord.position * 4 * secondsPerBeat; // 4 beats per bar
     const duration = chord.duration * 4 * secondsPerBeat;
 
     // Check if chord has notes
@@ -329,7 +327,7 @@ export const playChordProgressionWithSoundFont = async (instrument, chords, temp
  * Stop all currently playing sounds
  * @param {Object} instrument - SoundFont instrument player
  */
-export const stopAllSounds = (instrument) => {
+export const stopAllSounds = instrument => {
   if (instrument && typeof instrument.stop === 'function') {
     instrument.stop();
   }

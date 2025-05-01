@@ -26,7 +26,7 @@ function LoginForm({ onToggleForm }) {
 
   const { login, loginWithGoogle } = useAuth();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
 
     if (!email || !password) {
@@ -92,10 +92,10 @@ function LoginForm({ onToggleForm }) {
             <Input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               bg="rgba(255, 255, 255, 0.1)"
               borderColor="rgba(255, 255, 255, 0.15)"
-              _hover={{ borderColor: "primary.400" }}
+              _hover={{ borderColor: 'primary.400' }}
             />
           </FormControl>
 
@@ -105,10 +105,10 @@ function LoginForm({ onToggleForm }) {
               <Input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 bg="rgba(255, 255, 255, 0.1)"
                 borderColor="rgba(255, 255, 255, 0.15)"
-                _hover={{ borderColor: "primary.400" }}
+                _hover={{ borderColor: 'primary.400' }}
               />
               <InputRightElement width="4.5rem">
                 <Button
@@ -149,11 +149,7 @@ function LoginForm({ onToggleForm }) {
 
       <Text mt={4} textAlign="center">
         Don't have an account?{' '}
-        <Button
-          variant="link"
-          colorScheme="primary"
-          onClick={onToggleForm}
-        >
+        <Button variant="link" colorScheme="primary" onClick={onToggleForm}>
           Sign Up
         </Button>
       </Text>

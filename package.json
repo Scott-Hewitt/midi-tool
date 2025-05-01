@@ -12,6 +12,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:browser": "vitest run --browser",
     "prepare": "npm run lint && npm run test"
   },
   "dependencies": {

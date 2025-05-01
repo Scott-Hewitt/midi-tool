@@ -19,7 +19,7 @@ import {
   Spinner,
   Flex,
   Divider,
-  Text
+  Text,
 } from '@chakra-ui/react';
 import { usePlayback } from '../utils/PlaybackContext';
 import { getAvailableInstruments } from '../utils/soundfontUtils';
@@ -46,7 +46,7 @@ function PlayButtonWithInstruments({ data, type }) {
     chordInstrument,
     bassInstrument,
     loadInstruments,
-    instrumentsLoading
+    instrumentsLoading,
   } = usePlayback();
 
   const [isThisPlaying, setIsThisPlaying] = useState(false);
@@ -120,10 +120,19 @@ function PlayButtonWithInstruments({ data, type }) {
             Instruments
           </Button>
         </PopoverTrigger>
-        <PopoverContent bg="rgba(30, 41, 59, 0.95)" backdropFilter="blur(10px)" borderColor="rgba(255, 255, 255, 0.1)" p={2}>
+        <PopoverContent
+          bg="rgba(30, 41, 59, 0.95)"
+          backdropFilter="blur(10px)"
+          borderColor="rgba(255, 255, 255, 0.1)"
+          p={2}
+        >
           <PopoverArrow bg="rgba(30, 41, 59, 0.95)" />
           <PopoverCloseButton color="white" />
-          <PopoverHeader borderColor="rgba(255, 255, 255, 0.1)" fontWeight="bold" color="primary.300">
+          <PopoverHeader
+            borderColor="rgba(255, 255, 255, 0.1)"
+            fontWeight="bold"
+            color="primary.300"
+          >
             Sound Options
           </PopoverHeader>
           <PopoverBody>
@@ -135,7 +144,7 @@ function PlayButtonWithInstruments({ data, type }) {
                 <Checkbox
                   id="use-soundfont"
                   isChecked={useSoundFont}
-                  onChange={(e) => setUseSoundFont(e.target.checked)}
+                  onChange={e => setUseSoundFont(e.target.checked)}
                   colorScheme="primary"
                 />
               </FormControl>
@@ -150,16 +159,18 @@ function PlayButtonWithInstruments({ data, type }) {
                       <Flex align="center">
                         <Select
                           value={melodyInstrument}
-                          onChange={(e) => handleInstrumentChange('melody', e.target.value)}
+                          onChange={e => handleInstrumentChange('melody', e.target.value)}
                           isDisabled={instrumentsLoading}
                           bg="rgba(255, 255, 255, 0.1)"
                           borderColor="rgba(255, 255, 255, 0.15)"
-                          _hover={{ borderColor: "primary.400" }}
+                          _hover={{ borderColor: 'primary.400' }}
                           color="white"
                           mr={2}
                         >
                           {Object.entries(availableInstruments).map(([value, name]) => (
-                            <option key={value} value={value}>{name}</option>
+                            <option key={value} value={value}>
+                              {name}
+                            </option>
                           ))}
                         </Select>
                         {instrumentsLoading && <Spinner size="sm" color="primary.400" />}
@@ -173,16 +184,18 @@ function PlayButtonWithInstruments({ data, type }) {
                       <Flex align="center">
                         <Select
                           value={chordInstrument}
-                          onChange={(e) => handleInstrumentChange('chord', e.target.value)}
+                          onChange={e => handleInstrumentChange('chord', e.target.value)}
                           isDisabled={instrumentsLoading}
                           bg="rgba(255, 255, 255, 0.1)"
                           borderColor="rgba(255, 255, 255, 0.15)"
-                          _hover={{ borderColor: "primary.400" }}
+                          _hover={{ borderColor: 'primary.400' }}
                           color="white"
                           mr={2}
                         >
                           {Object.entries(availableInstruments).map(([value, name]) => (
-                            <option key={value} value={value}>{name}</option>
+                            <option key={value} value={value}>
+                              {name}
+                            </option>
                           ))}
                         </Select>
                         {instrumentsLoading && <Spinner size="sm" color="primary.400" />}
@@ -197,16 +210,18 @@ function PlayButtonWithInstruments({ data, type }) {
                         <Flex align="center">
                           <Select
                             value={melodyInstrument}
-                            onChange={(e) => handleInstrumentChange('melody', e.target.value)}
+                            onChange={e => handleInstrumentChange('melody', e.target.value)}
                             isDisabled={instrumentsLoading}
                             bg="rgba(255, 255, 255, 0.1)"
                             borderColor="rgba(255, 255, 255, 0.15)"
-                            _hover={{ borderColor: "primary.400" }}
+                            _hover={{ borderColor: 'primary.400' }}
                             color="white"
                             mr={2}
                           >
                             {Object.entries(availableInstruments).map(([value, name]) => (
-                              <option key={value} value={value}>{name}</option>
+                              <option key={value} value={value}>
+                                {name}
+                              </option>
                             ))}
                           </Select>
                           {instrumentsLoading && <Spinner size="sm" color="primary.400" />}
@@ -218,16 +233,18 @@ function PlayButtonWithInstruments({ data, type }) {
                         <Flex align="center">
                           <Select
                             value={chordInstrument}
-                            onChange={(e) => handleInstrumentChange('chord', e.target.value)}
+                            onChange={e => handleInstrumentChange('chord', e.target.value)}
                             isDisabled={instrumentsLoading}
                             bg="rgba(255, 255, 255, 0.1)"
                             borderColor="rgba(255, 255, 255, 0.15)"
-                            _hover={{ borderColor: "primary.400" }}
+                            _hover={{ borderColor: 'primary.400' }}
                             color="white"
                             mr={2}
                           >
                             {Object.entries(availableInstruments).map(([value, name]) => (
-                              <option key={value} value={value}>{name}</option>
+                              <option key={value} value={value}>
+                                {name}
+                              </option>
                             ))}
                           </Select>
                           {instrumentsLoading && <Spinner size="sm" color="primary.400" />}
@@ -239,16 +256,18 @@ function PlayButtonWithInstruments({ data, type }) {
                         <Flex align="center">
                           <Select
                             value={bassInstrument}
-                            onChange={(e) => handleInstrumentChange('bass', e.target.value)}
+                            onChange={e => handleInstrumentChange('bass', e.target.value)}
                             isDisabled={instrumentsLoading}
                             bg="rgba(255, 255, 255, 0.1)"
                             borderColor="rgba(255, 255, 255, 0.15)"
-                            _hover={{ borderColor: "primary.400" }}
+                            _hover={{ borderColor: 'primary.400' }}
                             color="white"
                             mr={2}
                           >
                             {Object.entries(availableInstruments).map(([value, name]) => (
-                              <option key={value} value={value}>{name}</option>
+                              <option key={value} value={value}>
+                                {name}
+                              </option>
                             ))}
                           </Select>
                           {instrumentsLoading && <Spinner size="sm" color="primary.400" />}

@@ -1,6 +1,6 @@
 /**
  * Firebase Configuration
- * 
+ *
  * This file exports the Firebase services initialized in the main Firebase service file.
  * It serves as a bridge to maintain compatibility with existing code.
  */

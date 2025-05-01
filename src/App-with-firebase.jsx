@@ -12,7 +12,7 @@ import {
   Container,
   VStack,
   HStack,
-  useToast
+  useToast,
 } from '@chakra-ui/react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import './App.css';
@@ -48,10 +48,9 @@ function App() {
 
   // Track which tab is active to prevent data interference
   const [activeTab, setActiveTab] = useState(0);
-  const [audioInitialized, setAudioInitialized] = useState(
-    // Check if audio was previously initialized
-    localStorage.getItem('hasSeenWelcomeScreen') === 'true'
-  );
+  // Audio initialization state is managed by WelcomeScreen component
+  // This is used to determine if we should show the welcome screen
+  // We use hasHadUserInteraction() to check if audio is initialized
   const { currentUser } = useAuth();
   const toast = useToast();
 
@@ -94,25 +93,28 @@ function App() {
     };
   }, []);
 
+  // Audio initialization is now handled by the WelcomeScreen component
+  // This function is kept for backward compatibility
   const handleAudioInitialized = () => {
-    setAudioInitialized(true);
+    // Audio initialization is now tracked via localStorage in WelcomeScreen
+    localStorage.setItem('hasSeenWelcomeScreen', 'true');
   };
 
-  const handleMelodyGenerated = (data) => {
+  const handleMelodyGenerated = data => {
     // Only update melody data if we're on the melody tab
     if (activeTab === 0) {
       setMelodyData(data);
     }
   };
 
-  const handleChordGenerated = (data) => {
+  const handleChordGenerated = data => {
     // Only update chord data if we're on the chord tab
     if (activeTab === 1) {
       setChordData(data);
     }
   };
 
-  const handleCompositionGenerated = (data) => {
+  const handleCompositionGenerated = data => {
     // Only update composition data if we're on the composition tab
     if (activeTab === 2) {
       setCompositionData(data);
@@ -141,29 +143,17 @@ function App() {
 
           <HStack spacing={4}>
             <Link to="/my-compositions">
-              <Text
-                color="gray.300"
-                _hover={{ color: "primary.300" }}
-                fontWeight="500"
-              >
+              <Text color="gray.300" _hover={{ color: 'primary.300' }} fontWeight="500">
                 My Compositions
               </Text>
             </Link>
             <Link to="/favorites">
-              <Text
-                color="gray.300"
-                _hover={{ color: "primary.300" }}
-                fontWeight="500"
-              >
+              <Text color="gray.300" _hover={{ color: 'primary.300' }} fontWeight="500">
                 Favorites
               </Text>
             </Link>
             <Link to="/backup-export">
-              <Text
-                color="gray.300"
-                _hover={{ color: "primary.300" }}
-                fontWeight="500"
-              >
+              <Text color="gray.300" _hover={{ color: 'primary.300' }} fontWeight="500">
                 Backup & Export
               </Text>
             </Link>
@@ -174,13 +164,7 @@ function App() {
         {children}
       </Box>
 
-      <Box
-        as="footer"
-        mt="auto"
-        textAlign="center"
-        py={4}
-        color="gray.300"
-      >
+      <Box as="footer" mt="auto" textAlign="center" py={4} color="gray.300">
         <Text>MIDI Melody & Chord Generator - MVP Version</Text>
       </Box>
     </Container>
@@ -198,7 +182,7 @@ function App() {
   // Generator Tabs Component
   const GeneratorTabs = () => {
     // Handle tab change
-    const handleTabChange = (index) => {
+    const handleTabChange = index => {
       // Update the active tab in the parent component
       setActiveTab(index);
 
@@ -206,144 +190,169 @@ function App() {
     };
 
     return (
-    <Tabs variant="soft-rounded" colorScheme="primary" isLazy onChange={handleTabChange} index={activeTab}>
-      <TabList
-        overflowX="auto"
-        overflowY="hidden"
-        py={2}
-        css={{
-          scrollbarWidth: 'none',
-          '&::-webkit-scrollbar': {
-            display: 'none',
-          },
-        }}
+      <Tabs
+        variant="soft-rounded"
+        colorScheme="primary"
+        isLazy
+        onChange={handleTabChange}
+        index={activeTab}
       >
-        <Tab px={6} py={3} transition="all 0.3s ease">
-          Melody Generator
-        </Tab>
-        <Tab px={6} py={3} transition="all 0.3s ease">
-          Chord Generator
-        </Tab>
-        <Tab px={6} py={3} transition="all 0.3s ease">
-          Composition Studio
-        </Tab>
-      </TabList>
+        <TabList
+          overflowX="auto"
+          overflowY="hidden"
+          py={2}
+          css={{
+            scrollbarWidth: 'none',
+            '&::-webkit-scrollbar': {
+              display: 'none',
+            },
+          }}
+        >
+          <Tab px={6} py={3} transition="all 0.3s ease">
+            Melody Generator
+          </Tab>
+          <Tab px={6} py={3} transition="all 0.3s ease">
+            Chord Generator
+          </Tab>
+          <Tab px={6} py={3} transition="all 0.3s ease">
+            Composition Studio
+          </Tab>
+        </TabList>
 
-      <TabPanels>
-        <TabPanel p={0} mt={6}>
-          <VStack spacing={8} align="stretch">
-            <Box>
-              <MelodyGenerator onMelodyGenerated={handleMelodyGenerated} />
-            </Box>
+        <TabPanels>
+          <TabPanel p={0} mt={6}>
+            <VStack spacing={8} align="stretch">
+              <Box>
+                <MelodyGenerator onMelodyGenerated={handleMelodyGenerated} />
+              </Box>
 
-            {melodyData && (
-              <>
-                <Box>
-                  <Visualization data={melodyData} type="melody" />
-                </Box>
+              {melodyData && (
+                <>
+                  <Box>
+                    <Visualization data={melodyData} type="melody" />
+                  </Box>
 
-                <Box>
-                  <MIDIExportWithSave data={melodyData} type="melody" />
-                </Box>
-              </>
-            )}
-          </VStack>
-        </TabPanel>
+                  <Box>
+                    <MIDIExportWithSave data={melodyData} type="melody" />
+                  </Box>
+                </>
+              )}
+            </VStack>
+          </TabPanel>
 
-        <TabPanel p={0} mt={6}>
-          <VStack spacing={8} align="stretch">
-            <Box>
-              <ChordGenerator onChordGenerated={handleChordGenerated} />
-            </Box>
+          <TabPanel p={0} mt={6}>
+            <VStack spacing={8} align="stretch">
+              <Box>
+                <ChordGenerator onChordGenerated={handleChordGenerated} />
+              </Box>
 
-            {chordData && (
-              <>
-                <Box>
-                  <Visualization data={chordData} type="chord" />
-                </Box>
+              {chordData && (
+                <>
+                  <Box>
+                    <Visualization data={chordData} type="chord" />
+                  </Box>
 
-                <Box>
-                  <MIDIExportWithSave data={chordData} type="chord" />
-                </Box>
-              </>
-            )}
-          </VStack>
-        </TabPanel>
+                  <Box>
+                    <MIDIExportWithSave data={chordData} type="chord" />
+                  </Box>
+                </>
+              )}
+            </VStack>
+          </TabPanel>
 
-        <TabPanel p={0} mt={6}>
-          <VStack spacing={8} align="stretch">
-            <Box>
-              <CompositionGenerator onCompositionGenerated={handleCompositionGenerated} />
-            </Box>
+          <TabPanel p={0} mt={6}>
+            <VStack spacing={8} align="stretch">
+              <Box>
+                <CompositionGenerator onCompositionGenerated={handleCompositionGenerated} />
+              </Box>
 
-            {compositionData && (
-              <>
-                <Box>
-                  <Visualization data={compositionData} type="composition" />
-                </Box>
+              {compositionData && (
+                <>
+                  <Box>
+                    <Visualization data={compositionData} type="composition" />
+                  </Box>
 
-                <Box>
-                  <MIDIExportWithSave data={compositionData} type="composition" />
-                </Box>
-              </>
-            )}
-          </VStack>
-        </TabPanel>
-      </TabPanels>
-    </Tabs>
-  );
+                  <Box>
+                    <MIDIExportWithSave data={compositionData} type="composition" />
+                  </Box>
+                </>
+              )}
+            </VStack>
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
+    );
   };
 
   return (
     <PlaybackProvider>
       <Router>
         <Routes>
-        <Route path="/" element={
-          <AppLayout>
-            <GeneratorTabs />
-          </AppLayout>
-        } />
+          <Route
+            path="/"
+            element={
+              <AppLayout>
+                <GeneratorTabs />
+              </AppLayout>
+            }
+          />
 
-        <Route path="/my-compositions" element={
-          <ProtectedRoute>
-            <AppLayout>
-              <MyCompositions />
-            </AppLayout>
-          </ProtectedRoute>
-        } />
+          <Route
+            path="/my-compositions"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <MyCompositions />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
 
-        <Route path="/favorites" element={
-          <ProtectedRoute>
-            <AppLayout>
-              <Favorites />
-            </AppLayout>
-          </ProtectedRoute>
-        } />
+          <Route
+            path="/favorites"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Favorites />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
 
-        <Route path="/backup-export" element={
-          <ProtectedRoute>
-            <AppLayout>
-              <BackupExport />
-            </AppLayout>
-          </ProtectedRoute>
-        } />
+          <Route
+            path="/backup-export"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <BackupExport />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
 
-        <Route path="*" element={
-          <AppLayout>
-            <Box textAlign="center" py={10}>
-              <Heading size="xl" mb={6} color="primary.400">Page Not Found</Heading>
-              <Text mb={6}>The page you're looking for doesn't exist.</Text>
-              <Link to="/">
-                <Text color="primary.400" fontWeight="bold">Return to Home</Text>
-              </Link>
-            </Box>
-          </AppLayout>
-        } />
-      </Routes>
+          <Route
+            path="*"
+            element={
+              <AppLayout>
+                <Box textAlign="center" py={10}>
+                  <Heading size="xl" mb={6} color="primary.400">
+                    Page Not Found
+                  </Heading>
+                  <Text mb={6}>The page you're looking for doesn't exist.</Text>
+                  <Link to="/">
+                    <Text color="primary.400" fontWeight="bold">
+                      Return to Home
+                    </Text>
+                  </Link>
+                </Box>
+              </AppLayout>
+            }
+          />
+        </Routes>
 
-      {/* Fallback audio initializer that shows if audio isn't initialized */}
-      {!hasHadUserInteraction() && <AudioInitializer />}
-    </Router>
+        {/* Fallback audio initializer that shows if audio isn't initialized */}
+        {!hasHadUserInteraction() && <AudioInitializer />}
+      </Router>
     </PlaybackProvider>
   );
 }

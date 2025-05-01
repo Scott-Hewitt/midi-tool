@@ -18,7 +18,7 @@ import {
   Select,
   Input,
   InputGroup,
-  InputLeftElement
+  InputLeftElement,
 } from '@chakra-ui/react';
 import { useAuth } from '../../utils/firebase/AuthContext';
 import { getUserFavorites, removeFromFavorites } from '../../utils/firebase/favorites';
@@ -64,7 +64,7 @@ function Favorites() {
   }, [currentUser, toast]);
 
   // Handle remove from favorites
-  const handleRemoveFromFavorites = async (fileId) => {
+  const handleRemoveFromFavorites = async fileId => {
     if (!currentUser) return;
 
     try {
@@ -123,7 +123,9 @@ function Favorites() {
   if (!currentUser) {
     return (
       <Box textAlign="center" py={10}>
-        <Heading size="lg" mb={6} color="primary.400">My Favorites</Heading>
+        <Heading size="lg" mb={6} color="primary.400">
+          My Favorites
+        </Heading>
         <Text>Please sign in to view your favorites.</Text>
       </Box>
     );
@@ -131,7 +133,9 @@ function Favorites() {
 
   return (
     <Box p={6}>
-      <Heading size="lg" mb={6} color="primary.400">My Favorites</Heading>
+      <Heading size="lg" mb={6} color="primary.400">
+        My Favorites
+      </Heading>
 
       {/* Filters and Search */}
       <Flex
@@ -145,11 +149,11 @@ function Favorites() {
       >
         <Select
           value={filter}
-          onChange={(e) => setFilter(e.target.value)}
+          onChange={e => setFilter(e.target.value)}
           maxW={{ base: 'full', md: '200px' }}
           bg="rgba(255, 255, 255, 0.1)"
           borderColor="rgba(255, 255, 255, 0.15)"
-          _hover={{ borderColor: "primary.400" }}
+          _hover={{ borderColor: 'primary.400' }}
         >
           <option value="all">All Types</option>
           <option value="melody">Melodies</option>
@@ -159,11 +163,11 @@ function Favorites() {
 
         <Select
           value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
+          onChange={e => setSortBy(e.target.value)}
           maxW={{ base: 'full', md: '200px' }}
           bg="rgba(255, 255, 255, 0.1)"
           borderColor="rgba(255, 255, 255, 0.15)"
-          _hover={{ borderColor: "primary.400" }}
+          _hover={{ borderColor: 'primary.400' }}
         >
           <option value="newest">Newest First</option>
           <option value="oldest">Oldest First</option>
@@ -171,16 +175,14 @@ function Favorites() {
         </Select>
 
         <InputGroup maxW={{ base: 'full', md: '300px' }}>
-          <InputLeftElement pointerEvents="none">
-            🔍
-          </InputLeftElement>
+          <InputLeftElement pointerEvents="none">🔍</InputLeftElement>
           <Input
             placeholder="Search favorites..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={e => setSearchTerm(e.target.value)}
             bg="rgba(255, 255, 255, 0.1)"
             borderColor="rgba(255, 255, 255, 0.15)"
-            _hover={{ borderColor: "primary.400" }}
+            _hover={{ borderColor: 'primary.400' }}
           />
         </InputGroup>
       </Flex>
@@ -190,8 +192,18 @@ function Favorites() {
           <Spinner size="xl" color="primary.500" />
         </Flex>
       ) : filteredFavorites.length === 0 ? (
-        <Box textAlign="center" py={10} bg="rgba(30, 41, 59, 0.7)" backdropFilter="blur(12px)" borderRadius="md" borderLeft="4px solid" borderColor="primary.500">
-          <Text fontWeight="medium" color="white" textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">No favorites found.</Text>
+        <Box
+          textAlign="center"
+          py={10}
+          bg="rgba(30, 41, 59, 0.7)"
+          backdropFilter="blur(12px)"
+          borderRadius="md"
+          borderLeft="4px solid"
+          borderColor="primary.500"
+        >
+          <Text fontWeight="medium" color="white" textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+            No favorites found.
+          </Text>
           {filter !== 'all' && (
             <Button mt={4} onClick={() => setFilter('all')} variant="outline" colorScheme="primary">
               Show All Favorites
@@ -200,7 +212,7 @@ function Favorites() {
         </Box>
       ) : (
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-          {filteredFavorites.map((favorite) => (
+          {filteredFavorites.map(favorite => (
             <Card
               key={favorite.id}
               bg="rgba(30, 41, 59, 0.5)"
@@ -237,8 +249,7 @@ function Favorites() {
                         ? 'Melody'
                         : favorite.file.type === 'chord'
                           ? 'Chord'
-                          : 'Composition'
-                      }
+                          : 'Composition'}
                     </Badge>
                   </HStack>
                 </Flex>
@@ -253,18 +264,16 @@ function Favorites() {
                     <strong>Tempo:</strong> {favorite.file.tempo || 'N/A'} BPM
                   </Text>
                   <Text fontSize="sm">
-                    <strong>Created by:</strong> {
-                      favorite.file.userId === currentUser.uid
-                        ? 'You'
-                        : favorite.file.createdBy || 'Unknown'
-                    }
+                    <strong>Created by:</strong>{' '}
+                    {favorite.file.userId === currentUser.uid
+                      ? 'You'
+                      : favorite.file.createdBy || 'Unknown'}
                   </Text>
                   <Text fontSize="sm">
-                    <strong>Favorited:</strong> {
-                      favorite.favoritedAt
-                        ? new Date(favorite.favoritedAt.toDate()).toLocaleDateString()
-                        : 'Unknown'
-                    }
+                    <strong>Favorited:</strong>{' '}
+                    {favorite.favoritedAt
+                      ? new Date(favorite.favoritedAt.toDate()).toLocaleDateString()
+                      : 'Unknown'}
                   </Text>
                 </VStack>
               </CardBody>

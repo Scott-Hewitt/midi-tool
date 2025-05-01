@@ -2,7 +2,7 @@
 
 A web application for generating melodies and chord progressions, visualizing them, and exporting them as MIDI files.
 
-![MIDI Tool Screenshot](screenshots/app-screenshot.png)
+![MIDI Tool Screenshot](/Images/app-screenshot.png)
 
 ## 🎵 [Try the Live Demo](https://midi-generator-81875.web.app/)
 
@@ -50,7 +50,7 @@ As a musician and developer, I've always been fascinated by the intersection of 
 
 1. Clone the repository
    ```bash
-   git clone https://github.com/yourusername/midi-tool.git
+   git clone https://github.com/scott-hewitt/midi-tool.git
    cd midi-tool
    ```
 

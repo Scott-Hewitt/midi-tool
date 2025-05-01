@@ -11,7 +11,7 @@ import {
   HStack,
   useDisclosure,
   Box,
-  Icon
+  Icon,
 } from '@chakra-ui/react';
 import { useAuth } from '../../utils/firebase/AuthContext';
 import AuthModal from './AuthModal';
@@ -43,13 +43,7 @@ function UserMenu() {
     <>
       {currentUser ? (
         <Menu>
-          <MenuButton
-            as={Button}
-            rounded="full"
-            variant="link"
-            cursor="pointer"
-            minW={0}
-          >
+          <MenuButton as={Button} rounded="full" variant="link" cursor="pointer" minW={0}>
             <Avatar
               size="sm"
               name={userProfile?.displayName || currentUser.displayName}
@@ -64,69 +58,39 @@ function UserMenu() {
             boxShadow="0 8px 32px 0 rgba(0, 0, 0, 0.37)"
           >
             <Box px={3} py={2}>
-              <Text fontWeight="bold">
-                {userProfile?.displayName || currentUser.displayName}
-              </Text>
+              <Text fontWeight="bold">{userProfile?.displayName || currentUser.displayName}</Text>
               <Text fontSize="sm" color="gray.300">
                 {currentUser.email}
               </Text>
             </Box>
             <MenuDivider />
-            <MenuItem
-              _hover={{ bg: 'rgba(255, 255, 255, 0.1)' }}
-              as="a"
-              href="/my-compositions"
-            >
+            <MenuItem _hover={{ bg: 'rgba(255, 255, 255, 0.1)' }} as="a" href="/my-compositions">
               My Compositions
             </MenuItem>
-            <MenuItem
-              _hover={{ bg: 'rgba(255, 255, 255, 0.1)' }}
-              as="a"
-              href="/favorites"
-            >
+            <MenuItem _hover={{ bg: 'rgba(255, 255, 255, 0.1)' }} as="a" href="/favorites">
               Favorites
             </MenuItem>
-            <MenuItem
-              _hover={{ bg: 'rgba(255, 255, 255, 0.1)' }}
-              as="a"
-              href="/profile"
-            >
+            <MenuItem _hover={{ bg: 'rgba(255, 255, 255, 0.1)' }} as="a" href="/profile">
               Profile Settings
             </MenuItem>
             <MenuDivider />
-            <MenuItem
-              _hover={{ bg: 'rgba(255, 255, 255, 0.1)' }}
-              onClick={handleLogout}
-            >
+            <MenuItem _hover={{ bg: 'rgba(255, 255, 255, 0.1)' }} onClick={handleLogout}>
               Sign Out
             </MenuItem>
           </MenuList>
         </Menu>
       ) : (
         <HStack spacing={4}>
-          <Button
-            variant="ghost"
-            colorScheme="primary"
-            onClick={handleLogin}
-            size="sm"
-          >
+          <Button variant="ghost" colorScheme="primary" onClick={handleLogin} size="sm">
             Log In
           </Button>
-          <Button
-            colorScheme="primary"
-            onClick={handleSignup}
-            size="sm"
-          >
+          <Button colorScheme="primary" onClick={handleSignup} size="sm">
             Sign Up
           </Button>
         </HStack>
       )}
 
-      <AuthModal
-        isOpen={isOpen}
-        onClose={onClose}
-        initialView={authView}
-      />
+      <AuthModal isOpen={isOpen} onClose={onClose} initialView={authView} />
     </>
   );
 }

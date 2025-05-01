@@ -1,9 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
-import { noteToMidiNumber, initJZZ } from '../utils/jzzMidi';
+import { describe, it, expect } from 'vitest';
+import { noteToMidiNumber, initJZZ } from '../utils/jzzMidi.js';
 import JZZ from 'jzz';
 
 describe('jzzMidi Utility Functions', () => {
-
   describe('noteToMidiNumber', () => {
     it('converts C4 to the correct MIDI number', () => {
       expect(noteToMidiNumber('C4')).toBe(60);

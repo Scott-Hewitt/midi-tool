@@ -9,14 +9,9 @@ import {
   where,
   deleteDoc,
   updateDoc,
-  serverTimestamp
+  serverTimestamp,
 } from 'firebase/firestore';
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL,
-  deleteObject
-} from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
 /**
  * Save a MIDI file to Firebase Storage and Firestore
@@ -47,7 +42,7 @@ export const saveMidiFile = async (file, metadata, userId) => {
       notes: metadata.notes || [],
       chords: metadata.chords || [],
       createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     });
 
     return docRef.id;
@@ -62,7 +57,7 @@ export const saveMidiFile = async (file, metadata, userId) => {
  * @param {string} userId - The user's ID
  * @returns {Promise<Array>} - A promise that resolves to an array of MIDI file objects
  */
-export const getUserMidiFiles = async (userId) => {
+export const getUserMidiFiles = async userId => {
   try {
     const midiFilesRef = collection(db, 'midiFiles');
     const q = query(midiFilesRef, where('userId', '==', userId));
@@ -70,7 +65,7 @@ export const getUserMidiFiles = async (userId) => {
 
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
+      ...doc.data(),
     }));
   } catch (error) {
     console.error('Error getting user MIDI files:', error);
@@ -90,7 +85,7 @@ export const getPublicMidiFiles = async () => {
 
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
+      ...doc.data(),
     }));
   } catch (error) {
     console.error('Error getting public MIDI files:', error);
@@ -103,7 +98,7 @@ export const getPublicMidiFiles = async () => {
  * @param {string} fileId - The MIDI file ID
  * @returns {Promise<Object>} - A promise that resolves to the MIDI file object
  */
-export const getMidiFile = async (fileId) => {
+export const getMidiFile = async fileId => {
   try {
     const docRef = doc(db, 'midiFiles', fileId);
     const docSnap = await getDoc(docRef);
@@ -111,7 +106,7 @@ export const getMidiFile = async (fileId) => {
     if (docSnap.exists()) {
       return {
         id: docSnap.id,
-        ...docSnap.data()
+        ...docSnap.data(),
       };
     } else {
       throw new Error('MIDI file not found');
@@ -139,7 +134,7 @@ export const updateMidiFile = async (fileId, updates, userId) => {
     const docRef = doc(db, 'midiFiles', fileId);
     await updateDoc(docRef, {
       ...updates,
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     });
   } catch (error) {
     console.error('Error updating MIDI file:', error);

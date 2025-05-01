@@ -5,32 +5,32 @@
  */
 export const extendedChordTypes = {
   // Basic chord types
-  'maj': [0, 4, 7],       // Major: root, major third, perfect fifth
-  'min': [0, 3, 7],       // Minor: root, minor third, perfect fifth
-  '7': [0, 4, 7, 10],     // Dominant 7th: root, major third, perfect fifth, minor seventh
-  'maj7': [0, 4, 7, 11],  // Major 7th: root, major third, perfect fifth, major seventh
-  'min7': [0, 3, 7, 10],  // Minor 7th: root, minor third, perfect fifth, minor seventh
-  'dim': [0, 3, 6],       // Diminished: root, minor third, diminished fifth
-  'aug': [0, 4, 8],       // Augmented: root, major third, augmented fifth
-  'sus4': [0, 5, 7],      // Suspended 4th: root, perfect fourth, perfect fifth
+  maj: [0, 4, 7], // Major: root, major third, perfect fifth
+  min: [0, 3, 7], // Minor: root, minor third, perfect fifth
+  7: [0, 4, 7, 10], // Dominant 7th: root, major third, perfect fifth, minor seventh
+  maj7: [0, 4, 7, 11], // Major 7th: root, major third, perfect fifth, major seventh
+  min7: [0, 3, 7, 10], // Minor 7th: root, minor third, perfect fifth, minor seventh
+  dim: [0, 3, 6], // Diminished: root, minor third, diminished fifth
+  aug: [0, 4, 8], // Augmented: root, major third, augmented fifth
+  sus4: [0, 5, 7], // Suspended 4th: root, perfect fourth, perfect fifth
 
   // Extended chord types
-  'dom9': [0, 4, 7, 10, 14],  // Dominant 9th: root, major third, perfect fifth, minor seventh, major ninth
-  'maj9': [0, 4, 7, 11, 14],  // Major 9th: root, major third, perfect fifth, major seventh, major ninth
-  'min9': [0, 3, 7, 10, 14],  // Minor 9th: root, minor third, perfect fifth, minor seventh, major ninth
-  'add9': [0, 4, 7, 14],      // Add9: root, major third, perfect fifth, major ninth
-  'sus2': [0, 2, 7],          // Suspended 2nd: root, major second, perfect fifth
-  '7sus4': [0, 5, 7, 10],     // 7sus4: root, perfect fourth, perfect fifth, minor seventh
-  '7b9': [0, 4, 7, 10, 13],   // 7flat9: root, major third, perfect fifth, minor seventh, minor ninth
-  '7#9': [0, 4, 7, 10, 15],   // 7sharp9: root, major third, perfect fifth, minor seventh, augmented ninth
-  '13': [0, 4, 7, 10, 14, 21], // 13th: root, major third, perfect fifth, minor seventh, major ninth, major thirteenth
-  '6': [0, 4, 7, 9],          // Major 6th: root, major third, perfect fifth, major sixth
-  'min6': [0, 3, 7, 9],       // Minor 6th: root, minor third, perfect fifth, major sixth
+  dom9: [0, 4, 7, 10, 14], // Dominant 9th: root, major third, perfect fifth, minor seventh, major ninth
+  maj9: [0, 4, 7, 11, 14], // Major 9th: root, major third, perfect fifth, major seventh, major ninth
+  min9: [0, 3, 7, 10, 14], // Minor 9th: root, minor third, perfect fifth, minor seventh, major ninth
+  add9: [0, 4, 7, 14], // Add9: root, major third, perfect fifth, major ninth
+  sus2: [0, 2, 7], // Suspended 2nd: root, major second, perfect fifth
+  '7sus4': [0, 5, 7, 10], // 7sus4: root, perfect fourth, perfect fifth, minor seventh
+  '7b9': [0, 4, 7, 10, 13], // 7flat9: root, major third, perfect fifth, minor seventh, minor ninth
+  '7#9': [0, 4, 7, 10, 15], // 7sharp9: root, major third, perfect fifth, minor seventh, augmented ninth
+  13: [0, 4, 7, 10, 14, 21], // 13th: root, major third, perfect fifth, minor seventh, major ninth, major thirteenth
+  6: [0, 4, 7, 9], // Major 6th: root, major third, perfect fifth, major sixth
+  min6: [0, 3, 7, 9], // Minor 6th: root, minor third, perfect fifth, major sixth
   '9sus4': [0, 5, 7, 10, 14], // 9sus4: root, perfect fourth, perfect fifth, minor seventh, major ninth
-  'dim7': [0, 3, 6, 9],       // Diminished 7th: root, minor third, diminished fifth, diminished seventh
-  'hdim7': [0, 3, 6, 10],     // Half-diminished 7th: root, minor third, diminished fifth, minor seventh
-  'aug7': [0, 4, 8, 10],      // Augmented 7th: root, major third, augmented fifth, minor seventh
-  'augmaj7': [0, 4, 8, 11]    // Augmented major 7th: root, major third, augmented fifth, major seventh
+  dim7: [0, 3, 6, 9], // Diminished 7th: root, minor third, diminished fifth, diminished seventh
+  hdim7: [0, 3, 6, 10], // Half-diminished 7th: root, minor third, diminished fifth, minor seventh
+  aug7: [0, 4, 8, 10], // Augmented 7th: root, major third, augmented fifth, minor seventh
+  augmaj7: [0, 4, 8, 11], // Augmented major 7th: root, major third, augmented fifth, major seventh
 };
 
 /**
@@ -39,59 +39,59 @@ export const extendedChordTypes = {
 export const advancedProgressions = {
   'Basic I-IV-V-I': {
     progression: ['I', 'IV', 'V', 'I'],
-    chordTypes: ['maj', 'maj', 'maj', 'maj']
+    chordTypes: ['maj', 'maj', 'maj', 'maj'],
   },
   'Pop I-V-vi-IV': {
     progression: ['I', 'V', 'vi', 'IV'],
-    chordTypes: ['maj', 'maj', 'min', 'maj']
+    chordTypes: ['maj', 'maj', 'min', 'maj'],
   },
   'Jazz ii-V-I': {
     progression: ['ii', 'V', 'I'],
-    chordTypes: ['min7', '7', 'maj7']
+    chordTypes: ['min7', '7', 'maj7'],
   },
   'Jazz ii-V-I with 9ths': {
     progression: ['ii', 'V', 'I'],
-    chordTypes: ['min9', 'dom9', 'maj9']
+    chordTypes: ['min9', 'dom9', 'maj9'],
   },
   'Blues I-IV-I-V-IV-I': {
     progression: ['I', 'IV', 'I', 'V', 'IV', 'I'],
-    chordTypes: ['7', '7', '7', '7', '7', '7']
+    chordTypes: ['7', '7', '7', '7', '7', '7'],
   },
   'Secondary Dominant': {
     progression: ['I', 'V/V', 'V', 'I'],
-    chordTypes: ['maj', '7', '7', 'maj']
+    chordTypes: ['maj', '7', '7', 'maj'],
   },
   'Modal Mixture': {
     progression: ['I', 'bVI', 'bVII', 'I'],
-    chordTypes: ['maj', 'maj', 'maj', 'maj']
+    chordTypes: ['maj', 'maj', 'maj', 'maj'],
   },
   'Circle of Fifths': {
     progression: ['vi', 'ii', 'V', 'I'],
-    chordTypes: ['min7', 'min7', '7', 'maj7']
+    chordTypes: ['min7', 'min7', '7', 'maj7'],
   },
   'Descending Fifths': {
     progression: ['I', 'IV', 'vii°', 'iii', 'vi', 'ii', 'V', 'I'],
-    chordTypes: ['maj7', 'maj7', 'dim7', 'min7', 'min7', 'min7', '7', 'maj7']
-  }
+    chordTypes: ['maj7', 'maj7', 'dim7', 'min7', 'min7', 'min7', '7', 'maj7'],
+  },
 };
 
 /**
  * Chord degrees in major keys
  */
 export const majorDegrees = {
-  'I': 0,   // Tonic
-  'ii': 2,  // Supertonic
-  'iii': 4, // Mediant
-  'IV': 5,  // Subdominant
-  'V': 7,   // Dominant
-  'vi': 9,  // Submediant
+  I: 0, // Tonic
+  ii: 2, // Supertonic
+  iii: 4, // Mediant
+  IV: 5, // Subdominant
+  V: 7, // Dominant
+  vi: 9, // Submediant
   'vii°': 11, // Leading tone
-  'bIII': 3, // Flat third (borrowed from minor)
-  'bVI': 8, // Flat sixth (borrowed from minor)
-  'bVII': 10, // Flat seventh (borrowed from minor)
-  'V/V': 2,  // Secondary dominant (V of V)
+  bIII: 3, // Flat third (borrowed from minor)
+  bVI: 8, // Flat sixth (borrowed from minor)
+  bVII: 10, // Flat seventh (borrowed from minor)
+  'V/V': 2, // Secondary dominant (V of V)
   'V/vi': 4, // Secondary dominant (V of vi)
-  'V/IV': 0  // Secondary dominant (V of IV)
+  'V/IV': 0, // Secondary dominant (V of IV)
 };
 
 /**
@@ -99,7 +99,7 @@ export const majorDegrees = {
  * @param {string} noteName - Note name (e.g., 'C4')
  * @returns {number} - MIDI note number
  */
-export const noteToMidi = (noteName) => {
+export const noteToMidi = noteName => {
   const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
   const [note, octave] = [noteName.slice(0, -1), parseInt(noteName.slice(-1))];
   return notes.indexOf(note) + (octave + 1) * 12;
@@ -110,7 +110,7 @@ export const noteToMidi = (noteName) => {
  * @param {number} midiNumber - MIDI note number
  * @returns {string} - Note name
  */
-export const midiToNote = (midiNumber) => {
+export const midiToNote = midiNumber => {
   const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
   const octave = Math.floor(midiNumber / 12) - 1;
   const note = notes[midiNumber % 12];
@@ -125,8 +125,8 @@ export const midiToNote = (midiNumber) => {
  */
 export const generateChord = (rootNote, chordType) => {
   const rootMidi = noteToMidi(rootNote);
-  return (extendedChordTypes[chordType] || extendedChordTypes.maj).map(
-    interval => midiToNote(rootMidi + interval)
+  return (extendedChordTypes[chordType] || extendedChordTypes.maj).map(interval =>
+    midiToNote(rootMidi + interval)
   );
 };
 
@@ -200,7 +200,7 @@ export const calculateTotalMovement = (voicing1, voicing2) => {
  * @param {Array} chords - Array of chord objects
  * @returns {Array} - Chords with voice leading applied
  */
-export const applyVoiceLeading = (chords) => {
+export const applyVoiceLeading = chords => {
   const voiceLedChords = [];
   let previousVoicing = null;
 
@@ -254,7 +254,7 @@ export const applyVoiceLeading = (chords) => {
       });
 
       // Use the best voicing
-      const voiceLedChord = {...chord, notes: bestVoicing};
+      const voiceLedChord = { ...chord, notes: bestVoicing };
       voiceLedChords.push(voiceLedChord);
       previousVoicing = bestVoicing;
     }
@@ -274,7 +274,8 @@ export const getSecondaryDominantRoot = (degree, key) => {
   const keyIndex = notes.indexOf(key.split('/')[0]);
 
   // Parse the secondary dominant notation (e.g., 'V/V')
-  const [dominantDegree, targetDegree] = degree.split('/');
+  // We only need the target degree, the dominant is always V
+  const [, targetDegree] = degree.split('/');
 
   // Get the root of the target chord
   const targetRoot = (keyIndex + majorDegrees[targetDegree]) % 12;

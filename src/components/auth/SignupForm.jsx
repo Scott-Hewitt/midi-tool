@@ -26,7 +26,7 @@ function SignupForm({ onToggleForm }) {
 
   const { signup } = useAuth();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
 
     // Validation
@@ -90,10 +90,10 @@ function SignupForm({ onToggleForm }) {
             <Input
               type="text"
               value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
+              onChange={e => setDisplayName(e.target.value)}
               bg="rgba(255, 255, 255, 0.1)"
               borderColor="rgba(255, 255, 255, 0.15)"
-              _hover={{ borderColor: "primary.400" }}
+              _hover={{ borderColor: 'primary.400' }}
             />
           </FormControl>
 
@@ -102,10 +102,10 @@ function SignupForm({ onToggleForm }) {
             <Input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               bg="rgba(255, 255, 255, 0.1)"
               borderColor="rgba(255, 255, 255, 0.15)"
-              _hover={{ borderColor: "primary.400" }}
+              _hover={{ borderColor: 'primary.400' }}
             />
           </FormControl>
 
@@ -115,10 +115,10 @@ function SignupForm({ onToggleForm }) {
               <Input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 bg="rgba(255, 255, 255, 0.1)"
                 borderColor="rgba(255, 255, 255, 0.15)"
-                _hover={{ borderColor: "primary.400" }}
+                _hover={{ borderColor: 'primary.400' }}
               />
               <InputRightElement width="4.5rem">
                 <Button
@@ -139,10 +139,10 @@ function SignupForm({ onToggleForm }) {
               <Input
                 type={showPassword ? 'text' : 'password'}
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={e => setConfirmPassword(e.target.value)}
                 bg="rgba(255, 255, 255, 0.1)"
                 borderColor="rgba(255, 255, 255, 0.15)"
-                _hover={{ borderColor: "primary.400" }}
+                _hover={{ borderColor: 'primary.400' }}
               />
               <InputRightElement width="4.5rem">
                 <Button
@@ -171,11 +171,7 @@ function SignupForm({ onToggleForm }) {
 
       <Text mt={4} textAlign="center">
         Already have an account?{' '}
-        <Button
-          variant="link"
-          colorScheme="primary"
-          onClick={onToggleForm}
-        >
+        <Button variant="link" colorScheme="primary" onClick={onToggleForm}>
           Log In
         </Button>
       </Text>

@@ -1,7 +1,11 @@
 import { createContext, useContext, useState, useRef, useEffect } from 'react';
 import { initializeTone } from './toneContext';
 import { ensureAudioContext, hasHadUserInteraction } from './audioContext';
-import { loadInstrument, playMelodyWithSoundFont, playChordProgressionWithSoundFont } from './soundfontUtils';
+import {
+  loadInstrument,
+  playMelodyWithSoundFont,
+  playChordProgressionWithSoundFont,
+} from './soundfontUtils';
 import * as Tone from 'tone';
 
 // Create a context for playback
@@ -36,7 +40,14 @@ export function PlaybackProvider({ children }) {
   const audioContextRef = useRef(null);
 
   // Create a synth
-  const createSynth = (type = 'default') => {
+  const createSynth = async (type = 'default') => {
+    // Ensure Tone.js is initialized before creating synths
+    const success = await initializeTone();
+    if (!success) {
+      console.error('Failed to initialize Tone.js, cannot create synth');
+      return null;
+    }
+
     let synth;
 
     switch (type) {
@@ -183,15 +194,21 @@ export function PlaybackProvider({ children }) {
 
       // Create synth lazily if it doesn't exist
       if (!melodySynthRef.current) {
-        melodySynthRef.current = createSynth('melody');
+        melodySynthRef.current = await createSynth('melody');
+        if (!melodySynthRef.current) {
+          console.error('Failed to create melody synth');
+          setIsPlaying(false);
+          setActivePlayingPart(null);
+          return;
+        }
       }
 
       Tone.Transport.bpm.value = tempo;
 
       const now = Tone.now();
       notes.forEach(note => {
-        const durationSeconds = note.duration * 60 / tempo;
-        const startTime = now + (note.startTime * 60 / tempo);
+        const durationSeconds = (note.duration * 60) / tempo;
+        const startTime = now + (note.startTime * 60) / tempo;
 
         melodySynthRef.current.triggerAttackRelease(
           note.pitch,
@@ -207,13 +224,16 @@ export function PlaybackProvider({ children }) {
         return endTime > latest ? endTime : latest;
       }, 0);
 
-      const playbackDuration = lastNote * 60 / tempo;
+      const playbackDuration = (lastNote * 60) / tempo;
 
       // Automatically stop playing after the melody finishes
-      setTimeout(() => {
-        setIsPlaying(false);
-        setActivePlayingPart(null);
-      }, playbackDuration * 1000 + 500); // Add a small buffer
+      setTimeout(
+        () => {
+          setIsPlaying(false);
+          setActivePlayingPart(null);
+        },
+        playbackDuration * 1000 + 500
+      ); // Add a small buffer
     } catch (error) {
       console.error('Error playing melody:', error);
       setIsPlaying(false);
@@ -260,16 +280,22 @@ export function PlaybackProvider({ children }) {
 
       // Create synth lazily if it doesn't exist
       if (!chordSynthRef.current) {
-        chordSynthRef.current = createSynth('chord');
+        chordSynthRef.current = await createSynth('chord');
+        if (!chordSynthRef.current) {
+          console.error('Failed to create chord synth');
+          setIsPlaying(false);
+          setActivePlayingPart(null);
+          return;
+        }
       }
 
       Tone.Transport.bpm.value = tempo;
 
       const now = Tone.now();
-      const secondsPerBar = 60 / tempo * 4; // 4 beats per bar
+      const secondsPerBar = (60 / tempo) * 4; // 4 beats per bar
 
-      chords.forEach((chord, index) => {
-        const startTime = now + (chord.position * secondsPerBar);
+      chords.forEach(chord => {
+        const startTime = now + chord.position * secondsPerBar;
         const duration = chord.duration * secondsPerBar;
 
         chordSynthRef.current.triggerAttackRelease(chord.notes, duration, startTime);
@@ -284,10 +310,13 @@ export function PlaybackProvider({ children }) {
       const playbackDuration = lastChord * secondsPerBar;
 
       // Automatically stop playing after the chords finish
-      setTimeout(() => {
-        setIsPlaying(false);
-        setActivePlayingPart(null);
-      }, playbackDuration * 1000 + 500); // Add a small buffer
+      setTimeout(
+        () => {
+          setIsPlaying(false);
+          setActivePlayingPart(null);
+        },
+        playbackDuration * 1000 + 500
+      ); // Add a small buffer
     } catch (error) {
       console.error('Error playing chords:', error);
       setIsPlaying(false);
@@ -334,15 +363,21 @@ export function PlaybackProvider({ children }) {
 
       // Create synth lazily if it doesn't exist
       if (!bassSynthRef.current) {
-        bassSynthRef.current = createSynth('bass');
+        bassSynthRef.current = await createSynth('bass');
+        if (!bassSynthRef.current) {
+          console.error('Failed to create bass synth');
+          setIsPlaying(false);
+          setActivePlayingPart(null);
+          return;
+        }
       }
 
       Tone.Transport.bpm.value = tempo;
 
       const now = Tone.now();
       notes.forEach(note => {
-        const durationSeconds = note.duration * 60 / tempo;
-        const startTime = now + (note.startTime * 60 / tempo);
+        const durationSeconds = (note.duration * 60) / tempo;
+        const startTime = now + (note.startTime * 60) / tempo;
 
         bassSynthRef.current.triggerAttackRelease(
           note.pitch,
@@ -358,13 +393,16 @@ export function PlaybackProvider({ children }) {
         return endTime > latest ? endTime : latest;
       }, 0);
 
-      const playbackDuration = lastNote * 60 / tempo;
+      const playbackDuration = (lastNote * 60) / tempo;
 
       // Automatically stop playing after the bass finishes
-      setTimeout(() => {
-        setIsPlaying(false);
-        setActivePlayingPart(null);
-      }, playbackDuration * 1000 + 500); // Add a small buffer
+      setTimeout(
+        () => {
+          setIsPlaying(false);
+          setActivePlayingPart(null);
+        },
+        playbackDuration * 1000 + 500
+      ); // Add a small buffer
     } catch (error) {
       console.error('Error playing bass:', error);
       setIsPlaying(false);
@@ -398,12 +436,16 @@ export function PlaybackProvider({ children }) {
 
             // Play melody with SoundFont
             if (melodyNotes.length > 0 && melodyInstrumentRef.current) {
-              promises.push(playMelodyWithSoundFont(melodyInstrumentRef.current, melodyNotes, tempo));
+              promises.push(
+                playMelodyWithSoundFont(melodyInstrumentRef.current, melodyNotes, tempo)
+              );
             }
 
             // Play chords with SoundFont
             if (chords.length > 0 && chordInstrumentRef.current) {
-              promises.push(playChordProgressionWithSoundFont(chordInstrumentRef.current, chords, tempo));
+              promises.push(
+                playChordProgressionWithSoundFont(chordInstrumentRef.current, chords, tempo)
+              );
             }
 
             // Play bass with SoundFont
@@ -438,25 +480,43 @@ export function PlaybackProvider({ children }) {
 
       // Create synths lazily if they don't exist
       if (!melodySynthRef.current) {
-        melodySynthRef.current = createSynth('melody');
+        melodySynthRef.current = await createSynth('melody');
+        if (!melodySynthRef.current) {
+          console.error('Failed to create melody synth');
+          setIsPlaying(false);
+          setActivePlayingPart(null);
+          return;
+        }
       }
 
       if (!chordSynthRef.current) {
-        chordSynthRef.current = createSynth('chord');
+        chordSynthRef.current = await createSynth('chord');
+        if (!chordSynthRef.current) {
+          console.error('Failed to create chord synth');
+          setIsPlaying(false);
+          setActivePlayingPart(null);
+          return;
+        }
       }
 
       if (!bassSynthRef.current) {
-        bassSynthRef.current = createSynth('bass');
+        bassSynthRef.current = await createSynth('bass');
+        if (!bassSynthRef.current) {
+          console.error('Failed to create bass synth');
+          setIsPlaying(false);
+          setActivePlayingPart(null);
+          return;
+        }
       }
 
       const now = Tone.now();
-      const secondsPerBar = 60 / tempo * 4; // 4 beats per bar
+      const secondsPerBar = (60 / tempo) * 4; // 4 beats per bar
 
       // Play melody
       if (melodyNotes.length > 0) {
         melodyNotes.forEach(note => {
-          const durationSeconds = note.duration * 60 / tempo;
-          const startTime = now + (note.startTime * 60 / tempo);
+          const durationSeconds = (note.duration * 60) / tempo;
+          const startTime = now + (note.startTime * 60) / tempo;
 
           melodySynthRef.current.triggerAttackRelease(
             note.pitch,
@@ -469,8 +529,8 @@ export function PlaybackProvider({ children }) {
 
       // Play chords
       if (chords.length > 0) {
-        chords.forEach((chord, index) => {
-          const startTime = now + (chord.position * secondsPerBar);
+        chords.forEach(chord => {
+          const startTime = now + chord.position * secondsPerBar;
           const duration = chord.duration * secondsPerBar;
 
           chordSynthRef.current.triggerAttackRelease(chord.notes, duration, startTime);
@@ -480,8 +540,8 @@ export function PlaybackProvider({ children }) {
       // Play bass
       if (bassNotes.length > 0) {
         bassNotes.forEach(note => {
-          const durationSeconds = note.duration * 60 / tempo;
-          const startTime = now + (note.startTime * 60 / tempo);
+          const durationSeconds = (note.duration * 60) / tempo;
+          const startTime = now + (note.startTime * 60) / tempo;
 
           bassSynthRef.current.triggerAttackRelease(
             note.pitch,
@@ -507,10 +567,11 @@ export function PlaybackProvider({ children }) {
 
       // Check chord end time
       if (chords.length > 0) {
-        const chordEndTime = chords.reduce((latest, chord) => {
-          const endPosition = chord.position + chord.duration;
-          return endPosition > latest ? endPosition : latest;
-        }, 0) * 4; // Convert from bars to beats
+        const chordEndTime =
+          chords.reduce((latest, chord) => {
+            const endPosition = chord.position + chord.duration;
+            return endPosition > latest ? endPosition : latest;
+          }, 0) * 4; // Convert from bars to beats
 
         lastTime = Math.max(lastTime, chordEndTime);
       }
@@ -525,13 +586,16 @@ export function PlaybackProvider({ children }) {
         lastTime = Math.max(lastTime, bassEndTime);
       }
 
-      const playbackDuration = lastTime * 60 / tempo;
+      const playbackDuration = (lastTime * 60) / tempo;
 
       // Automatically stop playing after the composition finishes
-      setTimeout(() => {
-        setIsPlaying(false);
-        setActivePlayingPart(null);
-      }, playbackDuration * 1000 + 500); // Add a small buffer
+      setTimeout(
+        () => {
+          setIsPlaying(false);
+          setActivePlayingPart(null);
+        },
+        playbackDuration * 1000 + 500
+      ); // Add a small buffer
     } catch (error) {
       console.error('Error playing composition:', error);
       setIsPlaying(false);
@@ -583,7 +647,7 @@ export function PlaybackProvider({ children }) {
         playBass,
         playComposition,
         playData,
-        stopPlayback
+        stopPlayback,
       }}
     >
       {children}

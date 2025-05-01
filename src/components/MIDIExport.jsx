@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { exportAndDownloadMIDI } from '../utils/simpleMidi';
+import { exportAndDownloadMIDI } from '../utils/firebase/midiExport';
 import {
   Box,
   Heading,
@@ -25,7 +25,7 @@ import {
   AccordionPanel,
   AccordionIcon,
   Icon,
-  Tooltip
+  Tooltip,
 } from '@chakra-ui/react';
 import { AccordionButton } from '@chakra-ui/react';
 
@@ -37,17 +37,17 @@ function MIDIExport({ data, type }) {
     includeChords: true,
     includeBass: true,
     melodyInstrument: 0, // Piano
-    chordInstrument: 4,  // Electric Piano
-    bassInstrument: 32,  // Acoustic Bass
+    chordInstrument: 4, // Electric Piano
+    bassInstrument: 32, // Acoustic Bass
     applyExpression: true,
-    humanize: true
+    humanize: true,
   });
 
   // Handle option changes
   const handleOptionChange = (option, value) => {
     setExportOptions({
       ...exportOptions,
-      [option]: value
+      [option]: value,
     });
   };
 
@@ -78,7 +78,7 @@ function MIDIExport({ data, type }) {
         ...exportOptions,
         includeMelody: (type === 'melody' || type === 'composition') && exportOptions.includeMelody,
         includeChords: (type === 'chord' || type === 'composition') && exportOptions.includeChords,
-        includeBass: type === 'composition' && exportOptions.includeBass
+        includeBass: type === 'composition' && exportOptions.includeBass,
       };
 
       // Export the MIDI file
@@ -114,9 +114,18 @@ function MIDIExport({ data, type }) {
   };
 
   return (
-    <Card p={6} variant="elevated" bg="rgba(30, 41, 59, 0.5)" backdropFilter="blur(12px)" border="1px solid rgba(255, 255, 255, 0.1)" boxShadow="0 8px 32px 0 rgba(0, 0, 0, 0.37)">
+    <Card
+      p={6}
+      variant="elevated"
+      bg="rgba(30, 41, 59, 0.5)"
+      backdropFilter="blur(12px)"
+      border="1px solid rgba(255, 255, 255, 0.1)"
+      boxShadow="0 8px 32px 0 rgba(0, 0, 0, 0.37)"
+    >
       <CardHeader pb={4}>
-        <Heading size="lg" color="primary.400">MIDI Export</Heading>
+        <Heading size="lg" color="primary.400">
+          MIDI Export
+        </Heading>
       </CardHeader>
 
       <CardBody>
@@ -126,11 +135,11 @@ function MIDIExport({ data, type }) {
             <FormLabel>File Name</FormLabel>
             <Input
               value={fileName}
-              onChange={(e) => setFileName(e.target.value)}
+              onChange={e => setFileName(e.target.value)}
               placeholder="Enter file name"
               bg="rgba(255, 255, 255, 0.1)"
               borderColor="rgba(255, 255, 255, 0.15)"
-              _hover={{ borderColor: "primary.400" }}
+              _hover={{ borderColor: 'primary.400' }}
             />
           </FormControl>
 
@@ -141,7 +150,7 @@ function MIDIExport({ data, type }) {
                 <AccordionButton
                   bg="rgba(255, 255, 255, 0.05)"
                   borderRadius="md"
-                  _hover={{ bg: "rgba(255, 255, 255, 0.1)" }}
+                  _hover={{ bg: 'rgba(255, 255, 255, 0.1)' }}
                 >
                   <Box flex="1" textAlign="left">
                     <Heading size="sm">Export Options</Heading>
@@ -152,13 +161,15 @@ function MIDIExport({ data, type }) {
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} mt={4}>
                     {/* Track Options */}
                     <Box>
-                      <Heading size="xs" mb={3}>Tracks</Heading>
+                      <Heading size="xs" mb={3}>
+                        Tracks
+                      </Heading>
 
                       {(type === 'melody' || type === 'composition') && (
                         <FormControl display="flex" alignItems="center" mb={2}>
                           <Checkbox
                             isChecked={exportOptions.includeMelody}
-                            onChange={(e) => handleOptionChange('includeMelody', e.target.checked)}
+                            onChange={e => handleOptionChange('includeMelody', e.target.checked)}
                             colorScheme="primary"
                             mr={2}
                           />
@@ -170,7 +181,7 @@ function MIDIExport({ data, type }) {
                         <FormControl display="flex" alignItems="center" mb={2}>
                           <Checkbox
                             isChecked={exportOptions.includeChords}
-                            onChange={(e) => handleOptionChange('includeChords', e.target.checked)}
+                            onChange={e => handleOptionChange('includeChords', e.target.checked)}
                             colorScheme="primary"
                             mr={2}
                           />
@@ -181,7 +192,7 @@ function MIDIExport({ data, type }) {
                       <FormControl display="flex" alignItems="center" mb={2}>
                         <Checkbox
                           isChecked={exportOptions.includeBass}
-                          onChange={(e) => handleOptionChange('includeBass', e.target.checked)}
+                          onChange={e => handleOptionChange('includeBass', e.target.checked)}
                           colorScheme="primary"
                           mr={2}
                         />
@@ -191,31 +202,41 @@ function MIDIExport({ data, type }) {
 
                     {/* Processing Options */}
                     <Box>
-                      <Heading size="xs" mb={3}>Processing</Heading>
+                      <Heading size="xs" mb={3}>
+                        Processing
+                      </Heading>
 
                       <FormControl display="flex" alignItems="center" mb={2}>
                         <Checkbox
                           isChecked={exportOptions.applyExpression}
-                          onChange={(e) => handleOptionChange('applyExpression', e.target.checked)}
+                          onChange={e => handleOptionChange('applyExpression', e.target.checked)}
                           colorScheme="primary"
                           mr={2}
                         />
                         <FormLabel mb={0}>Apply Expression</FormLabel>
                         <Tooltip label="Adds dynamics and volume changes" hasArrow placement="top">
-                          <Box as="span" ml={1} color="gray.300" fontSize="sm">ⓘ</Box>
+                          <Box as="span" ml={1} color="gray.300" fontSize="sm">
+                            ⓘ
+                          </Box>
                         </Tooltip>
                       </FormControl>
 
                       <FormControl display="flex" alignItems="center" mb={2}>
                         <Checkbox
                           isChecked={exportOptions.humanize}
-                          onChange={(e) => handleOptionChange('humanize', e.target.checked)}
+                          onChange={e => handleOptionChange('humanize', e.target.checked)}
                           colorScheme="primary"
                           mr={2}
                         />
                         <FormLabel mb={0}>Humanize</FormLabel>
-                        <Tooltip label="Adds slight timing and velocity variations" hasArrow placement="top">
-                          <Box as="span" ml={1} color="gray.300" fontSize="sm">ⓘ</Box>
+                        <Tooltip
+                          label="Adds slight timing and velocity variations"
+                          hasArrow
+                          placement="top"
+                        >
+                          <Box as="span" ml={1} color="gray.300" fontSize="sm">
+                            ⓘ
+                          </Box>
                         </Tooltip>
                       </FormControl>
                     </Box>
@@ -225,10 +246,12 @@ function MIDIExport({ data, type }) {
                       <FormLabel>Melody Instrument</FormLabel>
                       <Select
                         value={exportOptions.melodyInstrument}
-                        onChange={(e) => handleOptionChange('melodyInstrument', parseInt(e.target.value))}
+                        onChange={e =>
+                          handleOptionChange('melodyInstrument', parseInt(e.target.value))
+                        }
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
-                        _hover={{ borderColor: "primary.400" }}
+                        _hover={{ borderColor: 'primary.400' }}
                       >
                         <option value="0">Piano</option>
                         <option value="4">Electric Piano</option>
@@ -243,10 +266,12 @@ function MIDIExport({ data, type }) {
                       <FormLabel>Chord Instrument</FormLabel>
                       <Select
                         value={exportOptions.chordInstrument}
-                        onChange={(e) => handleOptionChange('chordInstrument', parseInt(e.target.value))}
+                        onChange={e =>
+                          handleOptionChange('chordInstrument', parseInt(e.target.value))
+                        }
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
-                        _hover={{ borderColor: "primary.400" }}
+                        _hover={{ borderColor: 'primary.400' }}
                       >
                         <option value="0">Piano</option>
                         <option value="4">Electric Piano</option>
@@ -261,10 +286,12 @@ function MIDIExport({ data, type }) {
                       <FormLabel>Bass Instrument</FormLabel>
                       <Select
                         value={exportOptions.bassInstrument}
-                        onChange={(e) => handleOptionChange('bassInstrument', parseInt(e.target.value))}
+                        onChange={e =>
+                          handleOptionChange('bassInstrument', parseInt(e.target.value))
+                        }
                         bg="rgba(255, 255, 255, 0.1)"
                         borderColor="rgba(255, 255, 255, 0.15)"
-                        _hover={{ borderColor: "primary.400" }}
+                        _hover={{ borderColor: 'primary.400' }}
                       >
                         <option value="32">Acoustic Bass</option>
                         <option value="33">Electric Bass</option>
@@ -286,7 +313,11 @@ function MIDIExport({ data, type }) {
             isDisabled={!data}
             colorScheme="primary"
             size="lg"
-            leftIcon={<Box as="span" className="icon">💾</Box>}
+            leftIcon={
+              <Box as="span" className="icon">
+                💾
+              </Box>
+            }
             alignSelf="flex-start"
             mt={4}
           >
@@ -316,13 +347,21 @@ function MIDIExport({ data, type }) {
             boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
           >
             <Text mb={3} fontWeight="medium" textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
-              Export your {type === 'melody' ? 'melody' : type === 'chord' ? 'chord progression' : 'composition'} as a standard MIDI file
-              that can be imported into any Digital Audio Workstation (DAW) like Ableton Live,
-              Logic Pro, FL Studio, etc.
+              Export your{' '}
+              {type === 'melody'
+                ? 'melody'
+                : type === 'chord'
+                  ? 'chord progression'
+                  : 'composition'}{' '}
+              as a standard MIDI file that can be imported into any Digital Audio Workstation (DAW)
+              like Ableton Live, Logic Pro, FL Studio, etc.
             </Text>
             <Text fontWeight="bold" color="primary.300" textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
-              Pro Tip: <Text as="span" fontWeight="medium" display="inline">Customize your export with the options above to create more
-              professional and complete MIDI files with multiple tracks and instruments.</Text>
+              Pro Tip:{' '}
+              <Text as="span" fontWeight="medium" display="inline">
+                Customize your export with the options above to create more professional and
+                complete MIDI files with multiple tracks and instruments.
+              </Text>
             </Text>
           </Box>
         </VStack>

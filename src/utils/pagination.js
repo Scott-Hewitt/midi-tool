@@ -1,23 +1,25 @@
 /**
  * Pagination Utilities
- * 
+ *
  * This module provides utilities for paginating data from Firestore.
  */
 
-import { 
-  collection, 
-  query, 
-  where, 
-  orderBy, 
-  limit, 
-  startAfter, 
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  startAfter,
   getDocs,
-  startAt,
-  endAt,
+  // startAt and endAt are imported for potential future use
+  // startAt,
+  // endAt,
   endBefore,
-  limitToLast
+  limitToLast,
 } from 'firebase/firestore';
 import { db } from '../services/firebase';
+import { useState, useEffect, useCallback } from 'react';
 
 /**
  * Get paginated data from Firestore
@@ -40,20 +42,20 @@ export const getPaginatedData = async (collectionName, options = {}) => {
       pageSize = 10,
       lastVisible = null,
       firstVisible = null,
-      direction = 'next'
+      direction = 'next',
     } = options;
-    
+
     // Start building the query
     let q = collection(db, collectionName);
-    
+
     // Add filters
     filters.forEach(filter => {
       q = query(q, where(filter.field, filter.operator, filter.value));
     });
-    
+
     // Add ordering
     q = query(q, orderBy(orderByField, orderDirection));
-    
+
     // Add pagination
     if (direction === 'next') {
       // Forward pagination
@@ -71,24 +73,24 @@ export const getPaginatedData = async (collectionName, options = {}) => {
         q = query(q, limitToLast(pageSize));
       }
     }
-    
+
     // Execute the query
     const querySnapshot = await getDocs(q);
-    
+
     // Extract the data
     const data = querySnapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
+      ...doc.data(),
     }));
-    
+
     // Get the first and last visible documents for pagination
     const newFirstVisible = querySnapshot.docs[0] || null;
     const newLastVisible = querySnapshot.docs[querySnapshot.docs.length - 1] || null;
-    
+
     // Check if there are more pages
     let hasNextPage = false;
     let hasPrevPage = false;
-    
+
     if (newLastVisible) {
       // Check for next page
       const nextQuery = query(
@@ -101,7 +103,7 @@ export const getPaginatedData = async (collectionName, options = {}) => {
       const nextSnapshot = await getDocs(nextQuery);
       hasNextPage = !nextSnapshot.empty;
     }
-    
+
     if (newFirstVisible) {
       // Check for previous page
       const prevQuery = query(
@@ -114,7 +116,7 @@ export const getPaginatedData = async (collectionName, options = {}) => {
       const prevSnapshot = await getDocs(prevQuery);
       hasPrevPage = !prevSnapshot.empty;
     }
-    
+
     return {
       data,
       pagination: {
@@ -122,8 +124,8 @@ export const getPaginatedData = async (collectionName, options = {}) => {
         lastVisible: newLastVisible,
         hasNextPage,
         hasPrevPage,
-        pageSize
-      }
+        pageSize,
+      },
     };
   } catch (error) {
     console.error('Error getting paginated data:', error);
@@ -138,13 +140,12 @@ export const getPaginatedData = async (collectionName, options = {}) => {
  * @param {Object} currentPagination - Current pagination info
  * @returns {Promise<Object>} - Next page data and pagination info
  */
-export const getNextPage = async (collectionName, options, currentPagination) => {
-  return getPaginatedData(collectionName, {
+export const getNextPage = async (collectionName, options, currentPagination) =>
+  getPaginatedData(collectionName, {
     ...options,
     lastVisible: currentPagination.lastVisible,
-    direction: 'next'
+    direction: 'next',
   });
-};
 
 /**
  * Get the previous page of data
@@ -153,13 +154,12 @@ export const getNextPage = async (collectionName, options, currentPagination) =>
  * @param {Object} currentPagination - Current pagination info
  * @returns {Promise<Object>} - Previous page data and pagination info
  */
-export const getPrevPage = async (collectionName, options, currentPagination) => {
-  return getPaginatedData(collectionName, {
+export const getPrevPage = async (collectionName, options, currentPagination) =>
+  getPaginatedData(collectionName, {
     ...options,
     firstVisible: currentPagination.firstVisible,
-    direction: 'prev'
+    direction: 'prev',
   });
-};
 
 /**
  * Create a paginated query hook for React components
@@ -167,8 +167,9 @@ export const getPrevPage = async (collectionName, options, currentPagination) =>
  * @param {Object} defaultOptions - Default query options
  * @returns {Function} - Hook function
  */
-export const createPaginatedQueryHook = (collectionName, defaultOptions = {}) => {
-  return (options = {}) => {
+export const createPaginatedQueryHook =
+  (collectionName, defaultOptions = {}) =>
+  (options = {}) => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -177,55 +178,58 @@ export const createPaginatedQueryHook = (collectionName, defaultOptions = {}) =>
       lastVisible: null,
       hasNextPage: false,
       hasPrevPage: false,
-      pageSize: defaultOptions.pageSize || 10
+      pageSize: defaultOptions.pageSize || 10,
     });
-    
-    const fetchData = useCallback(async (paginationDirection = 'next') => {
-      try {
-        setLoading(true);
-        
-        const mergedOptions = {
-          ...defaultOptions,
-          ...options,
-          direction: paginationDirection
-        };
-        
-        if (paginationDirection === 'next') {
-          mergedOptions.lastVisible = pagination.lastVisible;
-          mergedOptions.firstVisible = null;
-        } else if (paginationDirection === 'prev') {
-          mergedOptions.firstVisible = pagination.firstVisible;
-          mergedOptions.lastVisible = null;
+
+    const fetchData = useCallback(
+      async (paginationDirection = 'next') => {
+        try {
+          setLoading(true);
+
+          const mergedOptions = {
+            ...defaultOptions,
+            ...options,
+            direction: paginationDirection,
+          };
+
+          if (paginationDirection === 'next') {
+            mergedOptions.lastVisible = pagination.lastVisible;
+            mergedOptions.firstVisible = null;
+          } else if (paginationDirection === 'prev') {
+            mergedOptions.firstVisible = pagination.firstVisible;
+            mergedOptions.lastVisible = null;
+          }
+
+          const result = await getPaginatedData(collectionName, mergedOptions);
+
+          setData(result.data);
+          setPagination(result.pagination);
+          setError(null);
+        } catch (err) {
+          setError(err);
+        } finally {
+          setLoading(false);
         }
-        
-        const result = await getPaginatedData(collectionName, mergedOptions);
-        
-        setData(result.data);
-        setPagination(result.pagination);
-        setError(null);
-      } catch (err) {
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
-    }, [options, pagination.firstVisible, pagination.lastVisible]);
-    
+      },
+      [options, pagination.firstVisible, pagination.lastVisible]
+    );
+
     useEffect(() => {
       fetchData('next');
     }, [fetchData]);
-    
+
     const nextPage = useCallback(() => {
       if (pagination.hasNextPage) {
         fetchData('next');
       }
     }, [fetchData, pagination.hasNextPage]);
-    
+
     const prevPage = useCallback(() => {
       if (pagination.hasPrevPage) {
         fetchData('prev');
       }
     }, [fetchData, pagination.hasPrevPage]);
-    
+
     return {
       data,
       loading,
@@ -233,7 +237,6 @@ export const createPaginatedQueryHook = (collectionName, defaultOptions = {}) =>
       pagination,
       nextPage,
       prevPage,
-      refresh: () => fetchData('next')
+      refresh: () => fetchData('next'),
     };
   };
-};
