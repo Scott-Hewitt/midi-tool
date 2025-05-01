@@ -1,21 +1,21 @@
 import { db, storage } from '../../services/firebase';
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
-  getDoc, 
-  doc, 
-  query, 
-  where, 
-  deleteDoc, 
-  updateDoc, 
-  serverTimestamp 
+import {
+  collection,
+  addDoc,
+  getDocs,
+  getDoc,
+  doc,
+  query,
+  where,
+  deleteDoc,
+  updateDoc,
+  serverTimestamp
 } from 'firebase/firestore';
-import { 
-  ref, 
-  uploadBytes, 
-  getDownloadURL, 
-  deleteObject 
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject
 } from 'firebase/storage';
 
 /**
@@ -27,16 +27,11 @@ import {
  */
 export const saveMidiFile = async (file, metadata, userId) => {
   try {
-    // Create a reference to the file in Firebase Storage
     const storageRef = ref(storage, `users/${userId}/midi/${file.name}`);
-    
-    // Upload the file
+
     const snapshot = await uploadBytes(storageRef, file);
-    
-    // Get the download URL
+
     const downloadURL = await getDownloadURL(snapshot.ref);
-    
-    // Save the file metadata to Firestore
     const midiFilesRef = collection(db, 'midiFiles');
     const docRef = await addDoc(midiFilesRef, {
       fileName: file.name,
@@ -54,7 +49,7 @@ export const saveMidiFile = async (file, metadata, userId) => {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
-    
+
     return docRef.id;
   } catch (error) {
     console.error('Error saving MIDI file:', error);
@@ -72,7 +67,7 @@ export const getUserMidiFiles = async (userId) => {
     const midiFilesRef = collection(db, 'midiFiles');
     const q = query(midiFilesRef, where('userId', '==', userId));
     const querySnapshot = await getDocs(q);
-    
+
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
@@ -92,7 +87,7 @@ export const getPublicMidiFiles = async () => {
     const midiFilesRef = collection(db, 'midiFiles');
     const q = query(midiFilesRef, where('isPublic', '==', true));
     const querySnapshot = await getDocs(q);
-    
+
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
@@ -112,7 +107,7 @@ export const getMidiFile = async (fileId) => {
   try {
     const docRef = doc(db, 'midiFiles', fileId);
     const docSnap = await getDoc(docRef);
-    
+
     if (docSnap.exists()) {
       return {
         id: docSnap.id,
@@ -136,14 +131,11 @@ export const getMidiFile = async (fileId) => {
  */
 export const updateMidiFile = async (fileId, updates, userId) => {
   try {
-    // Get the file to check ownership
     const file = await getMidiFile(fileId);
-    
+
     if (file.userId !== userId) {
       throw new Error('You do not have permission to update this file');
     }
-    
-    // Update the file
     const docRef = doc(db, 'midiFiles', fileId);
     await updateDoc(docRef, {
       ...updates,
@@ -163,20 +155,16 @@ export const updateMidiFile = async (fileId, updates, userId) => {
  */
 export const deleteMidiFile = async (fileId, userId) => {
   try {
-    // Get the file to check ownership and get the storage path
     const file = await getMidiFile(fileId);
-    
+
     if (file.userId !== userId) {
       throw new Error('You do not have permission to delete this file');
     }
-    
-    // Delete the file from Storage
+
     if (file.storagePath) {
       const storageRef = ref(storage, file.storagePath);
       await deleteObject(storageRef);
     }
-    
-    // Delete the file from Firestore
     const docRef = doc(db, 'midiFiles', fileId);
     await deleteDoc(docRef);
   } catch (error) {

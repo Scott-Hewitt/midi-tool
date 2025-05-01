@@ -138,8 +138,8 @@ function MIDIExport({ data, type }) {
           <Box>
             <Accordion allowToggle defaultIndex={[]}>
               <AccordionItem border="none">
-                <AccordionButton 
-                  bg="rgba(255, 255, 255, 0.05)" 
+                <AccordionButton
+                  bg="rgba(255, 255, 255, 0.05)"
                   borderRadius="md"
                   _hover={{ bg: "rgba(255, 255, 255, 0.1)" }}
                 >
@@ -156,7 +156,7 @@ function MIDIExport({ data, type }) {
 
                       {(type === 'melody' || type === 'composition') && (
                         <FormControl display="flex" alignItems="center" mb={2}>
-                          <Checkbox 
+                          <Checkbox
                             isChecked={exportOptions.includeMelody}
                             onChange={(e) => handleOptionChange('includeMelody', e.target.checked)}
                             colorScheme="primary"
@@ -168,7 +168,7 @@ function MIDIExport({ data, type }) {
 
                       {(type === 'chord' || type === 'composition') && (
                         <FormControl display="flex" alignItems="center" mb={2}>
-                          <Checkbox 
+                          <Checkbox
                             isChecked={exportOptions.includeChords}
                             onChange={(e) => handleOptionChange('includeChords', e.target.checked)}
                             colorScheme="primary"
@@ -179,7 +179,7 @@ function MIDIExport({ data, type }) {
                       )}
 
                       <FormControl display="flex" alignItems="center" mb={2}>
-                        <Checkbox 
+                        <Checkbox
                           isChecked={exportOptions.includeBass}
                           onChange={(e) => handleOptionChange('includeBass', e.target.checked)}
                           colorScheme="primary"
@@ -194,7 +194,7 @@ function MIDIExport({ data, type }) {
                       <Heading size="xs" mb={3}>Processing</Heading>
 
                       <FormControl display="flex" alignItems="center" mb={2}>
-                        <Checkbox 
+                        <Checkbox
                           isChecked={exportOptions.applyExpression}
                           onChange={(e) => handleOptionChange('applyExpression', e.target.checked)}
                           colorScheme="primary"
@@ -207,7 +207,7 @@ function MIDIExport({ data, type }) {
                       </FormControl>
 
                       <FormControl display="flex" alignItems="center" mb={2}>
-                        <Checkbox 
+                        <Checkbox
                           isChecked={exportOptions.humanize}
                           onChange={(e) => handleOptionChange('humanize', e.target.checked)}
                           colorScheme="primary"
@@ -295,7 +295,7 @@ function MIDIExport({ data, type }) {
 
           {/* Export Status */}
           {exportStatus && (
-            <Alert 
+            <Alert
               status={exportStatus.includes('Error') ? 'error' : 'success'}
               variant="solid"
               borderRadius="md"
@@ -306,21 +306,22 @@ function MIDIExport({ data, type }) {
           )}
 
           {/* Export Info */}
-          <Box 
-            mt={4} 
-            p={4} 
-            borderRadius="md" 
-            bg="rgba(255, 255, 255, 0.05)"
+          <Box
+            mt={4}
+            p={4}
+            borderRadius="md"
+            bg="rgba(255, 255, 255, 0.08)"
             borderLeft="4px solid"
             borderColor="primary.500"
+            boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
           >
-            <Text mb={3}>
+            <Text mb={3} fontWeight="medium" textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
               Export your {type === 'melody' ? 'melody' : type === 'chord' ? 'chord progression' : 'composition'} as a standard MIDI file
               that can be imported into any Digital Audio Workstation (DAW) like Ableton Live,
               Logic Pro, FL Studio, etc.
             </Text>
-            <Text fontWeight="bold" color="primary.300">
-              Pro Tip: <Text as="span" fontWeight="normal">Customize your export with the options above to create more
+            <Text fontWeight="bold" color="primary.300" textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
+              Pro Tip: <Text as="span" fontWeight="medium" display="inline">Customize your export with the options above to create more
               professional and complete MIDI files with multiple tracks and instruments.</Text>
             </Text>
           </Box>

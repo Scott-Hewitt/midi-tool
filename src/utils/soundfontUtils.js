@@ -1,7 +1,6 @@
 // SoundFont-Player integration for realistic instrument sounds
 import Soundfont from 'soundfont-player';
 
-// Cache for loaded instruments
 const instrumentCache = {};
 
 /**
@@ -11,24 +10,20 @@ const instrumentCache = {};
  * @returns {Promise<Object>} - SoundFont instrument player
  */
 export const loadInstrument = async (instrumentName = 'acoustic_grand_piano', audioContext) => {
-  // Create audio context if not provided
   const ctx = audioContext || new (window.AudioContext || window.webkitAudioContext)();
 
-  // Check if instrument is already loaded
   const cacheKey = `${instrumentName}_${ctx.id}`;
   if (instrumentCache[cacheKey]) {
     return instrumentCache[cacheKey];
   }
 
   try {
-    // Load the instrument
     const instrument = await Soundfont.instrument(ctx, instrumentName, {
       format: 'mp3',
       soundfont: 'MusyngKite',
-      gain: 3.0 // Adjust volume
+      gain: 3.0
     });
 
-    // Cache the loaded instrument
     instrumentCache[cacheKey] = instrument;
 
     return instrument;

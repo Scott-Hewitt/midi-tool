@@ -28,10 +28,11 @@ import MyCompositions from './components/user/MyCompositions';
 import Favorites from './components/user/Favorites';
 import BackupExport from './components/user/BackupExport';
 import PlayButton from './components/PlayButton';
+import AudioInitializer from './components/AudioInitializer';
 
 // Firebase Auth
 import { useAuth } from './utils/firebase/AuthContext';
-import { registerUserInteraction } from './utils/audioContext';
+import { registerUserInteraction, hasHadUserInteraction } from './utils/audioContext';
 import WelcomeScreen from './components/WelcomeScreen';
 
 // Services and Utilities
@@ -101,9 +102,6 @@ function App() {
     // Only update melody data if we're on the melody tab
     if (activeTab === 0) {
       setMelodyData(data);
-      // Clear other data to prevent interference
-      setChordData(null);
-      setCompositionData(null);
     }
   };
 
@@ -111,9 +109,6 @@ function App() {
     // Only update chord data if we're on the chord tab
     if (activeTab === 1) {
       setChordData(data);
-      // Clear other data to prevent interference
-      setMelodyData(null);
-      setCompositionData(null);
     }
   };
 
@@ -121,9 +116,6 @@ function App() {
     // Only update composition data if we're on the composition tab
     if (activeTab === 2) {
       setCompositionData(data);
-      // Clear other data to prevent interference
-      setMelodyData(null);
-      setChordData(null);
     }
   };
 
@@ -210,20 +202,7 @@ function App() {
       // Update the active tab in the parent component
       setActiveTab(index);
 
-      // Reset data for other tabs to prevent interference
-      if (index === 0) {
-        // Melody tab is active
-        setChordData(null);
-        setCompositionData(null);
-      } else if (index === 1) {
-        // Chord tab is active
-        setMelodyData(null);
-        setCompositionData(null);
-      } else if (index === 2) {
-        // Composition tab is active
-        setMelodyData(null);
-        setChordData(null);
-      }
+      // We no longer reset data for other tabs to preserve generator state
     };
 
     return (
@@ -239,49 +218,13 @@ function App() {
           },
         }}
       >
-        <Tab
-          _selected={{
-            color: "white",
-            bg: "primary.500"
-          }}
-          _hover={{
-            color: "white"
-          }}
-          transition="all 0.3s ease"
-          fontWeight="500"
-          px={6}
-          py={3}
-        >
+        <Tab px={6} py={3} transition="all 0.3s ease">
           Melody Generator
         </Tab>
-        <Tab
-          _selected={{
-            color: "white",
-            bg: "primary.500"
-          }}
-          _hover={{
-            color: "white"
-          }}
-          transition="all 0.3s ease"
-          fontWeight="500"
-          px={6}
-          py={3}
-        >
+        <Tab px={6} py={3} transition="all 0.3s ease">
           Chord Generator
         </Tab>
-        <Tab
-          _selected={{
-            color: "white",
-            bg: "primary.500"
-          }}
-          _hover={{
-            color: "white"
-          }}
-          transition="all 0.3s ease"
-          fontWeight="500"
-          px={6}
-          py={3}
-        >
+        <Tab px={6} py={3} transition="all 0.3s ease">
           Composition Studio
         </Tab>
       </TabList>
@@ -397,6 +340,9 @@ function App() {
           </AppLayout>
         } />
       </Routes>
+
+      {/* Fallback audio initializer that shows if audio isn't initialized */}
+      {!hasHadUserInteraction() && <AudioInitializer />}
     </Router>
     </PlaybackProvider>
   );

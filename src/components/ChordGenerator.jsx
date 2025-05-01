@@ -55,10 +55,7 @@ import {
 
 // Import SoundFont utility functions
 import {
-  loadInstrument,
-  getAvailableInstruments,
-  playChordProgressionWithSoundFont,
-  stopAllSounds
+  getAvailableInstruments
 } from '../utils/soundfontUtils';
 
 // Define keys with their full names for Tonal.js compatibility
@@ -77,83 +74,32 @@ function ChordGenerator({ onChordGenerated }) {
   const [progression, setProgression] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // New state variables for advanced features
   const [useVoiceLeading, setUseVoiceLeading] = useState(false);
   const [useInversions, setUseInversions] = useState(false);
   const [inversion, setInversion] = useState(0);
   const [useExtendedChords, setUseExtendedChords] = useState(false);
-  const [autoRandomize, setAutoRandomize] = useState(true); // Auto-randomize is enabled by default
+  const [autoRandomize, setAutoRandomize] = useState(true);
 
-  // State for available progressions
   const [availableProgressions, setAvailableProgressions] = useState({});
 
-  // State for SoundFont instruments
-  const [useSoundFont, setUseSoundFont] = useState(true);
-  const [selectedInstrument, setSelectedInstrument] = useState('acoustic_grand_piano');
-  const [availableInstruments, setAvailableInstruments] = useState({});
-  const [instrumentLoading, setInstrumentLoading] = useState(false);
-
-  // Refs for audio context and instrument
   const audioContextRef = useRef(null);
-  const instrumentRef = useRef(null);
 
-  // Synth will be created lazily when needed
   const synthRef = useRef(null);
 
-  // Load available progressions and instruments on component mount
   useEffect(() => {
     setAvailableProgressions(getCommonProgressions());
-    setAvailableInstruments(getAvailableInstruments());
 
-    // Store a reference to the current AudioContext if it exists
     const currentAudioContext = getAudioContext();
     if (currentAudioContext) {
       audioContextRef.current = currentAudioContext;
-      // Load default instrument if we already have an AudioContext
-      loadSoundFontInstrument('acoustic_grand_piano');
     }
-
-    // Cleanup on unmount
-    return () => {
-      if (instrumentRef.current) {
-        stopAllSounds(instrumentRef.current);
-      }
-    };
   }, []);
 
-  // Load a SoundFont instrument
-  const loadSoundFontInstrument = async (instrumentName) => {
-    try {
-      // Ensure AudioContext is initialized (this should be called in response to a user gesture)
-      const ctx = await ensureAudioContext();
-      if (!ctx) {
-        console.error('Failed to initialize AudioContext');
-        setUseSoundFont(false);
-        return;
-      }
 
-      // Update our reference
-      audioContextRef.current = ctx;
 
-      setInstrumentLoading(true);
-      const instrument = await loadInstrument(instrumentName, ctx);
-      instrumentRef.current = instrument;
-      setInstrumentLoading(false);
-    } catch (error) {
-      console.error('Error loading instrument:', error);
-      setInstrumentLoading(false);
-      setUseSoundFont(false); // Fall back to Tone.js
-    }
-  };
-
-  // These functions are now imported from the utility file
-
-  // Generate chord progression using Tonal.js
   const generateProgression = () => {
-    // Get the progression pattern from available progressions
     const progressionPattern = availableProgressions[selectedProgression] || ['I', 'IV', 'V', 'I'];
 
-    // Reset advanced options before applying new ones
     const resetOptions = () => {
       setUseExtendedChords(false);
       setUseVoiceLeading(false);
@@ -161,49 +107,37 @@ function ChordGenerator({ onChordGenerated }) {
       setInversion(0);
     };
 
-    // Randomly apply advanced options for variety
     const randomizeOptions = () => {
-      // Reset options first
       resetOptions();
 
-      // 50% chance to use extended chords
       const shouldUseExtendedChords = Math.random() > 0.5;
       if (shouldUseExtendedChords) {
         setUseExtendedChords(true);
       }
 
-      // 40% chance to use voice leading
       const shouldUseVoiceLeading = Math.random() > 0.6;
       if (shouldUseVoiceLeading) {
         setUseVoiceLeading(true);
       }
 
-      // 30% chance to use inversions
       const shouldUseInversions = Math.random() > 0.7;
       if (shouldUseInversions) {
         setUseInversions(true);
-        // Random inversion level (0-2)
         const randomInversion = Math.floor(Math.random() * 3);
         setInversion(randomInversion);
       }
     };
 
-    // Apply random options if auto-randomize is enabled
     if (autoRandomize) {
       randomizeOptions();
     }
 
-    // Generate the chord progression using Tonal.js
     let chords = generateChordProgression(selectedKey, progressionPattern, useExtendedChords);
 
-    // Format the chords for our application
     chords = chords.map((chord, index) => {
-      // Get the chord notes with octave information
       let notes = chord.notes;
 
-      // Apply inversions if enabled
       if (useInversions && inversion > 0) {
-        // Simple inversion implementation - move the first n notes up an octave
         for (let i = 0; i < inversion && i < notes.length; i++) {
           const note = notes[i];
           const noteName = note.slice(0, -1);
@@ -223,7 +157,6 @@ function ChordGenerator({ onChordGenerated }) {
       };
     });
 
-    // Apply voice leading if enabled
     if (useVoiceLeading) {
       chords = applyVoiceLeading(chords);
     }
@@ -247,76 +180,35 @@ function ChordGenerator({ onChordGenerated }) {
     return chords;
   };
 
-  // Play the generated chord progression
   const playProgression = async () => {
     if (isPlaying) {
-      // Stop playing
-      if (useSoundFont && instrumentRef.current) {
-        stopAllSounds(instrumentRef.current);
-      } else {
-        Tone.Transport.stop();
-        Tone.Transport.cancel();
-      }
+      Tone.Transport.stop();
+      Tone.Transport.cancel();
       setIsPlaying(false);
       return;
     }
 
-    // Ensure AudioContext is initialized (this should be called in response to a user gesture)
-    try {
-      const ctx = await ensureAudioContext();
-      if (ctx && audioContextRef.current !== ctx) {
-        audioContextRef.current = ctx;
-      }
-    } catch (error) {
-      console.error('Failed to initialize AudioContext:', error);
-      // Continue anyway, we can still try to play using Tone.js
-    }
-
-    // Generate progression if not already generated
     const chords = progression ? progression.progression : generateProgression();
 
-    // Play using SoundFont if available, otherwise fall back to Tone.js
-    if (useSoundFont && instrumentRef.current) {
-      try {
-        setIsPlaying(true);
-
-        // Play the chord progression with SoundFont
-        await playChordProgressionWithSoundFont(instrumentRef.current, chords, tempo);
-
-        // Set isPlaying to false when done
-        setIsPlaying(false);
-      } catch (error) {
-        console.error('Error playing with SoundFont:', error);
-        // Fall back to Tone.js
-        playWithToneJs(chords);
-      }
-    } else {
-      // Use Tone.js as fallback
-      playWithToneJs(chords);
-    }
+    playWithToneJs(chords);
   };
 
-  // Play using Tone.js (fallback method)
   const playWithToneJs = async (chords) => {
     try {
-      // Initialize Tone.js on user interaction
       const success = await initializeTone();
       if (!success) {
         console.error('Failed to initialize Tone.js');
         return;
       }
 
-      // Create synth lazily if it doesn't exist
       if (!synthRef.current) {
         synthRef.current = createSynth();
       }
 
-      // Set the tempo
       Tone.Transport.bpm.value = tempo;
 
-      // Schedule the chords
       const now = Tone.now();
-      const secondsPerBar = 60 / tempo * 4; // 4 beats per bar
+      const secondsPerBar = 60 / tempo * 4;
 
       chords.forEach((chord, index) => {
         const startTime = now + (index * chord.duration * secondsPerBar);
@@ -327,11 +219,10 @@ function ChordGenerator({ onChordGenerated }) {
 
       setIsPlaying(true);
 
-      // Stop playing after the progression is complete
       const totalDuration = chords.reduce((sum, chord) => sum + chord.duration, 0) * secondsPerBar * 1000;
       setTimeout(() => {
         setIsPlaying(false);
-      }, totalDuration + 500); // Add a small buffer
+      }, totalDuration + 500);
     } catch (error) {
       console.error('Error playing with Tone.js:', error);
       setIsPlaying(false);
@@ -495,47 +386,6 @@ function ChordGenerator({ onChordGenerated }) {
                       </Flex>
                     </FormControl>
                   </SimpleGrid>
-
-                  <Divider my={6} borderColor="rgba(255, 255, 255, 0.1)" />
-
-                  <Heading size="sm" mb={4}>Sound Options</Heading>
-                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-                    <FormControl>
-                      <Flex align="center">
-                        <FormLabel mb={0}>Use Realistic Instrument Sounds</FormLabel>
-                        <Checkbox
-                          isChecked={useSoundFont}
-                          onChange={(e) => setUseSoundFont(e.target.checked)}
-                          colorScheme="primary"
-                        />
-                      </Flex>
-                    </FormControl>
-
-                    {useSoundFont && (
-                      <FormControl>
-                        <FormLabel>Instrument</FormLabel>
-                        <Flex align="center">
-                          <Select
-                            value={selectedInstrument}
-                            onChange={(e) => {
-                              setSelectedInstrument(e.target.value);
-                              loadSoundFontInstrument(e.target.value);
-                            }}
-                            isDisabled={instrumentLoading}
-                            bg="rgba(255, 255, 255, 0.1)"
-                            borderColor="rgba(255, 255, 255, 0.15)"
-                            _hover={{ borderColor: "primary.400" }}
-                            mr={2}
-                          >
-                            {Object.entries(availableInstruments).map(([value, name]) => (
-                              <option key={value} value={value}>{name}</option>
-                            ))}
-                          </Select>
-                          {instrumentLoading && <Spinner size="sm" color="primary.400" />}
-                        </Flex>
-                      </FormControl>
-                    )}
-                  </SimpleGrid>
                 </AccordionPanel>
               </AccordionItem>
             </Accordion>
@@ -551,15 +401,7 @@ function ChordGenerator({ onChordGenerated }) {
             >
               Generate Progression
             </Button>
-            <Button
-              onClick={playProgression}
-              colorScheme={isPlaying ? "red" : "secondary"}
-              variant={isPlaying ? "solid" : "outline"}
-              size="lg"
-              leftIcon={<Box as="span" className="icon">{isPlaying ? '⏹️' : '▶️'}</Box>}
-            >
-              {isPlaying ? 'Stop Playing' : 'Play Progression'}
-            </Button>
+
           </HStack>
 
           {/* Progression Info */}
@@ -568,12 +410,13 @@ function ChordGenerator({ onChordGenerated }) {
               mt={8}
               p={4}
               borderRadius="md"
-              bg="rgba(255, 255, 255, 0.05)"
+              bg="rgba(255, 255, 255, 0.08)"
               borderLeft="4px solid"
               borderColor="primary.500"
+              boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
             >
-              <Heading size="md" mb={4}>Generated Chord Progression</Heading>
-              <Text mb={4}><Badge colorScheme="primary" mr={2}>Key:</Badge> {progression.key}</Text>
+              <Heading size="md" mb={4} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Generated Chord Progression</Heading>
+              <Text mb={4} fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Key:</Badge> {progression.key}</Text>
 
               <Grid
                 templateColumns={{ base: "1fr", md: "repeat(auto-fill, minmax(200px, 1fr))" }}
@@ -584,16 +427,17 @@ function ChordGenerator({ onChordGenerated }) {
                     key={index}
                     p={3}
                     borderRadius="md"
-                    bg="rgba(255, 255, 255, 0.05)"
-                    _hover={{ bg: "rgba(255, 255, 255, 0.1)" }}
+                    bg="rgba(255, 255, 255, 0.08)"
+                    _hover={{ bg: "rgba(255, 255, 255, 0.12)" }}
                     transition="background 0.2s"
+                    boxShadow="0 2px 4px rgba(0, 0, 0, 0.1)"
                   >
                     <Flex direction="column" align="center">
-                      <Heading size="md" color="primary.300">
+                      <Heading size="md" color="primary.300" textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
                         {chord.symbol || `${chord.root.slice(0, -1)}${chord.type}`}
                       </Heading>
-                      <Badge mb={2}>{chord.degree}</Badge>
-                      <Text fontSize="sm" color="gray.300" textAlign="center">
+                      <Badge mb={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">{chord.degree}</Badge>
+                      <Text fontSize="sm" color="gray.200" textAlign="center" fontWeight="medium">
                         {chord.notes.join(', ')}
                       </Text>
                     </Flex>

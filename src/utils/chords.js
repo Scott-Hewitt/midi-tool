@@ -210,16 +210,14 @@ export const applyVoiceLeading = (chords) => {
       previousVoicing = chord.notes;
       voiceLedChords.push(chord);
     } else {
-      // Extract root note from the chord symbol or use the root property
       let rootNote;
       if (chord.root) {
         rootNote = chord.root + '4';
       } else {
         const rootMatch = chord.symbol ? chord.symbol.match(/^[A-G][#b]?/) : null;
-        rootNote = rootMatch ? rootMatch[0] + '4' : 'C4'; // Default to C4 if no match
+        rootNote = rootMatch ? rootMatch[0] + '4' : 'C4';
       }
 
-      // Determine chord type from the chord object or symbol
       let chordType;
       if (chord.type) {
         chordType = chord.type;
@@ -239,7 +237,7 @@ export const applyVoiceLeading = (chords) => {
           chordType = 'aug';
         }
       } else {
-        chordType = 'maj'; // Default to major if no type info available
+        chordType = 'maj';
       }
 
       // Find the closest voicing to the previous chord

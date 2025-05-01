@@ -2,14 +2,44 @@
 
 A web application for generating melodies and chord progressions, visualizing them, and exporting them as MIDI files.
 
+![MIDI Tool Screenshot](screenshots/app-screenshot.png)
+
+## 🎵 [Try the Live Demo](https://midi-generator-81875.web.app/)
+
+## Why I Built This
+
+As a musician and developer, I've always been fascinated by the intersection of music and technology. I created this tool to bridge the gap between music theory and digital music production, making it easier for musicians of all skill levels to experiment with melodies and chord progressions. The app serves as both a creative tool for experienced musicians and a learning resource for those new to music theory.
+
 ## Features
 
-- **Melody Generator**: Create melodies based on different scales, tempos, and complexity levels
-- **Chord Generator**: Generate chord progressions in various keys with common progression patterns
-- **Visualization**: View a visual representation of your melodies and chord progressions
-- **MIDI Export**: Export your creations as standard MIDI files for use in any DAW
+- **🎹 Melody Generator**: Create melodies based on different scales, tempos, and complexity levels
+  - Choose from various scales and modes
+  - Adjust complexity, rhythm patterns, and contours
+  - Apply motifs, articulation, and humanization
+  - Instantly hear your creations with built-in playback
 
-## Getting Started
+- **🎵 Chord Generator**: Generate chord progressions in various keys with common progression patterns
+  - Select from popular progression patterns (Pop, Jazz, Blues, etc.)
+  - Apply voice leading for smoother transitions
+  - Use inversions and extended chords for richer harmonies
+  - Visualize chord voicings and relationships
+
+- **👁️ Visualization**: View a visual representation of your melodies and chord progressions
+  - Piano roll display for melodies
+  - Chord diagrams with note highlighting
+  - Interactive playback visualization
+
+- **💾 MIDI Export**: Export your creations as standard MIDI files for use in any DAW
+  - Configure track and instrument settings
+  - Apply expression and humanization
+  - Download ready-to-use MIDI files
+
+- **☁️ User Accounts**: Save and organize your compositions
+  - Create a personal library of melodies and progressions
+  - Favorite your best creations for quick access
+  - Export and backup your collection
+
+## Quick Start
 
 ### Prerequisites
 
@@ -20,8 +50,8 @@ A web application for generating melodies and chord progressions, visualizing th
 
 1. Clone the repository
    ```bash
-   git clone https://github.com/yourusername/midi-web-app.git
-   cd midi-web-app
+   git clone https://github.com/yourusername/midi-tool.git
+   cd midi-tool
    ```
 
 2. Install dependencies
@@ -35,6 +65,34 @@ A web application for generating melodies and chord progressions, visualizing th
    ```
 
 4. Open your browser and navigate to `http://localhost:5173`
+
+### Development Commands
+
+```bash
+# Run development server
+npm run dev
+
+# Run tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Lint code
+npm run lint
+
+# Fix linting issues
+npm run lint:fix
+
+# Format code with Prettier
+npm run format
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
 
 ## Usage
 
@@ -91,15 +149,33 @@ To preview the production build locally:
 npm run preview
 ```
 
-## Technologies Used
+## Tech Stack
 
-- React 19.0.0
-- Vite
-- Tone.js for audio synthesis
-- JZZ.js for comprehensive MIDI support
-- Tonal.js for enhanced music theory capabilities
-- SoundFont-Player for realistic instrument sounds
-- HTML5 Canvas for visualization
+### Frontend
+- **React** (v18.2.0) - Component-based UI library
+- **Vite** (v5.0.10) - Fast build tool and development server
+- **Chakra UI** (v2.8.2) - Component library with built-in dark mode
+- **React Router** (v7.5.3) - Client-side routing
+
+### Music & Audio
+- **Tone.js** (v15.0.4) - Web Audio framework for synthesis and scheduling
+- **Tonal.js** (v5.1.0) - Music theory library for scales, chords, and progressions
+- **JZZ.js** (v1.9.3) - MIDI file creation and manipulation
+- **SoundFont-Player** (v0.12.0) - Realistic instrument playback
+
+### Backend & Storage
+- **Firebase** (v11.6.1) - Authentication, database, and storage
+- **React Firebase Hooks** (v5.1.1) - React bindings for Firebase
+
+### Testing & Quality
+- **Vitest** (v1.0.4) - Fast unit testing framework
+- **React Testing Library** (v14.1.2) - Component testing utilities
+- **ESLint** (v8.56.0) - Code linting
+- **Prettier** (v3.2.5) - Code formatting
+
+### Build & Deployment
+- **GitHub** - Version control and CI/CD
+- **Firebase Hosting** - Hosting and deployment
 
 ## License
 

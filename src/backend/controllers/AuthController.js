@@ -1,11 +1,11 @@
 /**
  * Auth Controller
- * 
+ *
  * Handles authentication-related business logic.
  * This controller connects the authentication service with the user model.
  */
 
-import { 
+import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -25,15 +25,10 @@ import { createUser, getUserById } from '../models/UserModel';
  */
 export const registerUser = async (email, password, displayName) => {
   try {
-    // Create user in Firebase Auth
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    
-    // Update profile with display name
     await updateProfile(userCredential.user, { displayName });
-    
-    // Create user document in Firestore
     await createUser(userCredential.user.uid, email, displayName);
-    
+
     return {
       uid: userCredential.user.uid,
       email: userCredential.user.email,
@@ -54,10 +49,9 @@ export const registerUser = async (email, password, displayName) => {
 export const loginWithEmail = async (email, password) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    
-    // Get user data from Firestore
+
     const userData = await getUserById(userCredential.user.uid);
-    
+
     return userData || {
       uid: userCredential.user.uid,
       email: userCredential.user.email,
@@ -77,25 +71,23 @@ export const loginWithGoogle = async () => {
   try {
     const provider = new GoogleAuthProvider();
     const userCredential = await signInWithPopup(auth, provider);
-    
-    // Check if user exists in Firestore
+
     let userData = await getUserById(userCredential.user.uid);
-    
-    // If user doesn't exist, create a new user document
+
     if (!userData) {
       await createUser(
         userCredential.user.uid,
         userCredential.user.email,
         userCredential.user.displayName || 'User'
       );
-      
+
       userData = {
         uid: userCredential.user.uid,
         email: userCredential.user.email,
         displayName: userCredential.user.displayName || 'User'
       };
     }
-    
+
     return userData;
   } catch (error) {
     console.error('Error logging in with Google:', error);

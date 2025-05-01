@@ -87,32 +87,32 @@ export const applyMotifVariation = (motif, scaleLength, variationType) => {
         ...note,
         scaleIndex: (note.scaleIndex + interval) % scaleLength
       }));
-    
+
     case 'invert':
       // Invert the motif (mirror the intervals)
       return motif.map(note => ({
         ...note,
         scaleIndex: scaleLength - 1 - note.scaleIndex
       }));
-    
+
     case 'retrograde':
       // Play the motif backwards
       return [...motif].reverse();
-    
+
     case 'augment':
       // Double the duration of each note
       return motif.map(note => ({
         ...note,
         duration: note.duration * 2
       }));
-    
+
     case 'diminish':
       // Halve the duration of each note
       return motif.map(note => ({
         ...note,
         duration: note.duration / 2
       }));
-    
+
     default:
       return motif;
   }
@@ -122,16 +122,13 @@ export const applyMotifVariation = (motif, scaleLength, variationType) => {
 export const generateArpeggios = (chordProgression, pattern, notesPerChord) => {
   const notes = [];
   let currentTime = 0;
-  
+
   chordProgression.forEach(chord => {
     const chordDuration = chord.duration * 4; // 4 beats per bar
     const noteDuration = chordDuration / notesPerChord;
-    
-    // Get notes for this chord based on pattern
+
     const patternFn = arpeggioPatterns[pattern] || arpeggioPatterns.up;
     const arpeggioNotes = patternFn(chord.notes);
-    
-    // Create notes for the arpeggio
     for (let i = 0; i < notesPerChord; i++) {
       const noteIndex = i % arpeggioNotes.length;
       notes.push({
@@ -143,6 +140,6 @@ export const generateArpeggios = (chordProgression, pattern, notesPerChord) => {
       currentTime += noteDuration;
     }
   });
-  
+
   return notes;
 };

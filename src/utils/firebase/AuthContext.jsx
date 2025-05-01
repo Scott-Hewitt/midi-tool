@@ -1,6 +1,6 @@
 /**
  * Authentication Context
- * 
+ *
  * Provides authentication state and methods to the entire application.
  * Uses the AuthController to handle authentication logic.
  */
@@ -8,15 +8,14 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../../services/firebase';
-import { 
-  registerUser, 
-  loginWithEmail, 
-  loginWithGoogle, 
-  logoutUser, 
-  getUserData 
+import {
+  registerUser,
+  loginWithEmail,
+  loginWithGoogle,
+  logoutUser,
+  getUserData
 } from '../../controllers/AuthController';
 
-// Create the authentication context
 const AuthContext = createContext();
 
 /**
@@ -113,7 +112,6 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // Listen for auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
@@ -128,7 +126,6 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
-  // Context value
   const value = {
     currentUser,
     userProfile,

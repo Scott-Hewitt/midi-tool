@@ -25,8 +25,10 @@ const firebaseConfig = {
   databaseURL: "https://midi-generator-81875-default-rtdb.asia-southeast1.firebasedatabase.app"
 };
 
+// Initialize Firebase app
 const app = initializeApp(firebaseConfig);
 
+// Initialize and export Firebase services
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);

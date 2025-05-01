@@ -22,14 +22,16 @@ import { ensureAudioContext, isAudioContextInitialized, hasHadUserInteraction } 
  * @param {Function} props.onInitialized - Callback when audio is initialized
  */
 const WelcomeScreen = ({ onInitialized }) => {
-  // Check if we should show the welcome screen
+  // Check if we should show the welcome screen - always show if audio needs to be initialized
   const shouldShowWelcomeScreen = !isAudioContextInitialized() || !isToneInitializedStatus() || !hasHadUserInteraction();
 
   // Use localStorage to remember if the user has seen the welcome screen
+  // but only use this if audio is already initialized
   const hasSeenWelcomeScreen = localStorage.getItem('hasSeenWelcomeScreen') === 'true';
 
   const { isOpen, onClose } = useDisclosure({
-    defaultIsOpen: shouldShowWelcomeScreen && !hasSeenWelcomeScreen
+    // Always show if audio needs to be initialized, regardless of whether they've seen the screen before
+    defaultIsOpen: shouldShowWelcomeScreen
   });
   const [isInitializing, setIsInitializing] = useState(false);
 
@@ -73,22 +75,22 @@ const WelcomeScreen = ({ onInitialized }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} closeOnOverlayClick={false} closeOnEsc={false}>
       <ModalOverlay backdropFilter="blur(10px)" bg="rgba(0, 0, 0, 0.7)" />
-      <ModalContent bg="rgba(30, 41, 59, 0.8)" backdropFilter="blur(12px)" border="1px solid rgba(255, 255, 255, 0.1)">
+      <ModalContent bg="rgba(30, 41, 59, 0.9)" backdropFilter="blur(12px)" border="1px solid rgba(255, 255, 255, 0.1)">
         <ModalHeader>
-          <Heading size="lg" color="primary.400">Welcome to MIDI Melody & Chord Generator</Heading>
+          <Heading size="lg" color="primary.300" textShadow="0 1px 3px rgba(0, 0, 0, 0.3)">Welcome to MIDI Melody & Chord Generator</Heading>
         </ModalHeader>
 
         <ModalBody>
           <VStack spacing={4} align="stretch">
-            <Text>
+            <Text fontWeight="medium" color="white" textShadow="0 1px 2px rgba(0, 0, 0, 0.2)">
               This application allows you to create melodies, chord progressions, and full compositions.
             </Text>
-            <Text>
+            <Text fontWeight="medium" color="white" textShadow="0 1px 2px rgba(0, 0, 0, 0.2)">
               To enable audio playback, we need to initialize the audio system.
               Please click the button below to start.
             </Text>
-            <Box p={4} bg="rgba(0, 0, 0, 0.2)" borderRadius="md">
-              <Text fontSize="sm" color="gray.300">
+            <Box p={4} bg="rgba(0, 0, 0, 0.3)" borderRadius="md" borderLeft="3px solid" borderColor="primary.500">
+              <Text fontSize="sm" color="gray.200" fontWeight="medium" textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">
                 Note: Web browsers require user interaction before allowing audio playback.
                 This is a security feature to prevent unwanted autoplay experiences.
               </Text>

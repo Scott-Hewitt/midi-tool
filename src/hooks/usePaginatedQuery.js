@@ -1,6 +1,6 @@
 /**
  * Paginated Query Hook
- * 
+ *
  * This hook provides paginated query functionality for Firestore collections.
  */
 
@@ -28,16 +28,15 @@ export const usePaginatedQuery = (collectionName, options = {}) => {
     currentPage: 1,
     totalPages: 1
   });
-  
+
   const toast = useToast();
-  
-  // Fetch data with pagination
+
   const fetchData = useCallback(async (paginationDirection = 'next') => {
     try {
       setLoading(true);
-      
+
       let result;
-      
+
       if (paginationDirection === 'next' && pagination.lastVisible) {
         result = await getNextPage(collectionName, options, pagination);
       } else if (paginationDirection === 'prev' && pagination.firstVisible) {
@@ -48,12 +47,12 @@ export const usePaginatedQuery = (collectionName, options = {}) => {
           direction: paginationDirection
         });
       }
-      
+
       setData(result.data);
       setPagination(prev => ({
         ...result.pagination,
-        currentPage: paginationDirection === 'next' 
-          ? prev.hasNextPage ? prev.currentPage + 1 : prev.currentPage 
+        currentPage: paginationDirection === 'next'
+          ? prev.hasNextPage ? prev.currentPage + 1 : prev.currentPage
           : prev.hasPrevPage ? prev.currentPage - 1 : prev.currentPage,
         totalPages: prev.totalPages // This would need to be calculated separately
       }));
@@ -65,31 +64,27 @@ export const usePaginatedQuery = (collectionName, options = {}) => {
       setLoading(false);
     }
   }, [collectionName, options, pagination, toast]);
-  
-  // Initial data fetch
+
   useEffect(() => {
     fetchData('next');
   }, [fetchData]);
-  
-  // Go to next page
+
   const nextPage = useCallback(() => {
     if (pagination.hasNextPage) {
       fetchData('next');
     }
   }, [fetchData, pagination.hasNextPage]);
-  
-  // Go to previous page
+
   const prevPage = useCallback(() => {
     if (pagination.hasPrevPage) {
       fetchData('prev');
     }
   }, [fetchData, pagination.hasPrevPage]);
-  
-  // Refresh data
+
   const refresh = useCallback(() => {
     fetchData('next');
   }, [fetchData]);
-  
+
   return {
     data,
     loading,

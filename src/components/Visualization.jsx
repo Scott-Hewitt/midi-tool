@@ -14,17 +14,46 @@ import {
   useTheme
 } from '@chakra-ui/react';
 import PlayButton from './PlayButton';
+import InstrumentSelector from './InstrumentSelector';
+import { usePlayback } from '../utils/PlaybackContext';
 
-function Visualization({ data, type }) {
+function Visualisation({ data, type }) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
+
+  const {
+    useSoundFont,
+    setUseSoundFont,
+    melodyInstrument,
+    chordInstrument,
+    bassInstrument,
+    setMelodyInstrument,
+    setChordInstrument,
+    setBassInstrument,
+    instrumentsLoading
+  } = usePlayback();
+
+  const handleInstrumentChange = (instrumentType, value) => {
+    switch (instrumentType) {
+      case 'melody':
+        setMelodyInstrument(value);
+        break;
+      case 'chord':
+        setChordInstrument(value);
+        break;
+      case 'bass':
+        setBassInstrument(value);
+        break;
+      default:
+        break;
+    }
+  };
   const [hoveredNote, setHoveredNote] = useState(null);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 400 });
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [dpr, setDpr] = useState(window.devicePixelRatio || 1);
   const theme = useTheme();
 
-  // Constants for piano roll
   const PIANO_KEY_WIDTH = 40;
   const WHITE_KEY_HEIGHT = 20;
   const BLACK_KEY_HEIGHT = 12;
@@ -137,14 +166,11 @@ function Visualization({ data, type }) {
     setHoveredNote(null);
   };
 
-  // Set up resize observer to handle container size changes
   useLayoutEffect(() => {
     if (!containerRef.current) return;
 
-    // Fixed aspect ratio
-    const ASPECT_RATIO = 2; // width:height = 2:1
+    const ASPECT_RATIO = 2;
 
-    // Function to update canvas size with debouncing
     let resizeTimeout = null;
     let lastWidth = 0;
     let lastHeight = 0;
@@ -171,23 +197,18 @@ function Visualization({ data, type }) {
       }
     };
 
-    // Initial size update
     updateCanvasSize();
 
-    // Set up resize observer with debouncing
     const resizeObserver = new ResizeObserver(() => {
-      // Cancel any pending updates
       if (resizeTimeout) {
         clearTimeout(resizeTimeout);
       }
 
-      // Schedule a new update with delay to avoid rapid consecutive updates
       resizeTimeout = setTimeout(updateCanvasSize, 100);
     });
 
     resizeObserver.observe(containerRef.current);
 
-    // Update DPR when it changes (e.g., when moving to a different screen)
     const updateDpr = () => {
       setDpr(window.devicePixelRatio || 1);
     };
@@ -195,7 +216,6 @@ function Visualization({ data, type }) {
     window.addEventListener('resize', updateDpr);
 
     return () => {
-      // Clean up all resources
       if (resizeTimeout) {
         clearTimeout(resizeTimeout);
       }
@@ -209,19 +229,15 @@ function Visualization({ data, type }) {
     };
   }, []);
 
-  // Set up canvas and draw visualization
   useEffect(() => {
     if (!data || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
-    // Reset any transformations and clear the canvas completely
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Set canvas dimensions accounting for device pixel ratio
-    // Store original dimensions to avoid feedback loops
     const physicalWidth = Math.floor(canvasSize.width * dpr);
     const physicalHeight = Math.floor(canvasSize.height * dpr);
 
@@ -235,13 +251,10 @@ function Visualization({ data, type }) {
       canvas.style.height = `${canvasSize.height}px`;
     }
 
-    // Scale the context to ensure correct drawing dimensions
     ctx.scale(dpr, dpr);
 
-    // Clear the canvas again after scaling
     ctx.clearRect(0, 0, canvasSize.width, canvasSize.height);
 
-    // Draw the appropriate visualization
     if (type === 'melody') {
       drawMelody(ctx, data, canvasSize.width, canvasSize.height);
     } else if (type === 'chord') {
@@ -250,32 +263,26 @@ function Visualization({ data, type }) {
       drawComposition(ctx, data, canvasSize.width, canvasSize.height);
     }
 
-    // Add event listeners for mouse interactions
-    // Remove existing listeners first to prevent duplicates
     canvas.removeEventListener('mousemove', handleMouseMove);
     canvas.removeEventListener('mouseleave', handleMouseLeave);
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('mouseleave', handleMouseLeave);
 
     return () => {
-      // Clean up event listeners
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
     };
   }, [data, type, canvasSize, dpr]);
 
-  // Draw a melody visualization as a DAW piano roll
   const drawMelody = (ctx, melody, width, height) => {
     if (!melody || !melody.notes || melody.notes.length === 0) return;
 
     const notes = melody.notes;
     const totalDuration = notes.reduce((sum, note) => Math.max(sum, note.startTime + note.duration), 0);
 
-    // Calculate the available width for the piano roll (excluding piano keys)
     const pianoRollWidth = width - PIANO_KEY_WIDTH;
     const timeScale = pianoRollWidth / totalDuration;
 
-    // Find the highest and lowest notes for scaling
     let highestNote = -Infinity;
     let lowestNote = Infinity;
 
@@ -286,26 +293,22 @@ function Visualization({ data, type }) {
       lowestNote = Math.min(lowestNote, midiNumber);
     });
 
-    // Add padding to note range
     highestNote += 2;
     lowestNote = Math.max(0, lowestNote - 2);
 
     const noteRange = highestNote - lowestNote;
     const contentHeight = height - HEADER_HEIGHT;
-    const noteScale = contentHeight / (noteRange || 1); // Avoid division by zero
+    const noteScale = contentHeight / (noteRange || 1);
 
-    // Get theme colors
     const bgColor = theme.colors.gray[900];
     const headerColor = theme.colors.gray[800];
     const textColor = theme.colors.gray[100];
     const primaryColor = theme.colors.primary[500];
     const secondaryColor = theme.colors.secondary[500];
 
-    // Draw background
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, width, height);
 
-    // Draw header area
     ctx.fillStyle = headerColor;
     ctx.fillRect(0, 0, width, HEADER_HEIGHT);
 
@@ -456,7 +459,6 @@ function Visualization({ data, type }) {
     ctx.fillText(`Scale: ${melody.scale} | Tempo: ${melody.tempo} BPM | Notes: ${notes.length}`, PIANO_KEY_WIDTH + 20, height - 15);
   };
 
-  // Draw a composition visualization as a DAW piano roll with melody, chord, and bass parts
   const drawComposition = (ctx, composition, width, height) => {
     if (!composition) return;
 
@@ -638,9 +640,9 @@ function Visualization({ data, type }) {
       ctx.font = 'bold 12px Arial';
       ctx.textAlign = 'center';
 
-      // Text shadow effect
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-      ctx.shadowBlur = 2;
+      // Text shadow effect - enhanced for better readability
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+      ctx.shadowBlur = 3;
       ctx.shadowOffsetX = 1;
       ctx.shadowOffsetY = 1;
 
@@ -999,10 +1001,22 @@ function Visualization({ data, type }) {
             textColor = brightness > 128 ? '#000000' : '#ffffff';
           }
 
+          // Add text shadow for better readability
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+          ctx.shadowBlur = 2;
+          ctx.shadowOffsetX = 1;
+          ctx.shadowOffsetY = 1;
+
           ctx.fillStyle = textColor;
           ctx.font = 'bold 10px Arial';
           ctx.textAlign = 'center';
           ctx.fillText(note, chordStartX + (chordWidth / 2), y + (keyHeight / 2) + 3);
+
+          // Reset shadow
+          ctx.shadowColor = 'transparent';
+          ctx.shadowBlur = 0;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
         }
 
         // Store note data for hover interaction
@@ -1283,7 +1297,19 @@ function Visualization({ data, type }) {
       <CardHeader pb={4}>
         <HStack justifyContent="space-between" alignItems="center">
           <Heading size="lg" color="primary.400">Piano Roll Visualization</Heading>
-          <PlayButton data={data} type={type} />
+          <HStack spacing={2} position="relative" zIndex={2}>
+            <InstrumentSelector
+              type={type}
+              useSoundFont={useSoundFont}
+              setUseSoundFont={setUseSoundFont}
+              melodyInstrument={melodyInstrument}
+              chordInstrument={chordInstrument}
+              bassInstrument={bassInstrument}
+              onInstrumentChange={handleInstrumentChange}
+              isLoading={instrumentsLoading}
+            />
+            <PlayButton data={data} type={type} />
+          </HStack>
         </HStack>
       </CardHeader>
 
@@ -1303,6 +1329,7 @@ function Visualization({ data, type }) {
           border="1px solid"
           borderColor="rgba(99, 102, 241, 0.2)"
           style={{ maxWidth: '100%' }}
+          zIndex={1}
         >
           {/* Canvas for piano roll */}
           <Box
@@ -1350,15 +1377,17 @@ function Visualization({ data, type }) {
 
         <Text
           fontSize="sm"
-          color="gray.300"
+          color="gray.200"
+          fontWeight="medium"
           mt={4}
           p={4}
-          bg="rgba(255, 255, 255, 0.05)"
+          bg="rgba(255, 255, 255, 0.08)"
           borderRadius="md"
           borderLeft="4px solid"
           borderColor="primary.500"
           boxShadow="sm"
           lineHeight="1.6"
+          textShadow="0 1px 2px rgba(0, 0, 0, 0.3)"
         >
           {type === 'melody'
             ? 'Piano Roll: Hover over notes to see details. Each rectangle represents a note. Height indicates pitch, width indicates duration, and color indicates velocity.'
@@ -1369,4 +1398,4 @@ function Visualization({ data, type }) {
   );
 }
 
-export default Visualization;
+export default Visualisation;

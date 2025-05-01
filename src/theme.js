@@ -168,7 +168,7 @@ const theme = extendTheme({
     Card: {
       baseStyle: {
         container: {
-          bg: 'rgba(30, 41, 59, 0.5)',
+          bg: 'rgba(30, 41, 59, 0.7)', // Increased opacity for better text readability
           borderRadius: 'lg',
           boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
           padding: '2rem',
@@ -181,7 +181,7 @@ const theme = extendTheme({
           _hover: {
             transform: 'translateY(-2px)',
             boxShadow: '0 10px 40px 0 rgba(0, 0, 0, 0.45)',
-            bg: 'rgba(30, 41, 59, 0.55)',
+            bg: 'rgba(30, 41, 59, 0.75)',
             borderColor: 'rgba(255, 255, 255, 0.15)',
           },
           _before: {
@@ -203,6 +203,7 @@ const theme = extendTheme({
         body: {
           position: 'relative',
           zIndex: 1,
+          color: 'white', // Ensure text is white for maximum contrast
         },
         footer: {
           position: 'relative',
@@ -211,13 +212,23 @@ const theme = extendTheme({
       },
     },
     Tabs: {
+      baseStyle: {
+        tab: {
+          color: 'gray.100', // Light default color for all tabs
+          textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)', // Text shadow for all tabs
+        },
+      },
       variants: {
         enclosed: {
           tab: {
             borderRadius: 'full',
+            fontWeight: 'medium',
+            color: 'gray.100', // Light color for better readability
             _selected: {
               color: 'white',
-              bg: 'rgba(255, 255, 255, 0.1)',
+              bg: 'rgba(255, 255, 255, 0.2)', // Increased opacity for better contrast
+              fontWeight: 'bold',
+              textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)', // Added text shadow for better readability
             },
           },
           tablist: {
@@ -226,13 +237,113 @@ const theme = extendTheme({
             p: '0.5rem',
           },
         },
+        'soft-rounded': {
+          tab: {
+            borderRadius: 'full',
+            fontWeight: 'medium',
+            color: 'gray.100', // Light color for better readability
+            _selected: {
+              color: 'white',
+              bg: 'primary.500',
+              fontWeight: 'bold',
+              textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)', // Added text shadow for better readability
+            },
+            _hover: {
+              color: 'white',
+            },
+          },
+        },
       },
     },
     Heading: {
       baseStyle: {
-        color: 'primary.400',
+        color: 'primary.300', // Lighter color for better contrast
         fontWeight: '700',
         letterSpacing: '-0.01em',
+        textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)', // Added text shadow for better readability
+      },
+    },
+    Text: {
+      baseStyle: {
+        color: 'white', // Ensure text is white for maximum contrast
+      },
+    },
+    FormLabel: {
+      baseStyle: {
+        color: 'gray.100', // Lighter color for better contrast
+        fontWeight: '500',
+        marginBottom: '2px',
+      },
+    },
+    Input: {
+      baseStyle: {
+        field: {
+          color: 'white',
+          _placeholder: { color: 'gray.400' }, // Brighter placeholder text
+        },
+      },
+      variants: {
+        outline: {
+          field: {
+            bg: 'rgba(255, 255, 255, 0.15)', // Increased opacity for better contrast
+            borderColor: 'rgba(255, 255, 255, 0.2)',
+            _hover: {
+              borderColor: 'primary.400',
+            },
+            _focus: {
+              borderColor: 'primary.400',
+              boxShadow: '0 0 0 1px var(--chakra-colors-primary-400)',
+            },
+          },
+        },
+      },
+    },
+    Select: {
+      baseStyle: {
+        field: {
+          color: 'white',
+        },
+      },
+      variants: {
+        outline: {
+          field: {
+            bg: 'rgba(255, 255, 255, 0.15)', // Increased opacity for better contrast
+            borderColor: 'rgba(255, 255, 255, 0.2)',
+            _hover: {
+              borderColor: 'primary.400',
+            },
+            _focus: {
+              borderColor: 'primary.400',
+              boxShadow: '0 0 0 1px var(--chakra-colors-primary-400)',
+            },
+          },
+        },
+      },
+    },
+    Menu: {
+      baseStyle: {
+        list: {
+          bg: 'rgba(30, 41, 59, 0.9)', // Increased opacity for better readability
+          backdropFilter: 'blur(12px)',
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+        },
+        item: {
+          bg: 'transparent',
+          _hover: {
+            bg: 'rgba(255, 255, 255, 0.15)', // Increased opacity for better contrast
+          },
+          _focus: {
+            bg: 'rgba(255, 255, 255, 0.15)', // Increased opacity for better contrast
+          },
+        },
+      },
+    },
+    Badge: {
+      baseStyle: {
+        textTransform: 'capitalize',
+        fontWeight: 'medium',
+        textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)', // Added text shadow for better readability
       },
     },
   },

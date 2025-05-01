@@ -54,11 +54,7 @@ import { applyVoiceLeading, noteToMidi, midiToNote } from '../utils/chords';
 
 // Import SoundFont utility functions
 import {
-  loadInstrument,
-  getAvailableInstruments,
-  playMelodyWithSoundFont,
-  playChordProgressionWithSoundFont,
-  stopAllSounds
+  getAvailableInstruments
 } from '../utils/soundfontUtils';
 
 // Use the default scales from the scales utility
@@ -73,7 +69,6 @@ const keyOptions = [
 ];
 
 function CompositionGenerator({ onCompositionGenerated }) {
-  // Shared state
   const [selectedKey, setSelectedKey] = useState('C major');
   const [tempo, setTempo] = useState(120);
   const [bars, setBars] = useState(4);
@@ -81,13 +76,11 @@ function CompositionGenerator({ onCompositionGenerated }) {
   const [composition, setComposition] = useState(null);
   const [activePlayingPart, setActivePlayingPart] = useState(null);
 
-  // Musical structure state
   const [useVerseChorus, setUseVerseChorus] = useState(false);
   const [verseProgression, setVerseProgression] = useState('Pop I-V-vi-IV');
   const [chorusProgression, setChorusProgression] = useState('Basic I-IV-V-I');
   const [structure, setStructure] = useState('verse-chorus-verse-chorus');
 
-  // Melody state
   const [complexity, setComplexity] = useState(5);
   const [rhythmPattern, setRhythmPattern] = useState('basic');
   const [contourType, setContourType] = useState('random');
@@ -97,104 +90,81 @@ function CompositionGenerator({ onCompositionGenerated }) {
   const [melodyDynamics, setMelodyDynamics] = useState('none');
   const [humanize, setHumanize] = useState(true);
 
-  // Chord state
   const [selectedProgression, setSelectedProgression] = useState('Basic I-IV-V-I');
-  const [chordDuration, setChordDuration] = useState(1); // in bars
+  const [chordDuration, setChordDuration] = useState(1);
   const [useVoiceLeading, setUseVoiceLeading] = useState(false);
   const [useInversions, setUseInversions] = useState(false);
   const [inversion, setInversion] = useState(0);
   const [useExtendedChords, setUseExtendedChords] = useState(false);
   const [autoRandomize, setAutoRandomize] = useState(true);
 
-  // Bass state
   const [bassPattern, setBassPattern] = useState('basic');
   const [bassOctave, setBassOctave] = useState(2);
   const [bassComplexity, setBassComplexity] = useState(3);
 
-  // State for available progressions
   const [availableProgressions, setAvailableProgressions] = useState({});
 
-  // State for SoundFont instruments
-  const [useSoundFont, setUseSoundFont] = useState(true);
-  const [melodyInstrument, setMelodyInstrument] = useState('acoustic_grand_piano');
-  const [chordInstrument, setChordInstrument] = useState('electric_piano_1');
-  const [bassInstrument, setBassInstrument] = useState('acoustic_bass');
-  const [availableInstruments, setAvailableInstruments] = useState({});
-  const [instrumentLoading, setInstrumentLoading] = useState(false);
-
-  // Refs for audio context and instruments
   const audioContextRef = useRef(null);
-  const melodyInstrumentRef = useRef(null);
-  const chordInstrumentRef = useRef(null);
-  const bassInstrumentRef = useRef(null);
 
-  // Synths will be created lazily when needed
   const melodySynthRef = useRef(null);
   const chordSynthRef = useRef(null);
   const bassSynthRef = useRef(null);
 
-  // Load available progressions and instruments on component mount
   useEffect(() => {
     setAvailableProgressions(getCommonProgressions());
-    setAvailableInstruments(getAvailableInstruments());
 
-    // We don't initialize AudioContext here anymore - it will be initialized on user interaction
-    // Store a reference to the current AudioContext if it exists
     const currentAudioContext = getAudioContext();
     if (currentAudioContext) {
       audioContextRef.current = currentAudioContext;
     }
-
-    // Cleanup on unmount
-    return () => {
-      if (melodyInstrumentRef.current) {
-        stopAllSounds(melodyInstrumentRef.current);
-      }
-      if (chordInstrumentRef.current) {
-        stopAllSounds(chordInstrumentRef.current);
-      }
-      if (bassInstrumentRef.current) {
-        stopAllSounds(bassInstrumentRef.current);
-      }
-    };
   }, []);
 
-  // Load a SoundFont instrument
-  const loadSoundFontInstrument = async (instrumentName, type) => {
-    try {
-      // Ensure AudioContext is initialized (this should be called in response to a user gesture)
-      const ctx = await ensureAudioContext();
-      if (!ctx) {
-        console.error('Failed to initialize AudioContext');
-        setUseSoundFont(false);
-        return;
-      }
 
-      // Update our reference
-      audioContextRef.current = ctx;
 
-      setInstrumentLoading(true);
-      const instrument = await loadInstrument(instrumentName, ctx);
+  const randomizeOptions = () => {
+    const rhythmPatternKeys = Object.keys(rhythmPatterns);
+    setRhythmPattern(rhythmPatternKeys[Math.floor(Math.random() * rhythmPatternKeys.length)]);
 
-      if (type === 'melody') {
-        melodyInstrumentRef.current = instrument;
-      } else if (type === 'chord') {
-        chordInstrumentRef.current = instrument;
-      } else if (type === 'bass') {
-        bassInstrumentRef.current = instrument;
-      }
+    const contourTypeKeys = Object.keys(contourTypes);
+    setContourType(contourTypeKeys[Math.floor(Math.random() * contourTypeKeys.length)]);
 
-      setInstrumentLoading(false);
-    } catch (error) {
-      console.error(`Error loading ${type} instrument:`, error);
-      setInstrumentLoading(false);
-      setUseSoundFont(false); // Fall back to Tone.js
+    const shouldUseMotif = Math.random() > 0.5;
+    setUseMotif(shouldUseMotif);
+
+    if (shouldUseMotif) {
+      const motifVariations = ['transpose', 'invert', 'retrograde', 'rhythmic'];
+      setMotifVariation(motifVariations[Math.floor(Math.random() * motifVariations.length)]);
     }
+
+    const articulations = ['legato', 'staccato', 'accent', 'none'];
+    setMelodyArticulation(articulations[Math.floor(Math.random() * articulations.length)]);
+
+    const dynamicsOptions = ['crescendo', 'diminuendo', 'random', 'none'];
+    setMelodyDynamics(dynamicsOptions[Math.floor(Math.random() * dynamicsOptions.length)]);
+
+    setHumanize(Math.random() > 0.3);
+
+    setUseExtendedChords(Math.random() > 0.5);
+
+    setUseVoiceLeading(Math.random() > 0.6);
+
+    const shouldUseInversions = Math.random() > 0.7;
+    setUseInversions(shouldUseInversions);
+
+    if (shouldUseInversions) {
+      setInversion(Math.floor(Math.random() * 3));
+    }
+
+    const bassPatterns = ['basic', 'walking', 'arpeggiated', 'octaves'];
+    setBassPattern(bassPatterns[Math.floor(Math.random() * bassPatterns.length)]);
+
+    setBassComplexity(Math.floor(Math.random() * 5) + 1);
   };
 
-  // Generate the complete composition
   const generateComposition = async () => {
-    // We'll initialize AudioContext only when playing, not during generation
+    if (autoRandomize) {
+      randomizeOptions();
+    }
 
     // Generate chord progression
     let formattedChords = [];
@@ -1005,7 +975,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
       structure: useVerseChorus ? structure : 'simple',
       melody: {
         notes: melodyNotes,
-        instrument: melodyInstrument,
+        instrument: 'acoustic_grand_piano',
         rhythmPattern: rhythmPattern,
         contourType: contourType,
         useMotif: useMotif,
@@ -1015,7 +985,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
       },
       chord: {
         progression: formattedChords,
-        instrument: chordInstrument,
+        instrument: 'acoustic_guitar_nylon',
         useVoiceLeading: useVoiceLeading,
         useInversions: useInversions,
         inversion: inversion,
@@ -1025,7 +995,7 @@ function CompositionGenerator({ onCompositionGenerated }) {
       },
       bass: {
         notes: bassNotes,
-        instrument: bassInstrument,
+        instrument: 'electric_bass_finger',
         pattern: bassPattern,
         octave: bassOctave,
         complexity: bassComplexity
@@ -1070,19 +1040,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
     const notes = composition.melody.notes;
 
-    // Play using SoundFont if available, otherwise fall back to Tone.js
-    if (useSoundFont && melodyInstrumentRef.current) {
-      try {
-        await playMelodyWithSoundFont(melodyInstrumentRef.current, notes, tempo);
-        setIsPlaying(false);
-        setActivePlayingPart(null);
-      } catch (error) {
-        console.error('Error playing melody with SoundFont:', error);
-        playMelodyWithToneJs(notes);
-      }
-    } else {
-      playMelodyWithToneJs(notes);
-    }
+    // Play using Tone.js
+    playMelodyWithToneJs(notes);
   };
 
   // Play melody using Tone.js
@@ -1160,19 +1119,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
     const chords = composition.chord.progression;
 
-    // Play using SoundFont if available, otherwise fall back to Tone.js
-    if (useSoundFont && chordInstrumentRef.current) {
-      try {
-        await playChordProgressionWithSoundFont(chordInstrumentRef.current, chords, tempo);
-        setIsPlaying(false);
-        setActivePlayingPart(null);
-      } catch (error) {
-        console.error('Error playing chords with SoundFont:', error);
-        playChordsWithToneJs(chords);
-      }
-    } else {
-      playChordsWithToneJs(chords);
-    }
+    // Play using Tone.js
+    playChordsWithToneJs(chords);
   };
 
   // Play chords using Tone.js
@@ -1244,19 +1192,8 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
     const notes = composition.bass.notes;
 
-    // Play using SoundFont if available, otherwise fall back to Tone.js
-    if (useSoundFont && bassInstrumentRef.current) {
-      try {
-        await playMelodyWithSoundFont(bassInstrumentRef.current, notes, tempo);
-        setIsPlaying(false);
-        setActivePlayingPart(null);
-      } catch (error) {
-        console.error('Error playing bass with SoundFont:', error);
-        playBassWithToneJs(notes);
-      }
-    } else {
-      playBassWithToneJs(notes);
-    }
+    // Play using Tone.js
+    playBassWithToneJs(notes);
   };
 
   // Play bass using Tone.js
@@ -1333,40 +1270,34 @@ function CompositionGenerator({ onCompositionGenerated }) {
     setActivePlayingPart('all');
 
     // Play all parts simultaneously
-    const melodyPromise = useSoundFont && melodyInstrumentRef.current
-      ? playMelodyWithSoundFont(melodyInstrumentRef.current, composition.melody.notes, tempo)
-      : new Promise(resolve => {
-          playMelodyWithToneJs(composition.melody.notes);
-          // This is an approximation since we can't easily know when Tone.js finishes
-          const totalDuration = composition.melody.notes.reduce(
-            (max, note) => Math.max(max, note.startTime + note.duration),
-            0
-          );
-          setTimeout(resolve, (totalDuration * 60 / tempo * 1000) + 500);
-        });
+    const melodyPromise = new Promise(resolve => {
+      playMelodyWithToneJs(composition.melody.notes);
+      // This is an approximation since we can't easily know when Tone.js finishes
+      const totalDuration = composition.melody.notes.reduce(
+        (max, note) => Math.max(max, note.startTime + note.duration),
+        0
+      );
+      setTimeout(resolve, (totalDuration * 60 / tempo * 1000) + 500);
+    });
 
-    const chordPromise = useSoundFont && chordInstrumentRef.current
-      ? playChordProgressionWithSoundFont(chordInstrumentRef.current, composition.chord.progression, tempo)
-      : new Promise(resolve => {
-          playChordsWithToneJs(composition.chord.progression);
-          const secondsPerBar = 60 / tempo * 4;
-          const totalDuration = composition.chord.progression.reduce(
-            (sum, chord) => Math.max(sum, chord.position + chord.duration),
-            0
-          ) * secondsPerBar * 1000;
-          setTimeout(resolve, totalDuration + 500);
-        });
+    const chordPromise = new Promise(resolve => {
+      playChordsWithToneJs(composition.chord.progression);
+      const secondsPerBar = 60 / tempo * 4;
+      const totalDuration = composition.chord.progression.reduce(
+        (sum, chord) => Math.max(sum, chord.position + chord.duration),
+        0
+      ) * secondsPerBar * 1000;
+      setTimeout(resolve, totalDuration + 500);
+    });
 
-    const bassPromise = useSoundFont && bassInstrumentRef.current
-      ? playMelodyWithSoundFont(bassInstrumentRef.current, composition.bass.notes, tempo)
-      : new Promise(resolve => {
-          playBassWithToneJs(composition.bass.notes);
-          const totalDuration = composition.bass.notes.reduce(
-            (max, note) => Math.max(max, note.startTime + note.duration),
-            0
-          );
-          setTimeout(resolve, (totalDuration * 60 / tempo * 1000) + 500);
-        });
+    const bassPromise = new Promise(resolve => {
+      playBassWithToneJs(composition.bass.notes);
+      const totalDuration = composition.bass.notes.reduce(
+        (max, note) => Math.max(max, note.startTime + note.duration),
+        0
+      );
+      setTimeout(resolve, (totalDuration * 60 / tempo * 1000) + 500);
+    });
 
     // Wait for all parts to finish
     await Promise.all([melodyPromise, chordPromise, bassPromise]);
@@ -1377,16 +1308,10 @@ function CompositionGenerator({ onCompositionGenerated }) {
 
   // Stop all playback
   const stopPlayback = () => {
-    if (useSoundFont) {
-      if (melodyInstrumentRef.current) stopAllSounds(melodyInstrumentRef.current);
-      if (chordInstrumentRef.current) stopAllSounds(chordInstrumentRef.current);
-      if (bassInstrumentRef.current) stopAllSounds(bassInstrumentRef.current);
-    } else {
-      // Stop Tone.js playback if it's initialized
-      if (melodySynthRef.current || chordSynthRef.current || bassSynthRef.current) {
-        Tone.Transport.stop();
-        Tone.Transport.cancel();
-      }
+    // Stop Tone.js playback if it's initialized
+    if (melodySynthRef.current || chordSynthRef.current || bassSynthRef.current) {
+      Tone.Transport.stop();
+      Tone.Transport.cancel();
     }
 
     setIsPlaying(false);
@@ -1467,134 +1392,23 @@ function CompositionGenerator({ onCompositionGenerated }) {
               <TabPanels>
                 {/* General Tab */}
                 <TabPanel>
-                  <Heading size="sm" mb={3}>Instrument Selection</Heading>
-                  <Flex align="center" mb={3}>
-                    <Checkbox
-                      isChecked={useSoundFont}
-                      onChange={(e) => {
-                        setUseSoundFont(e.target.checked);
-                        if (e.target.checked) {
-                          // Ensure AudioContext is initialized on user interaction
-                          ensureAudioContext().then(() => {
-                            // Load default instruments if needed
-                            if (!melodyInstrumentRef.current) {
-                              loadSoundFontInstrument(melodyInstrument, 'melody');
-                            }
-                            if (!chordInstrumentRef.current) {
-                              loadSoundFontInstrument(chordInstrument, 'chord');
-                            }
-                            if (!bassInstrumentRef.current) {
-                              loadSoundFontInstrument(bassInstrument, 'bass');
-                            }
-                          }).catch(error => {
-                            console.error('Failed to initialize AudioContext:', error);
-                            // If we can't initialize AudioContext, we can't use SoundFont
-                            setUseSoundFont(false);
-                          });
-                        }
-                      }}
-                      colorScheme="primary"
-                      mr={2}
-                    />
-                    <FormLabel mb={0}>Use Realistic Instrument Sounds</FormLabel>
-                    <Tooltip label="Uses high-quality sampled instruments instead of synthesized sounds" hasArrow placement="top">
-                      <Box as="span" ml={1} color="gray.300" fontSize="sm">ⓘ</Box>
-                    </Tooltip>
-                  </Flex>
+                  <FormControl mb={4}>
+                    <FormLabel>Auto-Randomize Options</FormLabel>
+                    <Flex align="center">
+                      <Checkbox
+                        isChecked={autoRandomize}
+                        onChange={(e) => setAutoRandomize(e.target.checked)}
+                        colorScheme="primary"
+                        mr={2}
+                      />
+                      <Text>Automatically randomize advanced options when generating</Text>
+                      <Tooltip label="When enabled, advanced options will be randomized each time you generate a new composition" hasArrow placement="top">
+                        <Box as="span" ml={1} color="gray.300" fontSize="sm">ⓘ</Box>
+                      </Tooltip>
+                    </Flex>
+                  </FormControl>
 
-                  <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4} mt={3}>
-                    <FormControl>
-                      <FormLabel>Melody Instrument</FormLabel>
-                      <Flex align="center">
-                        <Select
-                          value={melodyInstrument}
-                          onChange={(e) => {
-                            setMelodyInstrument(e.target.value);
-                            // Ensure AudioContext is initialized on user interaction
-                            ensureAudioContext().then(() => {
-                              loadSoundFontInstrument(e.target.value, 'melody');
-                            }).catch(error => {
-                              console.error('Failed to initialize AudioContext:', error);
-                              // Continue anyway, but we might not be able to load the instrument
-                              loadSoundFontInstrument(e.target.value, 'melody');
-                            });
-                          }}
-                          isDisabled={!useSoundFont || instrumentLoading}
-                          bg="rgba(255, 255, 255, 0.1)"
-                          borderColor="rgba(255, 255, 255, 0.15)"
-                          _hover={{ borderColor: "primary.400" }}
-                          mr={2}
-                        >
-                          {Object.entries(availableInstruments).map(([value, name]) => (
-                            <option key={value} value={value}>{name}</option>
-                          ))}
-                        </Select>
-                        {instrumentLoading && <Spinner size="sm" color="primary.400" />}
-                      </Flex>
-                    </FormControl>
-
-                    <FormControl>
-                      <FormLabel>Chord Instrument</FormLabel>
-                      <Flex align="center">
-                        <Select
-                          value={chordInstrument}
-                          onChange={(e) => {
-                            setChordInstrument(e.target.value);
-                            // Ensure AudioContext is initialized on user interaction
-                            ensureAudioContext().then(() => {
-                              loadSoundFontInstrument(e.target.value, 'chord');
-                            }).catch(error => {
-                              console.error('Failed to initialize AudioContext:', error);
-                              // Continue anyway, but we might not be able to load the instrument
-                              loadSoundFontInstrument(e.target.value, 'chord');
-                            });
-                          }}
-                          isDisabled={!useSoundFont || instrumentLoading}
-                          bg="rgba(255, 255, 255, 0.1)"
-                          borderColor="rgba(255, 255, 255, 0.15)"
-                          _hover={{ borderColor: "primary.400" }}
-                          mr={2}
-                        >
-                          {Object.entries(availableInstruments).map(([value, name]) => (
-                            <option key={value} value={value}>{name}</option>
-                          ))}
-                        </Select>
-                        {instrumentLoading && <Spinner size="sm" color="primary.400" />}
-                      </Flex>
-                    </FormControl>
-
-                    <FormControl>
-                      <FormLabel>Bass Instrument</FormLabel>
-                      <Flex align="center">
-                        <Select
-                          value={bassInstrument}
-                          onChange={(e) => {
-                            setBassInstrument(e.target.value);
-                            // Ensure AudioContext is initialized on user interaction
-                            ensureAudioContext().then(() => {
-                              loadSoundFontInstrument(e.target.value, 'bass');
-                            }).catch(error => {
-                              console.error('Failed to initialize AudioContext:', error);
-                              // Continue anyway, but we might not be able to load the instrument
-                              loadSoundFontInstrument(e.target.value, 'bass');
-                            });
-                          }}
-                          isDisabled={!useSoundFont || instrumentLoading}
-                          bg="rgba(255, 255, 255, 0.1)"
-                          borderColor="rgba(255, 255, 255, 0.15)"
-                          _hover={{ borderColor: "primary.400" }}
-                          mr={2}
-                        >
-                          {Object.entries(availableInstruments).map(([value, name]) => (
-                            <option key={value} value={value}>{name}</option>
-                          ))}
-                        </Select>
-                        {instrumentLoading && <Spinner size="sm" color="primary.400" />}
-                      </Flex>
-                    </FormControl>
-                  </SimpleGrid>
-
-                  <FormControl mt={4}>
+                  <FormControl>
                     <FormLabel>Humanization</FormLabel>
                     <Flex align="center">
                       <Checkbox
@@ -1998,94 +1812,10 @@ function CompositionGenerator({ onCompositionGenerated }) {
             >
               Generate Composition
             </Button>
-            <Button
-              onClick={stopPlayback}
-              colorScheme="red"
-              variant="outline"
-              size="lg"
-              leftIcon={<Box as="span" className="icon">⏹️</Box>}
-              isDisabled={!isPlaying}
-            >
-              Stop Playing
-            </Button>
+
           </HStack>
 
-          {/* Playback Controls */}
-          {composition && (
-            <Box mt={4} p={4} borderRadius="md" bg="rgba(255, 255, 255, 0.05)">
-              <Heading size="sm" mb={3}>Playback Controls</Heading>
-              <SimpleGrid columns={{ base: 1, md: 4 }} spacing={4}>
-                <Button
-                  onClick={() => {
-                    // Ensure AudioContext is initialized on user interaction
-                    ensureAudioContext().then(() => {
-                      playMelody();
-                    }).catch(error => {
-                      console.error('Failed to initialize AudioContext:', error);
-                      // Continue anyway, we can still try to play
-                      playMelody();
-                    });
-                  }}
-                  colorScheme="secondary"
-                  isDisabled={isPlaying && activePlayingPart !== 'melody'}
-                  leftIcon={<Box as="span" className="icon">🎵</Box>}
-                >
-                  {isPlaying && activePlayingPart === 'melody' ? 'Stop Melody' : 'Play Melody'}
-                </Button>
-                <Button
-                  onClick={() => {
-                    // Ensure AudioContext is initialized on user interaction
-                    ensureAudioContext().then(() => {
-                      playChords();
-                    }).catch(error => {
-                      console.error('Failed to initialize AudioContext:', error);
-                      // Continue anyway, we can still try to play
-                      playChords();
-                    });
-                  }}
-                  colorScheme="secondary"
-                  isDisabled={isPlaying && activePlayingPart !== 'chord'}
-                  leftIcon={<Box as="span" className="icon">🎹</Box>}
-                >
-                  {isPlaying && activePlayingPart === 'chord' ? 'Stop Chords' : 'Play Chords'}
-                </Button>
-                <Button
-                  onClick={() => {
-                    // Ensure AudioContext is initialized on user interaction
-                    ensureAudioContext().then(() => {
-                      playBass();
-                    }).catch(error => {
-                      console.error('Failed to initialize AudioContext:', error);
-                      // Continue anyway, we can still try to play
-                      playBass();
-                    });
-                  }}
-                  colorScheme="secondary"
-                  isDisabled={isPlaying && activePlayingPart !== 'bass'}
-                  leftIcon={<Box as="span" className="icon">🎸</Box>}
-                >
-                  {isPlaying && activePlayingPart === 'bass' ? 'Stop Bass' : 'Play Bass'}
-                </Button>
-                <Button
-                  onClick={() => {
-                    // Ensure AudioContext is initialized on user interaction
-                    ensureAudioContext().then(() => {
-                      playComposition();
-                    }).catch(error => {
-                      console.error('Failed to initialize AudioContext:', error);
-                      // Continue anyway, we can still try to play
-                      playComposition();
-                    });
-                  }}
-                  colorScheme="primary"
-                  isDisabled={isPlaying && activePlayingPart !== 'all'}
-                  leftIcon={<Box as="span" className="icon">🎼</Box>}
-                >
-                  {isPlaying && activePlayingPart === 'all' ? 'Stop All' : 'Play All'}
-                </Button>
-              </SimpleGrid>
-            </Box>
-          )}
+
 
           {/* Composition Info */}
           {composition && (
@@ -2093,18 +1823,19 @@ function CompositionGenerator({ onCompositionGenerated }) {
               mt={8}
               p={4}
               borderRadius="md"
-              bg="rgba(255, 255, 255, 0.05)"
+              bg="rgba(255, 255, 255, 0.08)"
               borderLeft="4px solid"
               borderColor="primary.500"
+              boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
             >
-              <Heading size="md" mb={4}>Generated Composition</Heading>
+              <Heading size="md" mb={4} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Generated Composition</Heading>
               <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={3}>
-                <Text><Badge colorScheme="primary" mr={2}>Key:</Badge> {composition.key}</Text>
-                <Text><Badge colorScheme="primary" mr={2}>Tempo:</Badge> {composition.tempo} BPM</Text>
-                <Text><Badge colorScheme="primary" mr={2}>Length:</Badge> {composition.bars} bars</Text>
-                <Text><Badge colorScheme="primary" mr={2}>Melody Notes:</Badge> {composition.melody.notes.length}</Text>
-                <Text><Badge colorScheme="primary" mr={2}>Chords:</Badge> {composition.chord.progression.length}</Text>
-                <Text><Badge colorScheme="primary" mr={2}>Bass Notes:</Badge> {composition.bass.notes.length}</Text>
+                <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Key:</Badge> {composition.key}</Text>
+                <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Tempo:</Badge> {composition.tempo} BPM</Text>
+                <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Length:</Badge> {composition.bars} bars</Text>
+                <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Melody Notes:</Badge> {composition.melody.notes.length}</Text>
+                <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Chords:</Badge> {composition.chord.progression.length}</Text>
+                <Text fontWeight="medium"><Badge colorScheme="primary" mr={2} textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">Bass Notes:</Badge> {composition.bass.notes.length}</Text>
               </SimpleGrid>
             </Box>
           )}

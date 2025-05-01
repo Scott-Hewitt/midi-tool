@@ -1,4 +1,3 @@
-// Import the Firebase-enabled version of the app
 import AppWithFirebase from './App-with-firebase';
 
 // Export the Firebase-enabled version as the default app

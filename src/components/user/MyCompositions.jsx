@@ -266,8 +266,8 @@ function MyCompositions() {
           <Spinner size="xl" color="primary.500" />
         </Flex>
       ) : filteredCompositions.length === 0 ? (
-        <Box textAlign="center" py={10} bg="rgba(30, 41, 59, 0.5)" backdropFilter="blur(12px)" borderRadius="md">
-          <Text>No compositions found.</Text>
+        <Box textAlign="center" py={10} bg="rgba(30, 41, 59, 0.7)" backdropFilter="blur(12px)" borderRadius="md" borderLeft="4px solid" borderColor="primary.500">
+          <Text fontWeight="medium" color="white" textShadow="0 1px 2px rgba(0, 0, 0, 0.3)">No compositions found.</Text>
           {filter !== 'all' && (
             <Button mt={4} onClick={() => setFilter('all')} variant="outline" colorScheme="primary">
               Show All Compositions

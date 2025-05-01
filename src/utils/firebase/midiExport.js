@@ -5,11 +5,14 @@
  * Uses the MidiFileController to handle storage operations.
  */
 
-import { exportMIDIWithJZZ } from '../jzzMidi';
+import { exportAndDownloadMIDI as jzzExportAndDownloadMIDI } from '../jzzMidi';
 import { generateAndSaveMidiFile } from '../../controllers/MidiFileController';
 
 /**
  * Export MIDI file and download it
+ * This function delegates to the jzzMidi implementation which handles both
+ * generating the MIDI data and triggering the download.
+ * 
  * @param {Object} melodyData - Melody data
  * @param {Object} chordData - Chord progression data
  * @param {string} fileName - File name
@@ -23,10 +26,10 @@ export const exportAndDownloadMIDI = async (melodyData, chordData, fileName, opt
       console.error('No data to export');
       return false;
     }
-    
-    // Generate MIDI data
-    const success = await exportMIDIWithJZZ(melodyData, chordData, fileName, options);
-    
+
+    // Generate MIDI data and download it
+    const success = await jzzExportAndDownloadMIDI(melodyData, chordData, fileName, options);
+
     return success;
   } catch (error) {
     console.error('Error exporting MIDI:', error);
@@ -58,13 +61,13 @@ export const exportAndSaveMIDI = async (
       console.error('No data to export');
       return null;
     }
-    
+
     // Check if user is authenticated
     if (!userId) {
       console.error('User not authenticated');
       return null;
     }
-    
+
     // Generate and save MIDI file
     const fileId = await generateAndSaveMidiFile(
       melodyData, 
@@ -74,7 +77,7 @@ export const exportAndSaveMIDI = async (
       userId, 
       isPublic
     );
-    
+
     return fileId;
   } catch (error) {
     console.error('Error exporting and saving MIDI:', error);

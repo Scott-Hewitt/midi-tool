@@ -38,58 +38,48 @@ export const createMIDIFile = (melodyData, chordData, options = {}) => {
     humanize = true
   } = options;
 
-  // MIDI file header
   const header = [
     0x4D, 0x54, 0x68, 0x64, // MThd
-    0x00, 0x00, 0x00, 0x06, // Header size (6 bytes)
-    0x00, 0x01, // Format type (1 = multiple tracks)
-    0x00, includeMelody + includeChords + includeBass + 1, // Number of tracks (control track + data tracks)
-    0x00, 0x60, // Division (96 ticks per quarter note)
+    0x00, 0x00, 0x00, 0x06, // Header size
+    0x00, 0x01, // Format type
+    0x00, includeMelody + includeChords + includeBass + 1, // Number of tracks
+    0x00, 0x60, // Division
   ];
 
-  // Create tracks
   const tracks = [];
-
-  // Control track (tempo, time signature)
   const controlTrack = [];
-  
-  // Track header
+
   controlTrack.push(
     0x4D, 0x54, 0x72, 0x6B, // MTrk
-    0x00, 0x00, 0x00, 0x00, // Placeholder for track length (will be filled later)
+    0x00, 0x00, 0x00, 0x00, // Placeholder for track length
   );
 
-  // Track name
   const trackNameBytes = Array.from('Control Track').map(c => c.charCodeAt(0));
   controlTrack.push(
-    0x00, // Delta time
-    0xFF, 0x03, trackNameBytes.length, ...trackNameBytes // Track name meta event
+    0x00,
+    0xFF, 0x03, trackNameBytes.length, ...trackNameBytes
   );
 
-  // Tempo (microseconds per quarter note)
   const tempo = melodyData?.tempo || chordData?.tempo || 120;
   const mspqn = Math.floor(60000000 / tempo);
   controlTrack.push(
-    0x00, // Delta time
-    0xFF, 0x51, 0x03, // Tempo meta event
-    (mspqn >> 16) & 0xFF, (mspqn >> 8) & 0xFF, mspqn & 0xFF // Tempo value
+    0x00,
+    0xFF, 0x51, 0x03,
+    (mspqn >> 16) & 0xFF, (mspqn >> 8) & 0xFF, mspqn & 0xFF
   );
 
-  // Time signature (4/4)
   controlTrack.push(
-    0x00, // Delta time
-    0xFF, 0x58, 0x04, // Time signature meta event
-    0x04, 0x02, 0x18, 0x08 // 4/4 time signature
+    0x00,
+    0xFF, 0x58, 0x04,
+    0x04, 0x02, 0x18, 0x08
   );
 
-  // End of track
   controlTrack.push(
-    0x00, // Delta time
-    0xFF, 0x2F, 0x00 // End of track meta event
+    0x00,
+    0xFF, 0x2F, 0x00
   );
 
-  // Update track length
-  const controlTrackLength = controlTrack.length - 8; // Subtract header size
+  const controlTrackLength = controlTrack.length - 8;
   controlTrack[4] = (controlTrackLength >> 24) & 0xFF;
   controlTrack[5] = (controlTrackLength >> 16) & 0xFF;
   controlTrack[6] = (controlTrackLength >> 8) & 0xFF;
@@ -100,7 +90,7 @@ export const createMIDIFile = (melodyData, chordData, options = {}) => {
   // Melody track
   if (includeMelody && melodyData && melodyData.notes && melodyData.notes.length > 0) {
     const melodyTrack = [];
-    
+
     // Track header
     melodyTrack.push(
       0x4D, 0x54, 0x72, 0x6B, // MTrk
@@ -130,16 +120,16 @@ export const createMIDIFile = (melodyData, chordData, options = {}) => {
       const velocity = Math.floor(note.velocity * 127);
       const startTime = Math.floor(note.startTime * 96); // 96 ticks per quarter note
       const duration = Math.floor(note.duration * 96);
-      
+
       // Note on
       const deltaTimeOn = startTime - currentTime;
       melodyTrack.push(...writeVariableLength(deltaTimeOn));
       melodyTrack.push(0x90 | melodyChannel, pitch, velocity);
-      
+
       // Note off
       melodyTrack.push(...writeVariableLength(duration));
       melodyTrack.push(0x80 | melodyChannel, pitch, 0);
-      
+
       currentTime = startTime + duration;
     }
 
@@ -162,7 +152,7 @@ export const createMIDIFile = (melodyData, chordData, options = {}) => {
   // Chord track
   if (includeChords && chordData && chordData.progression && chordData.progression.length > 0) {
     const chordTrack = [];
-    
+
     // Track header
     chordTrack.push(
       0x4D, 0x54, 0x72, 0x6B, // MTrk
@@ -190,12 +180,12 @@ export const createMIDIFile = (melodyData, chordData, options = {}) => {
     for (const chord of sortedChords) {
       const startTime = Math.floor(chord.position * 4 * 96); // 4 beats per bar, 96 ticks per quarter
       const duration = Math.floor(chord.duration * 4 * 96);
-      
+
       // Add each note in the chord
       for (const noteName of chord.notes) {
         const pitch = noteToMidiNumber(noteName);
         const velocity = 80;
-        
+
         // Note on
         const deltaTimeOn = startTime - currentTime;
         if (deltaTimeOn > 0) {
@@ -206,16 +196,16 @@ export const createMIDIFile = (melodyData, chordData, options = {}) => {
         }
         chordTrack.push(0x90 | chordChannel, pitch, velocity);
       }
-      
+
       // Note off for each note
       for (const noteName of chord.notes) {
         const pitch = noteToMidiNumber(noteName);
-        
+
         // Note off
         chordTrack.push(...writeVariableLength(duration));
         chordTrack.push(0x80 | chordChannel, pitch, 0);
       }
-      
+
       currentTime = startTime + duration;
     }
 
@@ -238,7 +228,7 @@ export const createMIDIFile = (melodyData, chordData, options = {}) => {
   // Bass track
   if (includeBass && chordData && chordData.progression && chordData.progression.length > 0) {
     const bassTrack = [];
-    
+
     // Track header
     bassTrack.push(
       0x4D, 0x54, 0x72, 0x6B, // MTrk
@@ -269,16 +259,16 @@ export const createMIDIFile = (melodyData, chordData, options = {}) => {
       const rootNote = chord.root + '2'; // One octave lower
       const pitch = noteToMidiNumber(rootNote);
       const velocity = 100;
-      
+
       // Note on
       const deltaTimeOn = startTime - currentTime;
       bassTrack.push(...writeVariableLength(deltaTimeOn));
       bassTrack.push(0x90 | bassChannel, pitch, velocity);
-      
+
       // Note off
       bassTrack.push(...writeVariableLength(duration));
       bassTrack.push(0x80 | bassChannel, pitch, 0);
-      
+
       currentTime = startTime + duration;
     }
 
@@ -321,22 +311,18 @@ export const createMIDIFile = (melodyData, chordData, options = {}) => {
  */
 function writeVariableLength(value) {
   if (value < 0) return [0];
-  
+
   const bytes = [];
   let v = value;
-  
-  // Extract 7-bit chunks
+
   while (v > 0) {
     bytes.unshift(v & 0x7F);
     v >>= 7;
   }
-  
-  // Set the continuation bit on all but the last byte
+
   for (let i = 0; i < bytes.length - 1; i++) {
     bytes[i] |= 0x80;
   }
-  
-  // Return at least one byte
   return bytes.length > 0 ? bytes : [0];
 }
 
@@ -350,34 +336,27 @@ function writeVariableLength(value) {
  */
 export const exportAndDownloadMIDI = (melodyData, chordData, fileName, options = {}) => {
   try {
-    // Check if we have data to export
     if (!melodyData && !chordData) {
       console.error('No data to export');
       return false;
     }
-    
-    // Create the MIDI file
+
     const midiData = createMIDIFile(melodyData, chordData, options);
-    
-    // Create a Blob from the MIDI data
     const midiBlob = new Blob([midiData], { type: 'audio/midi' });
-    
-    // Create a download link
+
     const downloadLink = document.createElement('a');
     downloadLink.href = URL.createObjectURL(midiBlob);
     downloadLink.download = `${fileName}.mid`;
     downloadLink.style.display = 'none';
-    
-    // Trigger the download
+
     document.body.appendChild(downloadLink);
     downloadLink.click();
-    
-    // Clean up
+
     setTimeout(() => {
       document.body.removeChild(downloadLink);
       URL.revokeObjectURL(downloadLink.href);
     }, 100);
-    
+
     return true;
   } catch (error) {
     console.error('Error exporting MIDI:', error);

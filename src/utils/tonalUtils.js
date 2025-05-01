@@ -46,27 +46,22 @@ export const getKeys = () => {
  * @returns {string[]} - Array of note names in the chord
  */
 export const getChordNotes = (chordSymbol, octave = 4) => {
-  console.log(`getChordNotes called with symbol: ${chordSymbol}, octave: ${octave}`);
 
-  // Get the chord notes using Tonal.js
-  const chord = Chord.get(chordSymbol);
-  console.log('Chord object from Tonal.js:', chord);
-
-  // Check if we have valid notes
-  if (!chord || !chord.notes || chord.notes.length === 0) {
-    console.error(`No notes found for chord symbol: ${chordSymbol}`);
-    // Return a default C major chord as fallback
+  if (!chordSymbol || chordSymbol.trim() === '') {
     return ['C4', 'E4', 'G4'];
   }
 
-  // Add octave information to each note
+  const chord = Chord.get(chordSymbol);
+
+  if (!chord || !chord.notes || chord.notes.length === 0) {
+    return ['C4', 'E4', 'G4'];
+  }
+
   const result = chord.notes.map((note, index) => {
-    // For extended chords, we might need to adjust octaves for better voicing
     const noteOctave = octave + Math.floor(index / 7);
     return `${note}${noteOctave}`;
   });
 
-  console.log(`Final notes for ${chordSymbol}:`, result);
   return result;
 };
 
@@ -135,129 +130,58 @@ export const getCommonProgressions = () => {
  * @returns {Object[]} - Array of chord objects with symbol, notes, and degree
  */
 export const generateChordProgression = (key, progression, extended = false) => {
-  console.log('Generating chord progression in key:', key);
-  console.log('Progression pattern:', progression);
-
-  // Parse the key to get the tonic
   const [tonic, mode] = key.split(' ');
-  console.log(`Parsed key: tonic=${tonic}, mode=${mode}`);
 
-  // Convert Roman numerals to chord symbols
   let chordSymbols = [];
   try {
-    // Try using Tonal.js Progression.fromRomanNumerals
     chordSymbols = Progression.fromRomanNumerals(key, progression);
-    console.log('Chord symbols from Tonal.js:', chordSymbols);
-
-    // Check if we got valid chord symbols
-    if (!chordSymbols || chordSymbols.length === 0 || chordSymbols.includes(undefined) || chordSymbols.includes(null)) {
+    if (!chordSymbols || chordSymbols.length === 0 || chordSymbols.includes(undefined) || chordSymbols.includes(null) || chordSymbols.includes('')) {
       throw new Error('Invalid chord symbols generated');
     }
   } catch (error) {
-    console.error('Error converting Roman numerals to chord symbols:', error);
-
-    // Manually create chord symbols based on the progression pattern and key
-    chordSymbols = [];
-
-    // Get the scale notes for this key
-    const scale = Scale.get(`${tonic} ${mode}`);
-    console.log('Scale notes:', scale.notes);
-
-    // Map Roman numerals to scale degrees
-    progression.forEach(degree => {
-      let scaleIndex = 0;
-      let chordType = 'maj';
-
-      // Parse the Roman numeral
-      // Extract the base degree (i, ii, iii, etc.) without any extensions
-      const baseDegree = degree.replace(/[^ivIV]/g, '').toLowerCase();
-      const isMajor = degree === degree.toUpperCase(); // Check if the degree is uppercase (major)
-
-      // Determine scale index based on the base degree
-      if (baseDegree === 'i') {
-        scaleIndex = 0;
-      } else if (baseDegree === 'ii') {
-        scaleIndex = 1;
-      } else if (baseDegree === 'iii') {
-        scaleIndex = 2;
-      } else if (baseDegree === 'iv') {
-        scaleIndex = 3;
-      } else if (baseDegree === 'v') {
-        scaleIndex = 4;
-      } else if (baseDegree === 'vi') {
-        scaleIndex = 5;
-      } else if (baseDegree === 'vii') {
-        scaleIndex = 6;
-      }
-
-      // Determine chord type based on mode and whether the degree is major or minor
-      if (mode === 'major') {
-        // In major keys: I, IV, V are major; ii, iii, vi are minor; vii is diminished
-        if (baseDegree === 'i' || baseDegree === 'iv' || baseDegree === 'v') {
-          chordType = isMajor ? 'maj' : 'min';
-        } else if (baseDegree === 'ii' || baseDegree === 'iii' || baseDegree === 'vi') {
-          chordType = isMajor ? 'maj' : 'min';
-        } else if (baseDegree === 'vii') {
-          chordType = isMajor ? 'maj' : 'dim';
+    if (mode === 'major' || mode === 'Major') {
+      try {
+        const scale = Scale.get(`${tonic} major`).notes;
+        if (scale && scale.length >= 7) {
+          chordSymbols = [
+            scale[0] + 'maj',  // I chord
+            scale[3] + 'maj',  // IV chord
+            scale[4] + 'maj',  // V chord
+            scale[0] + 'maj'   // I chord
+          ];
+        } else {
+          chordSymbols = [tonic + 'maj', tonic + 'maj7', tonic + '7', tonic + 'maj'];
         }
-      } else { // minor mode
-        // In minor keys: III, VI, VII are major; i, iv, v are minor; ii is diminished
-        if (baseDegree === 'iii' || baseDegree === 'vi' || baseDegree === 'vii') {
-          chordType = isMajor ? 'maj' : 'min';
-        } else if (baseDegree === 'i' || baseDegree === 'iv' || baseDegree === 'v') {
-          chordType = isMajor ? 'maj' : 'min';
-        } else if (baseDegree === 'ii') {
-          chordType = isMajor ? 'maj' : 'dim';
+      } catch (error) {
+        chordSymbols = [tonic + 'maj', tonic + 'maj7', tonic + '7', tonic + 'maj'];
+      }
+    } else {
+      try {
+        const scale = Scale.get(`${tonic} minor`).notes;
+        if (scale && scale.length >= 7) {
+          chordSymbols = [
+            scale[0] + 'm',    // i chord
+            scale[3] + 'm',    // iv chord
+            scale[4] + 'maj',  // V chord (major in minor key)
+            scale[0] + 'm'     // i chord
+          ];
+        } else {
+          chordSymbols = [tonic + 'm', tonic + 'm7', tonic + 'dim', tonic + 'm'];
         }
+      } catch (error) {
+        chordSymbols = [tonic + 'm', tonic + 'm7', tonic + 'dim', tonic + 'm'];
       }
-
-      // Handle extensions like 7, maj7, etc.
-      if (degree.includes('7')) {
-        if (chordType === 'maj') {
-          chordType = 'maj7';
-        } else if (chordType === 'min') {
-          chordType = 'm7';
-        } else if (chordType === 'dim') {
-          chordType = 'dim7';
-        }
-      }
-
-      // Get the root note for this degree
-      const rootNote = scale.notes[scaleIndex];
-
-      // Create the chord symbol
-      let chordSymbol = rootNote;
-      if (chordType === 'min') {
-        chordSymbol += 'm';
-      } else if (chordType === 'dim') {
-        chordSymbol += 'dim';
-      } else if (chordType === 'aug') {
-        chordSymbol += 'aug';
-      }
-
-      chordSymbols.push(chordSymbol);
-    });
-
-    console.log('Manually created chord symbols:', chordSymbols);
-
-    // Validate manually created chord symbols
-    if (!chordSymbols || chordSymbols.length === 0) {
-      throw new Error('Failed to create chord symbols');
-    }
-
-    // Check if all symbols are the same
-    const allSame = chordSymbols.every(symbol => symbol === chordSymbols[0]);
-    if (allSame) {
-      // If all symbols are the same, try to create different symbols
-      // This is a fallback to ensure we have some variety
-      if (mode === 'major') {
-        chordSymbols = [tonic, tonic + 'maj7', tonic + 'm', tonic + '7'];
-      } else {
-        chordSymbols = [tonic + 'm', tonic + 'dim', tonic + 'maj7', tonic + '7'];
-      }
-      console.log('Created fallback chord symbols:', chordSymbols);
     }
   }
+
+  while (chordSymbols.length < progression.length) {
+    chordSymbols.push(...chordSymbols.slice(0, progression.length - chordSymbols.length));
+  }
+
+  if (chordSymbols.length > progression.length) {
+    chordSymbols = chordSymbols.slice(0, progression.length);
+  }
+
 
   // Generate chord objects
   return chordSymbols.map((symbol, index) => {
@@ -273,9 +197,7 @@ export const generateChordProgression = (key, progression, extended = false) => 
     }
 
     // Get the notes for this chord
-    console.log(`Getting notes for chord symbol: ${finalSymbol}`);
     const notes = getChordNotes(finalSymbol);
-    console.log(`Notes for ${finalSymbol}:`, notes);
 
     // Extract root note (first letter possibly followed by # or b)
     const rootMatch = finalSymbol.match(/^[A-G][#b]?/);

@@ -6,6 +6,7 @@ let isToneInitialized = false;
 
 /**
  * Initialize Tone.js context on user interaction
+ * This must be called in response to a genuine user gesture
  * @returns {Promise<boolean>} - Whether initialization was successful
  */
 export const initializeTone = async () => {
@@ -24,41 +25,16 @@ export const initializeTone = async () => {
   }
 
   try {
-    // Make sure we're in a user gesture context
+    // Remove no-audio class if it exists
     if (document.documentElement.classList.contains('no-audio')) {
       document.documentElement.classList.remove('no-audio');
     }
 
-    // Start Tone.js context with a safety wrapper
-    const startPromise = new Promise((resolve, reject) => {
-      try {
-        // Create a user gesture event if needed
-        const tempButton = document.createElement('button');
-        tempButton.style.display = 'none';
-        document.body.appendChild(tempButton);
-        tempButton.click();
-
-        // Start Tone.js
-        Tone.start()
-          .then(() => {
-            isToneInitialized = true;
-            console.log('Tone.js initialized successfully');
-            resolve(true);
-          })
-          .catch(err => {
-            console.error('Error in Tone.start():', err);
-            reject(err);
-          })
-          .finally(() => {
-            document.body.removeChild(tempButton);
-          });
-      } catch (err) {
-        console.error('Error in Tone initialization wrapper:', err);
-        reject(err);
-      }
-    });
-
-    return await startPromise;
+    // Start Tone.js - this must be called during a user gesture event
+    await Tone.start();
+    isToneInitialized = true;
+    console.log('Tone.js initialized successfully');
+    return true;
   } catch (error) {
     console.error('Failed to initialize Tone.js:', error);
     return false;

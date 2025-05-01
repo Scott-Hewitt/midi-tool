@@ -27,7 +27,7 @@ import { getAvailableInstruments } from '../utils/soundfontUtils';
 /**
  * PlayButtonWithInstruments component
  * Enhanced play button with instrument selection options
- * 
+ *
  * @param {Object} data - MIDI data to play
  * @param {string} type - Type of data (melody, chord, composition)
  */
@@ -48,21 +48,19 @@ function PlayButtonWithInstruments({ data, type }) {
     loadInstruments,
     instrumentsLoading
   } = usePlayback();
-  
+
   const [isThisPlaying, setIsThisPlaying] = useState(false);
   const [availableInstruments, setAvailableInstruments] = useState({});
-  
+
   // Load available instruments on component mount
   useEffect(() => {
     setAvailableInstruments(getAvailableInstruments());
   }, []);
-  
-  // Update isThisPlaying when global playback state changes
+
   useEffect(() => {
     setIsThisPlaying(isPlaying && activePlayingPart === type);
   }, [isPlaying, activePlayingPart, type]);
-  
-  // Handle play/stop
+
   const handlePlayToggle = async () => {
     if (isThisPlaying) {
       stopPlayback();
@@ -70,8 +68,7 @@ function PlayButtonWithInstruments({ data, type }) {
       await playData(data, type);
     }
   };
-  
-  // Handle instrument change
+
   const handleInstrumentChange = (instrumentType, value) => {
     switch (instrumentType) {
       case 'melody':
@@ -86,11 +83,10 @@ function PlayButtonWithInstruments({ data, type }) {
       default:
         break;
     }
-    
-    // Load the instruments
+
     loadInstruments();
   };
-  
+
   return (
     <Flex align="center" gap={2}>
       <Tooltip label={isThisPlaying ? 'Stop' : 'Play'}>
@@ -108,7 +104,7 @@ function PlayButtonWithInstruments({ data, type }) {
           {isThisPlaying ? 'Stop' : 'Play'}
         </Button>
       </Tooltip>
-      
+
       <Popover placement="bottom-end">
         <PopoverTrigger>
           <Button
@@ -143,11 +139,11 @@ function PlayButtonWithInstruments({ data, type }) {
                   colorScheme="primary"
                 />
               </FormControl>
-              
+
               {useSoundFont && (
                 <>
                   <Divider borderColor="rgba(255, 255, 255, 0.1)" />
-                  
+
                   {type === 'melody' && (
                     <FormControl>
                       <FormLabel color="white">Melody Instrument</FormLabel>
@@ -170,7 +166,7 @@ function PlayButtonWithInstruments({ data, type }) {
                       </Flex>
                     </FormControl>
                   )}
-                  
+
                   {type === 'chord' && (
                     <FormControl>
                       <FormLabel color="white">Chord Instrument</FormLabel>
@@ -193,7 +189,7 @@ function PlayButtonWithInstruments({ data, type }) {
                       </Flex>
                     </FormControl>
                   )}
-                  
+
                   {type === 'composition' && (
                     <>
                       <FormControl>
@@ -216,7 +212,7 @@ function PlayButtonWithInstruments({ data, type }) {
                           {instrumentsLoading && <Spinner size="sm" color="primary.400" />}
                         </Flex>
                       </FormControl>
-                      
+
                       <FormControl>
                         <FormLabel color="white">Chord Instrument</FormLabel>
                         <Flex align="center">
@@ -237,7 +233,7 @@ function PlayButtonWithInstruments({ data, type }) {
                           {instrumentsLoading && <Spinner size="sm" color="primary.400" />}
                         </Flex>
                       </FormControl>
-                      
+
                       <FormControl>
                         <FormLabel color="white">Bass Instrument</FormLabel>
                         <Flex align="center">
@@ -262,7 +258,7 @@ function PlayButtonWithInstruments({ data, type }) {
                   )}
                 </>
               )}
-              
+
               {!useSoundFont && (
                 <Text color="gray.300" fontSize="sm">
                   Using basic synthesizer sounds. Enable realistic sounds for better quality.

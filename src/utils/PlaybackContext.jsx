@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useRef } from 'react';
+import { createContext, useContext, useState, useRef, useEffect } from 'react';
 import { initializeTone } from './toneContext';
-import { ensureAudioContext } from './audioContext';
+import { ensureAudioContext, hasHadUserInteraction } from './audioContext';
 import { loadInstrument, playMelodyWithSoundFont, playChordProgressionWithSoundFont } from './soundfontUtils';
 import * as Tone from 'tone';
 
@@ -15,6 +15,12 @@ export function PlaybackProvider({ children }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activePlayingPart, setActivePlayingPart] = useState(null);
   const [useSoundFont, setUseSoundFont] = useState(true); // Default to using SoundFont
+  const [instrumentsLoading, setInstrumentsLoading] = useState(false);
+
+  // Instrument selection state
+  const [melodyInstrument, setMelodyInstrument] = useState('acoustic_grand_piano');
+  const [chordInstrument, setChordInstrument] = useState('acoustic_guitar_nylon');
+  const [bassInstrument, setBassInstrument] = useState('electric_bass_finger');
 
   // Refs for synths
   const melodySynthRef = useRef(null);
@@ -57,39 +63,68 @@ export function PlaybackProvider({ children }) {
   // Load SoundFont instruments
   const loadSoundFontInstruments = async () => {
     try {
+      setInstrumentsLoading(true);
+
+      // Check if we've had user interaction before trying to initialize AudioContext
+      if (!hasHadUserInteraction()) {
+        console.log('No user interaction yet, cannot initialize AudioContext');
+        setInstrumentsLoading(false);
+        return false;
+      }
+
       // Ensure AudioContext is initialized
       const ctx = await ensureAudioContext();
       if (!ctx) {
         console.error('Failed to initialize AudioContext');
         setUseSoundFont(false);
+        setInstrumentsLoading(false);
         return false;
       }
 
       // Update our reference
       audioContextRef.current = ctx;
 
-      // Load melody instrument if not already loaded
-      if (!melodyInstrumentRef.current) {
-        melodyInstrumentRef.current = await loadInstrument('acoustic_grand_piano', ctx);
-      }
+      // Load melody instrument
+      melodyInstrumentRef.current = await loadInstrument(melodyInstrument, ctx);
 
-      // Load chord instrument if not already loaded
-      if (!chordInstrumentRef.current) {
-        chordInstrumentRef.current = await loadInstrument('acoustic_guitar_nylon', ctx);
-      }
+      // Load chord instrument
+      chordInstrumentRef.current = await loadInstrument(chordInstrument, ctx);
 
-      // Load bass instrument if not already loaded
-      if (!bassInstrumentRef.current) {
-        bassInstrumentRef.current = await loadInstrument('acoustic_bass', ctx);
-      }
+      // Load bass instrument
+      bassInstrumentRef.current = await loadInstrument(bassInstrument, ctx);
 
+      setInstrumentsLoading(false);
       return true;
     } catch (error) {
       console.error('Error loading SoundFont instruments:', error);
       setUseSoundFont(false);
+      setInstrumentsLoading(false);
       return false;
     }
   };
+
+  // Function to load instruments when selections change
+  const loadInstruments = async () => {
+    if (!useSoundFont) return;
+
+    try {
+      await loadSoundFontInstruments();
+    } catch (error) {
+      console.error('Error loading instruments:', error);
+    }
+  };
+
+  // We'll load instruments on demand instead of automatically on mount
+  // This helps avoid AudioContext errors when there's no user interaction yet
+
+  // This effect will run when instrument selections change, but only if we've already
+  // had user interaction (which is checked inside loadInstruments)
+  useEffect(() => {
+    if (useSoundFont) {
+      // We don't automatically load on mount anymore
+      // loadInstruments will check if we've had user interaction
+    }
+  }, [melodyInstrument, chordInstrument, bassInstrument, useSoundFont]);
 
   // Stop all playback
   const stopPlayback = () => {
@@ -535,6 +570,14 @@ export function PlaybackProvider({ children }) {
         activePlayingPart,
         useSoundFont,
         setUseSoundFont,
+        instrumentsLoading,
+        melodyInstrument,
+        chordInstrument,
+        bassInstrument,
+        setMelodyInstrument,
+        setChordInstrument,
+        setBassInstrument,
+        loadInstruments,
         playMelody,
         playChords,
         playBass,
