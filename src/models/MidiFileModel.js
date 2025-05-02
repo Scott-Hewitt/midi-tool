@@ -1,10 +1,3 @@
-/**
- * MIDI File Model
- *
- * Handles all Firestore operations related to MIDI file data.
- * This model encapsulates the data structure and database operations for MIDI files.
- */
-
 import {
   collection,
   addDoc,
@@ -22,15 +15,6 @@ import {
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../services/firebase';
 
-/**
- * Save a MIDI file to Firebase Storage and add metadata to Firestore
- * @param {Uint8Array} midiData - The MIDI file data
- * @param {string} fileName - The name of the file
- * @param {Object} metadata - Metadata about the MIDI file (scale, tempo, etc.)
- * @param {string} userId - The user ID
- * @param {boolean} isPublic - Whether the file is public or private
- * @returns {Promise<string>} - The ID of the saved file
- */
 export const saveMidiFile = async (midiData, fileName, metadata, userId, isPublic = false) => {
   try {
     // Create a blob from the MIDI data
@@ -69,12 +53,6 @@ export const saveMidiFile = async (midiData, fileName, metadata, userId, isPubli
   }
 };
 
-/**
- * Get a MIDI file by ID
- * @param {string} fileId - The ID of the file in Firestore
- * @param {string} userId - The user ID (for authorization of private files)
- * @returns {Promise<Object|null>} - The MIDI file metadata or null if not found/unauthorized
- */
 export const getMidiFileById = async (fileId, userId = null) => {
   try {
     const fileRef = doc(db, 'midiFiles', fileId);

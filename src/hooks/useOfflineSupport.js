@@ -1,9 +1,3 @@
-/**
- * Offline Support Hook
- *
- * This hook provides offline support functionality for components.
- */
-
 import { useState, useEffect, useCallback } from 'react';
 import { checkOnlineStatus } from '../utils/syncService';
 import {

@@ -1,14 +1,3 @@
-/**
- * Error Handling Utilities
- *
- * This module provides utilities for consistent error handling across the application.
- */
-
-/**
- * Map Firebase error codes to user-friendly messages
- * @param {Error} error - The error object
- * @returns {string} - User-friendly error message
- */
 export const getFirebaseErrorMessage = error => {
   const errorCode = error.code || '';
 
@@ -88,11 +77,6 @@ export const getFirebaseErrorMessage = error => {
   return errorMap[errorCode] || error.message || 'An unexpected error occurred. Please try again.';
 };
 
-/**
- * Log error to console with additional context
- * @param {string} context - The context where the error occurred
- * @param {Error} error - The error object
- */
 export const logError = (context, error) => {
   console.error(`Error in ${context}:`, error);
 
@@ -100,12 +84,6 @@ export const logError = (context, error) => {
   // or another error tracking service
 };
 
-/**
- * Handle API errors consistently
- * @param {Error} error - The error object
- * @param {Function} toast - Toast function for displaying errors
- * @param {string} context - Context for the error
- */
 export const handleApiError = (error, toast, context = 'operation') => {
   const errorMessage = getFirebaseErrorMessage(error);
 

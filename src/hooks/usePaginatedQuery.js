@@ -1,20 +1,8 @@
-/**
- * Paginated Query Hook
- *
- * This hook provides paginated query functionality for Firestore collections.
- */
-
 import { useState, useEffect, useCallback } from 'react';
 import { getPaginatedData, getNextPage, getPrevPage } from '../utils/pagination';
 import { handleApiError } from '../utils/errorHandling';
 import { useToast } from '@chakra-ui/react';
 
-/**
- * Hook for paginated queries
- * @param {string} collectionName - Firestore collection name
- * @param {Object} options - Query options
- * @returns {Object} - Paginated query utilities
- */
 export const usePaginatedQuery = (collectionName, options = {}) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);

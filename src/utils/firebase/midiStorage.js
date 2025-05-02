@@ -13,13 +13,6 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
-/**
- * Save a MIDI file to Firebase Storage and Firestore
- * @param {File} file - The MIDI file to save
- * @param {Object} metadata - Metadata about the MIDI file
- * @param {string} userId - The user's ID
- * @returns {Promise<string>} - A promise that resolves to the new document ID
- */
 export const saveMidiFile = async (file, metadata, userId) => {
   try {
     const storageRef = ref(storage, `users/${userId}/midi/${file.name}`);
@@ -52,11 +45,6 @@ export const saveMidiFile = async (file, metadata, userId) => {
   }
 };
 
-/**
- * Get a user's MIDI files
- * @param {string} userId - The user's ID
- * @returns {Promise<Array>} - A promise that resolves to an array of MIDI file objects
- */
 export const getUserMidiFiles = async userId => {
   try {
     const midiFilesRef = collection(db, 'midiFiles');
@@ -73,10 +61,6 @@ export const getUserMidiFiles = async userId => {
   }
 };
 
-/**
- * Get public MIDI files
- * @returns {Promise<Array>} - A promise that resolves to an array of public MIDI file objects
- */
 export const getPublicMidiFiles = async () => {
   try {
     const midiFilesRef = collection(db, 'midiFiles');

@@ -1,15 +1,6 @@
-/**
- * Offline Storage Utilities
- *
- * This module provides utilities for storing and retrieving data offline using IndexedDB.
- * It allows the application to function when the user is offline.
- */
-
-// IndexedDB database name and version
 const DB_NAME = 'midi_generator_offline_db';
 const DB_VERSION = 1;
 
-// Store names
 const STORES = {
   MIDI_FILES: 'midiFiles',
   PENDING_UPLOADS: 'pendingUploads',
@@ -17,10 +8,6 @@ const STORES = {
   COMPOSITIONS: 'compositions',
 };
 
-/**
- * Initialize the IndexedDB database
- * @returns {Promise<IDBDatabase>} - The database instance
- */
 export const initDatabase = () =>
   new Promise((resolve, reject) => {
     if (!window.indexedDB) {
@@ -74,11 +61,6 @@ export const initDatabase = () =>
     };
   });
 
-/**
- * Save a MIDI file to IndexedDB
- * @param {Object} midiFile - MIDI file object
- * @returns {Promise<string>} - The ID of the saved file
- */
 export const saveMidiFileOffline = async midiFile => {
   try {
     const db = await initDatabase();
@@ -118,11 +100,6 @@ export const saveMidiFileOffline = async midiFile => {
   }
 };
 
-/**
- * Get MIDI files for a user from IndexedDB
- * @param {string} userId - User ID
- * @returns {Promise<Array>} - Array of MIDI files
- */
 export const getUserMidiFilesOffline = async userId => {
   try {
     const db = await initDatabase();
@@ -147,10 +124,6 @@ export const getUserMidiFilesOffline = async userId => {
   }
 };
 
-/**
- * Get public MIDI files from IndexedDB
- * @returns {Promise<Array>} - Array of public MIDI files
- */
 export const getPublicMidiFilesOffline = async () => {
   try {
     const db = await initDatabase();
@@ -323,11 +296,6 @@ export const addPendingUpload = async uploadData => {
   }
 };
 
-/**
- * Get all pending uploads from IndexedDB
- * @param {string} userId - User ID
- * @returns {Promise<Array>} - Array of pending uploads
- */
 export const getPendingUploads = async userId => {
   try {
     const db = await initDatabase();

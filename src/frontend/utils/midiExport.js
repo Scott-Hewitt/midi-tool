@@ -1,21 +1,6 @@
-/**
- * MIDI Export Utilities for Frontend
- *
- * Provides functions for exporting MIDI files and saving them to Firebase.
- * This is a frontend wrapper around the backend MIDI export functionality.
- */
-
 import { exportMIDIWithJZZ } from '../../utils/jzzMidi.js';
 import { saveMidiFile } from '../../backend/utils/midiExport';
 
-/**
- * Export MIDI file and download it
- * @param {Object} melodyData - Melody data
- * @param {Object} chordData - Chord progression data
- * @param {string} fileName - File name
- * @param {Object} options - Export options
- * @returns {Promise<boolean>} - Whether the export was successful
- */
 export const exportAndDownloadMIDI = async (melodyData, chordData, fileName, options = {}) => {
   try {
     // Check if we have data to export

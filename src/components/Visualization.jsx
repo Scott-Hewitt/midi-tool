@@ -6,7 +6,7 @@ import {
   Card,
   CardHeader,
   CardBody,
-  // useColorModeValue is no longer used as we're using theme colors directly
+
   Tooltip,
   HStack,
   VStack,
@@ -60,14 +60,12 @@ function Visualisation({ data, type }) {
   const NOTE_HEIGHT = 16;
   const HEADER_HEIGHT = 30;
 
-  // Handle mouse movement over the canvas
   const handleMouseMove = e => {
     if (!canvasRef.current || !data) return;
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
 
-    // Calculate mouse position relative to the canvas, accounting for CSS scaling
     const scaleX = canvas.width / rect.width / dpr;
     const scaleY = canvas.height / rect.height / dpr;
 
@@ -76,7 +74,6 @@ function Visualisation({ data, type }) {
 
     setMousePosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
 
-    // Check if mouse is over a note
     if (type === 'melody' && data.notes) {
       const hovered = data.notes.find(note => {
         if (!note.visualData) return false;
@@ -86,7 +83,6 @@ function Visualisation({ data, type }) {
 
       setHoveredNote(hovered);
     } else if (type === 'chord' && data.progression) {
-      // For chord data, we need to check each note in each chord
       let foundNote = null;
 
       data.progression.forEach(chord => {

@@ -1,13 +1,6 @@
-// Tonal.js integration for enhanced music theory capabilities
 import * as Tonal from 'tonal';
 import { Scale, Chord, Note, Key, Progression } from 'tonal';
 
-/**
- * Get all notes in a scale
- * @param {string} scaleName - Scale name (e.g., 'C major', 'A minor')
- * @param {number} octave - Base octave for the scale
- * @returns {string[]} - Array of note names in the scale
- */
 export const getScaleNotes = (scaleName, octave = 4) => {
   // Parse the scale name to get the tonic and scale type
   const [tonic, type] = scaleName.split(' ');
@@ -23,24 +16,10 @@ export const getScaleNotes = (scaleName, octave = 4) => {
   });
 };
 
-/**
- * Get all available scale types
- * @returns {string[]} - Array of scale types
- */
 export const getScaleTypes = () => Scale.names();
 
-/**
- * Get all available keys
- * @returns {string[]} - Array of key names
- */
 export const getKeys = () => Key.names();
 
-/**
- * Generate a chord from a chord symbol
- * @param {string} chordSymbol - Chord symbol (e.g., 'Cmaj7', 'Dm9')
- * @param {number} octave - Base octave for the chord
- * @returns {string[]} - Array of note names in the chord
- */
 export const getChordNotes = (chordSymbol, octave = 4) => {
   if (!chordSymbol || chordSymbol.trim() === '') {
     return ['C4', 'E4', 'G4'];
@@ -60,19 +39,8 @@ export const getChordNotes = (chordSymbol, octave = 4) => {
   return result;
 };
 
-/**
- * Get chord from scale degree
- * @param {string} key - Key (e.g., 'C major', 'A minor')
- * @param {string} degree - Scale degree (e.g., 'I', 'ii', 'V7')
- * @returns {string} - Chord symbol
- */
 export const getChordFromDegree = (key, degree) => Progression.fromRomanNumerals(key, [degree])[0];
 
-/**
- * Get all chords in a key
- * @param {string} key - Key (e.g., 'C major', 'A minor')
- * @returns {Object[]} - Array of chord objects with symbol and degree
- */
 export const getChordsInKey = key => {
   const keyObj = Key.majorKey(key.split(' ')[0]);
 
@@ -82,10 +50,6 @@ export const getChordsInKey = key => {
   }));
 };
 
-/**
- * Get common chord progressions
- * @returns {Object} - Object with progression names and their Roman numeral patterns
- */
 export const getCommonProgressions = () => ({
   // Basic progressions
   'Basic I-IV-V-I': ['I', 'IV', 'V', 'I'],

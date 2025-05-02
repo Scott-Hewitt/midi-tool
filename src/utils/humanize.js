@@ -1,11 +1,3 @@
-// Humanization functions for MIDI generation
-
-/**
- * Add humanization to notes by slightly varying timing and velocity
- * @param {Array} notes - Array of note objects
- * @param {Object} options - Humanization options
- * @returns {Array} - Humanized notes
- */
 export const humanizeNotes = (notes, options = {}) => {
   const {
     timingVariation = 0.02, // Timing variation as a fraction of a beat
@@ -27,12 +19,6 @@ export const humanizeNotes = (notes, options = {}) => {
   });
 };
 
-/**
- * Add articulation to notes
- * @param {Array} notes - Array of note objects
- * @param {string} articulationType - Type of articulation to apply
- * @returns {Array} - Notes with articulation applied
- */
 export const applyArticulation = (notes, articulationType) => {
   const articulationTypes = {
     legato: { durationMultiplier: 1.0, velocityMultiplier: 0.9 },
@@ -51,12 +37,6 @@ export const applyArticulation = (notes, articulationType) => {
   }));
 };
 
-/**
- * Add dynamic changes to a sequence of notes
- * @param {Array} notes - Array of note objects
- * @param {string} dynamicType - Type of dynamic change to apply
- * @returns {Array} - Notes with dynamics applied
- */
 export const applyDynamics = (notes, dynamicType) => {
   const dynamicTypes = {
     crescendo: (i, total) => 0.7 + (i / total) * 0.3,
@@ -74,12 +54,6 @@ export const applyDynamics = (notes, dynamicType) => {
   }));
 };
 
-/**
- * Generate controller events for expression
- * @param {Array} notes - Array of note objects
- * @param {string} expressionType - Type of expression to apply
- * @returns {Array} - Controller events for expression
- */
 export const generateExpressionEvents = (notes, expressionType) => {
   if (!notes || notes.length === 0) return [];
 

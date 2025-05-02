@@ -1,10 +1,3 @@
-/**
- * MIDI File Model
- *
- * Handles all Firestore operations related to MIDI file data.
- * This model encapsulates the data structure and database operations for MIDI files.
- */
-
 import {
   collection,
   addDoc,
@@ -22,15 +15,6 @@ import {
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../services/firebase';
 
-/**
- * Save a MIDI file to Firebase Storage and add metadata to Firestore
- * @param {Uint8Array} midiData - The MIDI file data
- * @param {string} fileName - The name of the file
- * @param {Object} metadata - Metadata about the MIDI file (scale, tempo, etc.)
- * @param {string} userId - The user ID
- * @param {boolean} isPublic - Whether the file is public or private
- * @returns {Promise<string>} - The ID of the saved file
- */
 export const saveMidiFile = async (midiData, fileName, metadata, userId, isPublic = false) => {
   try {
     const midiBlob = new Blob([midiData], { type: 'audio/midi' });
@@ -63,12 +47,6 @@ export const saveMidiFile = async (midiData, fileName, metadata, userId, isPubli
   }
 };
 
-/**
- * Get a MIDI file by ID
- * @param {string} fileId - The ID of the file in Firestore
- * @param {string} userId - The user ID (for authorization of private files)
- * @returns {Promise<Object|null>} - The MIDI file metadata or null if not found/unauthorized
- */
 export const getMidiFileById = async (fileId, userId = null) => {
   try {
     const fileRef = doc(db, 'midiFiles', fileId);
@@ -94,12 +72,6 @@ export const getMidiFileById = async (fileId, userId = null) => {
   }
 };
 
-/**
- * Get all MIDI files for a user
- * @param {string} userId - The user ID
- * @param {Object} options - Query options (sorting, filtering)
- * @returns {Promise<Array>} - Array of MIDI file metadata
- */
 export const getUserMidiFiles = async (userId, options = {}) => {
   try {
     const { sortBy = 'createdAt', sortDirection = 'desc', fileType = null } = options;
@@ -125,11 +97,6 @@ export const getUserMidiFiles = async (userId, options = {}) => {
   }
 };
 
-/**
- * Get public MIDI files
- * @param {Object} options - Query options (limit, sorting, filtering)
- * @returns {Promise<Array>} - Array of public MIDI file metadata
- */
 export const getPublicMidiFiles = async (options = {}) => {
   try {
     const {
@@ -160,13 +127,6 @@ export const getPublicMidiFiles = async (options = {}) => {
   }
 };
 
-/**
- * Update a MIDI file's metadata
- * @param {string} fileId - The ID of the file in Firestore
- * @param {Object} updates - The updates to apply
- * @param {string} userId - The user ID (for authorization)
- * @returns {Promise<boolean>} - Whether the update was successful
- */
 export const updateMidiFile = async (fileId, updates, userId) => {
   try {
     const fileRef = doc(db, 'midiFiles', fileId);
@@ -193,12 +153,6 @@ export const updateMidiFile = async (fileId, updates, userId) => {
   }
 };
 
-/**
- * Delete a MIDI file
- * @param {string} fileId - The ID of the file in Firestore
- * @param {string} userId - The user ID (for authorization)
- * @returns {Promise<boolean>} - Whether the deletion was successful
- */
 export const deleteMidiFile = async (fileId, userId) => {
   try {
     const fileRef = doc(db, 'midiFiles', fileId);

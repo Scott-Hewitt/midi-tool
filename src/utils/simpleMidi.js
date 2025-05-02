@@ -1,14 +1,3 @@
-/**
- * Simple MIDI file generator
- * This module provides a simple way to create and download MIDI files
- * without relying on external libraries.
- */
-
-/**
- * Convert note name to MIDI number
- * @param {string} noteName - Note name (e.g., 'C4')
- * @returns {number} - MIDI note number
- */
 export const noteToMidiNumber = noteName => {
   const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
   const note = noteName.slice(0, -1);
@@ -16,13 +5,6 @@ export const noteToMidiNumber = noteName => {
   return notes.indexOf(note) + (octave + 1) * 12;
 };
 
-/**
- * Create a MIDI file with melody and chord data
- * @param {Object} melodyData - Melody data
- * @param {Object} chordData - Chord progression data
- * @param {Object} options - Export options
- * @returns {Uint8Array} - MIDI file data
- */
 export const createMIDIFile = (melodyData, chordData, options = {}) => {
   const {
     includeMelody = true,
@@ -350,11 +332,6 @@ export const createMIDIFile = (melodyData, chordData, options = {}) => {
   return midiFile;
 };
 
-/**
- * Write a variable-length value
- * @param {number} value - The value to write
- * @returns {Array} - The bytes representing the value
- */
 function writeVariableLength(value) {
   if (value < 0) return [0];
 
@@ -372,14 +349,6 @@ function writeVariableLength(value) {
   return bytes.length > 0 ? bytes : [0];
 }
 
-/**
- * Export MIDI file and download it
- * @param {Object} melodyData - Melody data
- * @param {Object} chordData - Chord progression data
- * @param {string} fileName - File name
- * @param {Object} options - Export options
- * @returns {boolean} - Whether the export was successful
- */
 export const exportAndDownloadMIDI = (melodyData, chordData, fileName, options = {}) => {
   try {
     if (!melodyData && !chordData) {

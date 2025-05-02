@@ -40,13 +40,8 @@ import {
 } from '@chakra-ui/react';
 import { AccordionButton } from '@chakra-ui/react';
 
-// Import utility functions from chords.js for backward compatibility
 import { applyVoiceLeading } from '../utils/chords';
-
-// Import Tonal.js utility functions
 import { getCommonProgressions, generateChordProgression } from '../utils/tonalUtils';
-
-// SoundFont utilities are now managed in the Composition Studio
 
 // Define keys with their full names for Tonal.js compatibility
 const keyOptions = [

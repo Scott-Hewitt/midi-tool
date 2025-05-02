@@ -3,20 +3,14 @@ import { Box, Button, Text, useToast } from '@chakra-ui/react';
 import { initializeTone } from '../utils/toneContext';
 import { ensureAudioContext, registerUserInteraction } from '../utils/audioContext';
 
-/**
- * AudioInitializer component
- * Provides a button to initialize audio after user interaction
- */
 function AudioInitializer() {
   const [audioInitialized, setAudioInitialized] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const toast = useToast();
 
-  // Check if audio is already initialized
   useEffect(() => {
     const checkAudioStatus = async () => {
       try {
-        // Check if Tone.js context is running
         if (window.Tone && window.Tone.context && window.Tone.context.state === 'running') {
           setAudioInitialized(true);
         }
@@ -28,15 +22,12 @@ function AudioInitializer() {
     checkAudioStatus();
   }, []);
 
-  // Handle initializing audio
   const handleInitializeAudio = async () => {
     try {
       setIsInitializing(true);
 
-      // Register user interaction
       registerUserInteraction();
 
-      // Initialize AudioContext first
       const audioContext = await ensureAudioContext();
 
       if (!audioContext) {
@@ -44,11 +35,7 @@ function AudioInitializer() {
       }
 
       // Initialize Tone.js - this must be done during a user gesture
-      // and after the AudioContext is initialized
       const toneInitialized = await initializeTone();
-
-      // Even if Tone.js initialization fails, we can still proceed with basic audio
-      // as long as the AudioContext is initialized
       setAudioInitialized(true);
       toast({
         title: 'Audio enabled',
@@ -71,7 +58,6 @@ function AudioInitializer() {
     }
   };
 
-  // Don't show anything if audio is already initialized
   if (audioInitialized) {
     return null;
   }

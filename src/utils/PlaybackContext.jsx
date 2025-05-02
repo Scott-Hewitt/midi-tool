@@ -8,38 +8,28 @@ import {
 } from './soundfontUtils';
 import * as Tone from 'tone';
 
-// Create a context for playback
 const PlaybackContext = createContext();
 
-/**
- * PlaybackProvider component
- * Provides playback functionality for MIDI data
- */
 export function PlaybackProvider({ children }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activePlayingPart, setActivePlayingPart] = useState(null);
   const [useSoundFont, setUseSoundFont] = useState(true); // Default to using SoundFont
   const [instrumentsLoading, setInstrumentsLoading] = useState(false);
 
-  // Instrument selection state
   const [melodyInstrument, setMelodyInstrument] = useState('acoustic_grand_piano');
   const [chordInstrument, setChordInstrument] = useState('acoustic_guitar_nylon');
   const [bassInstrument, setBassInstrument] = useState('electric_bass_finger');
 
-  // Refs for synths
   const melodySynthRef = useRef(null);
   const chordSynthRef = useRef(null);
   const bassSynthRef = useRef(null);
 
-  // Refs for SoundFont instruments
   const melodyInstrumentRef = useRef(null);
   const chordInstrumentRef = useRef(null);
   const bassInstrumentRef = useRef(null);
 
-  // Ref for AudioContext
   const audioContextRef = useRef(null);
 
-  // Create a synth
   const createSynth = async (type = 'default') => {
     // Ensure Tone.js is initialized before creating synths
     const success = await initializeTone();

@@ -1,20 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import MIDIExport from '../components/MIDIExport';
-import * as simpleMidi from '../utils/simpleMidi';
 
 // Mock window.scrollTo to avoid JSDOM errors
 window.scrollTo = vi.fn();
 
-// Mock the simpleMidi export utility
-vi.mock('../utils/simpleMidi', () => ({
+// Mock the firebase/midiExport module
+vi.mock('../utils/firebase/midiExport', () => ({
   exportAndDownloadMIDI: vi.fn().mockResolvedValue(true),
-  createMIDIFile: vi.fn().mockReturnValue(new Uint8Array([1, 2, 3])),
-  noteToMidiNumber: vi.fn(note => {
-    const notes = { C4: 60, D4: 62, E4: 64, F4: 65, G4: 67, A4: 69, B4: 71 };
-    return notes[note] || 60;
-  }),
 }));
+
+// Import the mocked module
+import { exportAndDownloadMIDI } from '../utils/firebase/midiExport';
 
 describe('MIDIExport Component', () => {
   const mockMelodyData = {
@@ -79,7 +76,7 @@ describe('MIDIExport Component', () => {
     const exportButton = screen.getByText('Export as MIDI');
     fireEvent.click(exportButton);
 
-    expect(simpleMidi.exportAndDownloadMIDI).toHaveBeenCalledWith(
+    expect(exportAndDownloadMIDI).toHaveBeenCalledWith(
       mockMelodyData,
       null,
       'my-music-melody',
@@ -96,7 +93,7 @@ describe('MIDIExport Component', () => {
     const exportButton = screen.getByText('Export as MIDI');
     fireEvent.click(exportButton);
 
-    expect(simpleMidi.exportAndDownloadMIDI).toHaveBeenCalledWith(
+    expect(exportAndDownloadMIDI).toHaveBeenCalledWith(
       null,
       mockChordData,
       'my-music-chord',
@@ -109,7 +106,7 @@ describe('MIDIExport Component', () => {
 
   it('shows success message when export succeeds', async () => {
     // Mock the exportAndDownloadMIDI function to resolve with true
-    simpleMidi.exportAndDownloadMIDI.mockResolvedValueOnce(true);
+    exportAndDownloadMIDI.mockResolvedValueOnce(true);
 
     render(<MIDIExport data={mockMelodyData} type="melody" />);
 
@@ -127,7 +124,7 @@ describe('MIDIExport Component', () => {
 
   it('shows error message when export fails', async () => {
     // Mock the export function to fail
-    simpleMidi.exportAndDownloadMIDI.mockResolvedValueOnce(false);
+    exportAndDownloadMIDI.mockResolvedValueOnce(false);
 
     render(<MIDIExport data={mockMelodyData} type="melody" />);
 
@@ -142,7 +139,7 @@ describe('MIDIExport Component', () => {
 
   it('handles export errors gracefully', async () => {
     // Mock the export function to throw an error
-    simpleMidi.exportAndDownloadMIDI.mockRejectedValueOnce(new Error('Test error'));
+    exportAndDownloadMIDI.mockRejectedValueOnce(new Error('Test error'));
 
     render(<MIDIExport data={mockMelodyData} type="melody" />);
 
@@ -182,7 +179,7 @@ describe('MIDIExport Component', () => {
     fireEvent.click(exportButton);
 
     // Use expect.objectContaining to match only the properties we care about
-    expect(simpleMidi.exportAndDownloadMIDI).toHaveBeenCalledWith(
+    expect(exportAndDownloadMIDI).toHaveBeenCalledWith(
       mockMelodyData,
       null,
       'my-music-melody',

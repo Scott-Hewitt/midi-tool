@@ -1,15 +1,7 @@
-/**
- * Sync Service
- *
- * This module provides utilities for synchronizing offline data with Firebase
- * when the user comes back online.
- */
-
 import { getPendingUploads, removePendingUpload, getUserMidiFilesOffline } from './offlineStorage';
 import { saveMidiFile } from '../models/MidiFileModel';
 import { logError } from './errorHandling';
 
-// Network status tracking
 let isOnline = navigator.onLine;
 
 /**
@@ -51,16 +43,8 @@ export const initSyncService = toast => {
   }
 };
 
-/**
- * Check if the user is online
- * @returns {boolean} - Whether the user is online
- */
 export const checkOnlineStatus = () => isOnline;
 
-/**
- * Sync pending uploads with Firebase
- * @returns {Promise<void>}
- */
 export const syncPendingUploads = async () => {
   if (!isOnline) {
     return;

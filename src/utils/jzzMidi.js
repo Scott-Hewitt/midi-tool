@@ -1,45 +1,22 @@
-// JZZ.js integration for advanced MIDI features
-
 import JZZ from 'jzz';
 
-// We'll use dynamic imports to ensure proper loading of all modules
-// This helps ensure modules are loaded in the correct order
-// and are fully initialized before use
-
-// Flag to track if JZZ is fully initialized
 let isJzzInitialized = false;
-
-// Function to initialize JZZ and its modules
 async function initializeJZZ() {
   if (isJzzInitialized) return true;
-  
+
   try {
-    // Load all required modules dynamically in the correct order
-    // This ensures proper initialization
-    
-    // First, initialize JZZ
     JZZ();
-    
-    // Then load the SMF module
     await import('jzz-midi-smf');
-    
-    // Then load the synth module
     await import('jzz-synth-tiny');
-    
-    // Wait a moment to ensure modules are fully loaded
     await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // Make sure MIDI modules are loaded
+
     if (typeof JZZ.MIDI === 'undefined') {
       JZZ.MIDI = {};
     }
-    
-    // Register the synth
+
     if (JZZ.synth && typeof JZZ.synth.Tiny === 'object') {
       JZZ.synth.Tiny.register();
     }
-    
-    // Mark as initialized
     isJzzInitialized = true;
     return true;
   } catch (e) {
@@ -58,7 +35,7 @@ initializeJZZ().catch(err => console.error('Failed to initialize JZZ:', err));
 export const initJZZ = async () => {
   // Make sure JZZ is initialized
   await initializeJZZ();
-  
+
   try {
     const midi = await JZZ({
       sysex: true,
@@ -78,13 +55,13 @@ export const initJZZ = async () => {
  */
 export const noteToMidiNumber = noteName => {
   const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-  
+
   // Check if the last character is a digit (octave)
   const lastChar = noteName.slice(-1);
   const hasOctave = /\d/.test(lastChar);
-  
+
   let note, octave;
-  
+
   if (hasOctave) {
     // Format: C4, D#5, etc.
     note = noteName.slice(0, -1);
@@ -95,27 +72,27 @@ export const noteToMidiNumber = noteName => {
     octave = 4;
     console.warn('Note without octave:', noteName, '- defaulting to octave 4');
   }
-  
+
   const noteIndex = notes.indexOf(note);
   if (noteIndex === -1) {
     console.error('Invalid note name:', noteName, '- note part:', note);
     return 60; // Default to middle C (C4) if invalid
   }
-  
+
   if (isNaN(octave)) {
     console.error('Invalid octave in note name:', noteName, '- octave part:', lastChar);
     octave = 4; // Default to octave 4 if invalid
   }
-  
+
   // MIDI note number calculation: noteIndex + (octave+1) * 12
   const midiNumber = noteIndex + (octave + 1) * 12;
-  
+
   // Validate the result is in MIDI range (0-127)
   if (midiNumber < 0 || midiNumber > 127) {
     console.error('MIDI note number out of range:', midiNumber, 'for note:', noteName);
     return Math.max(0, Math.min(127, midiNumber)); // Clamp to valid MIDI range
   }
-  
+
   return midiNumber;
 };
 
@@ -158,7 +135,7 @@ export const exportMIDIWithJZZ = async (melodyData, chordData, fileName, options
   // Ensure MIDI.SMF is available
   if (typeof JZZ.MIDI.SMF !== 'function') {
     console.warn('JZZ.MIDI.SMF not available in exportMIDIWithJZZ, falling back to simpleMidi implementation');
-    
+
     // Import and use simpleMidi as a fallback
     const { createMIDIFile } = await import('./simpleMidi');
     return createMIDIFile(melodyData, chordData, options);
@@ -167,41 +144,41 @@ export const exportMIDIWithJZZ = async (melodyData, chordData, fileName, options
   try {
     // Create a new SMF object
     const smf = new JZZ.MIDI.SMF(1); // Format 1 (multiple tracks)
-    
+
     // Create tracks for melody, chords, and bass
     if (includeMelody && melodyData && melodyData.notes && melodyData.notes.length > 0) {
       const melodyTrack = new JZZ.MIDI.SMF.MTrk();
       smf.push(melodyTrack);
-      
+
       // Add melody notes
       melodyData.notes.forEach((note, index) => {
         const pitch = noteToMidiNumber(note.pitch);
         const velocity = Math.round(note.velocity * 127);
         const startTime = note.startTime;
         const duration = note.duration;
-        
+
         // Note on
         melodyTrack.add(startTime, JZZ.MIDI.noteOn(melodyChannel, pitch, velocity));
         // Note off
         melodyTrack.add(startTime + duration, JZZ.MIDI.noteOff(melodyChannel, pitch, 0));
       });
     }
-    
+
     if (includeChords && chordData && chordData.progression && chordData.progression.length > 0) {
       const chordTrack = new JZZ.MIDI.SMF.MTrk();
       smf.push(chordTrack);
-      
+
       // Add chord notes
       chordData.progression.forEach((chord) => {
         const startTime = chord.position;
         const duration = chord.duration;
-        
+
         // Add each note in the chord
         if (chord.notes && chord.notes.length > 0) {
           chord.notes.forEach((noteName) => {
             const pitch = noteToMidiNumber(noteName);
             const velocity = 80; // Medium velocity for chords
-            
+
             // Note on
             chordTrack.add(startTime, JZZ.MIDI.noteOn(chordChannel, pitch, velocity));
             // Note off
@@ -210,7 +187,7 @@ export const exportMIDIWithJZZ = async (melodyData, chordData, fileName, options
         }
       });
     }
-    
+
     // Return the MIDI data
     return smf.dump();
   } catch (error) {
@@ -270,18 +247,18 @@ export const exportAndDownloadMIDI = async (melodyData, chordData, fileName, opt
     // Check if JZZ.MIDI.SMF is available
     if (typeof JZZ.MIDI.SMF !== 'function') {
       console.warn('JZZ.MIDI.SMF not available, falling back to simpleMidi implementation');
-      
+
       // Import and use simpleMidi as a fallback
       const simpleMidi = await import('./simpleMidi');
       return simpleMidi.exportAndDownloadMIDI(melodyData, chordData, fileName, options);
     }
-    
+
     // Generate MIDI data using JZZ
     const midiData = await exportMIDIWithJZZ(melodyData, chordData, fileName, options);
-    
+
     if (!midiData) {
       console.error('Failed to generate MIDI data with JZZ, falling back to simpleMidi');
-      
+
       // Try with simpleMidi as a fallback
       const simpleMidi = await import('./simpleMidi');
       return simpleMidi.exportAndDownloadMIDI(melodyData, chordData, fileName, options);

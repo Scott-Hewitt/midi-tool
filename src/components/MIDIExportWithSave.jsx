@@ -63,7 +63,6 @@ function MIDIExportWithSave({ data, type }) {
   const { currentUser } = useAuth();
   const toast = useToast();
 
-  // Handle option changes
   const handleOptionChange = (option, value) => {
     setExportOptions({
       ...exportOptions,
@@ -71,7 +70,6 @@ function MIDIExportWithSave({ data, type }) {
     });
   };
 
-  // Check if the file is favorited when the component loads
   useEffect(() => {
     const checkFavoriteStatusAsync = async () => {
       if (currentUser && savedFileId) {
@@ -87,9 +85,7 @@ function MIDIExportWithSave({ data, type }) {
     checkFavoriteStatusAsync();
   }, [currentUser, savedFileId]);
 
-  // Export MIDI file using JZZ
   const handleExport = async () => {
-    // Determine which data to use
     let melodyData = null;
     let chordData = null;
 

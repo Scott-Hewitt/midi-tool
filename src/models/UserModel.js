@@ -1,20 +1,6 @@
-/**
- * User Model
- *
- * Handles all Firestore operations related to user data.
- * This model encapsulates the data structure and database operations for users.
- */
-
 import { doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from '../services/firebase';
 
-/**
- * Create a new user document in Firestore
- * @param {string} uid - User ID from Firebase Auth
- * @param {string} email - User's email
- * @param {string} displayName - User's display name
- * @returns {Promise<void>}
- */
 export const createUser = async (uid, email, displayName) => {
   try {
     await setDoc(doc(db, 'users', uid), {
@@ -71,12 +57,6 @@ export const updateUserProfile = async (uid, userData) => {
   }
 };
 
-/**
- * Add a file ID to user's favorites
- * @param {string} uid - User ID
- * @param {string} fileId - MIDI file ID
- * @returns {Promise<void>}
- */
 export const addFavorite = async (uid, fileId) => {
   try {
     const userRef = doc(db, 'users', uid);
@@ -90,12 +70,6 @@ export const addFavorite = async (uid, fileId) => {
   }
 };
 
-/**
- * Remove a file ID from user's favorites
- * @param {string} uid - User ID
- * @param {string} fileId - MIDI file ID
- * @returns {Promise<void>}
- */
 export const removeFavorite = async (uid, fileId) => {
   try {
     const userRef = doc(db, 'users', uid);
@@ -109,12 +83,6 @@ export const removeFavorite = async (uid, fileId) => {
   }
 };
 
-/**
- * Check if a file is in user's favorites
- * @param {string} uid - User ID
- * @param {string} fileId - MIDI file ID
- * @returns {Promise<boolean>} - Whether the file is favorited
- */
 export const isFileFavorited = async (uid, fileId) => {
   try {
     const userDoc = await getDoc(doc(db, 'users', uid));

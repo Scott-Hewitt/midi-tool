@@ -41,51 +41,38 @@ import { setAnalyticsUserId, trackPageView } from './services/analytics';
 import { PlaybackProvider } from './utils/PlaybackContext';
 
 function App() {
-  // Each tab will have its own state that's completely isolated
   const [melodyData, setMelodyData] = useState(null);
   const [chordData, setChordData] = useState(null);
   const [compositionData, setCompositionData] = useState(null);
 
-  // Track which tab is active to prevent data interference
   const [activeTab, setActiveTab] = useState(0);
-  // Audio initialization state is managed by WelcomeScreen component
-  // This is used to determine if we should show the welcome screen
-  // We use hasHadUserInteraction() to check if audio is initialized
   const { currentUser } = useAuth();
   const toast = useToast();
 
-  // Initialize sync service
   useEffect(() => {
     initSyncService(toast);
   }, [toast]);
 
-  // Set analytics user ID when user changes
   useEffect(() => {
     if (currentUser) {
       setAnalyticsUserId(currentUser.uid);
     }
   }, [currentUser]);
 
-  // Track page views
   useEffect(() => {
     trackPageView('App');
   }, []);
-
-  // Add global user interaction listener
   useEffect(() => {
-    // Register user interaction events
     const interactionEvents = ['mousedown', 'keydown', 'touchstart'];
 
     const handleUserInteraction = () => {
       registerUserInteraction();
     };
 
-    // Add event listeners
     interactionEvents.forEach(event => {
       document.addEventListener(event, handleUserInteraction);
     });
 
-    // Clean up event listeners
     return () => {
       interactionEvents.forEach(event => {
         document.removeEventListener(event, handleUserInteraction);
@@ -93,29 +80,23 @@ function App() {
     };
   }, []);
 
-  // Audio initialization is now handled by the WelcomeScreen component
-  // This function is kept for backward compatibility
   const handleAudioInitialized = () => {
-    // Audio initialization is now tracked via localStorage in WelcomeScreen
     localStorage.setItem('hasSeenWelcomeScreen', 'true');
   };
 
   const handleMelodyGenerated = data => {
-    // Only update melody data if we're on the melody tab
     if (activeTab === 0) {
       setMelodyData(data);
     }
   };
 
   const handleChordGenerated = data => {
-    // Only update chord data if we're on the chord tab
     if (activeTab === 1) {
       setChordData(data);
     }
   };
 
   const handleCompositionGenerated = data => {
-    // Only update composition data if we're on the composition tab
     if (activeTab === 2) {
       setCompositionData(data);
     }
@@ -165,7 +146,7 @@ function App() {
       </Box>
 
       <Box as="footer" mt="auto" textAlign="center" py={4} color="gray.300">
-        <Text>MIDI Melody & Chord Generator - MVP Version</Text>
+        <Text>MIDI Melody & Chord Generator</Text>
       </Box>
     </Container>
   );
@@ -179,14 +160,9 @@ function App() {
     return children;
   };
 
-  // Generator Tabs Component
   const GeneratorTabs = () => {
-    // Handle tab change
     const handleTabChange = index => {
-      // Update the active tab in the parent component
       setActiveTab(index);
-
-      // We no longer reset data for other tabs to preserve generator state
     };
 
     return (

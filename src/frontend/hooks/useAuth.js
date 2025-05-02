@@ -1,10 +1,3 @@
-/**
- * Authentication Hook
- *
- * Custom hook for authentication state and methods.
- * Uses the AuthController to handle authentication logic.
- */
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../../backend/services/firebase';
@@ -16,35 +9,17 @@ import {
   getUserData,
 } from '../../backend/controllers/AuthController';
 
-// Create the authentication context
 const AuthContext = createContext();
 
-/**
- * Custom hook to use the auth context
- * @returns {Object} - Auth context value
- */
 export function useAuth() {
   return useContext(AuthContext);
 }
 
-/**
- * Authentication Provider component
- * @param {Object} props - Component props
- * @param {React.ReactNode} props.children - Child components
- * @returns {JSX.Element} - Provider component
- */
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  /**
-   * Sign up with email and password
-   * @param {string} email - User's email
-   * @param {string} password - User's password
-   * @param {string} displayName - User's display name
-   * @returns {Promise<Object>} - User data
-   */
   async function signup(email, password, displayName) {
     // Direct return without unnecessary try/catch
     return registerUser(email, password, displayName);
@@ -79,11 +54,6 @@ export function AuthProvider({ children }) {
     setUserProfile(null);
   }
 
-  /**
-   * Fetch user profile from Firestore
-   * @param {string} uid - User ID
-   * @returns {Promise<Object|null>} - User profile data
-   */
   async function fetchUserProfile(uid) {
     try {
       const userData = await getUserData(uid);

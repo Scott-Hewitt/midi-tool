@@ -117,12 +117,6 @@ export const midiToNote = midiNumber => {
   return `${note}${octave}`;
 };
 
-/**
- * Generate a chord based on root note and chord type
- * @param {string} rootNote - Root note (e.g., 'C4')
- * @param {string} chordType - Chord type (e.g., 'maj', 'min7')
- * @returns {string[]} - Array of note names in the chord
- */
 export const generateChord = (rootNote, chordType) => {
   const rootMidi = noteToMidi(rootNote);
   return (extendedChordTypes[chordType] || extendedChordTypes.maj).map(interval =>
@@ -130,13 +124,6 @@ export const generateChord = (rootNote, chordType) => {
   );
 };
 
-/**
- * Get chord inversion
- * @param {string} rootNote - Root note (e.g., 'C4')
- * @param {string} chordType - Chord type (e.g., 'maj', 'min7')
- * @param {number} inversion - Inversion number (0 = root position, 1 = first inversion, etc.)
- * @returns {string[]} - Array of note names in the inverted chord
- */
 export const getChordInversion = (rootNote, chordType, inversion) => {
   const baseChord = generateChord(rootNote, chordType);
   const midiNotes = baseChord.map(note => noteToMidi(note));
@@ -150,12 +137,6 @@ export const getChordInversion = (rootNote, chordType, inversion) => {
   return midiNotes.map(midi => midiToNote(midi));
 };
 
-/**
- * Generate different voicings for a chord
- * @param {string} rootNote - Root note (e.g., 'C4')
- * @param {string} chordType - Chord type (e.g., 'maj', 'min7')
- * @returns {Array<string[]>} - Array of chord voicings
- */
 export const generateChordVoicings = (rootNote, chordType) => {
   const voicings = [];
   const intervals = extendedChordTypes[chordType] || extendedChordTypes.maj;
@@ -195,11 +176,6 @@ export const calculateTotalMovement = (voicing1, voicing2) => {
   return totalMovement;
 };
 
-/**
- * Apply voice leading for smoother chord transitions
- * @param {Array} chords - Array of chord objects
- * @returns {Array} - Chords with voice leading applied
- */
 export const applyVoiceLeading = chords => {
   const voiceLedChords = [];
   let previousVoicing = null;

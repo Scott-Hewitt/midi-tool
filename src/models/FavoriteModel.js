@@ -1,10 +1,3 @@
-/**
- * Favorite Model
- *
- * Handles all Firestore operations related to user favorites.
- * This model encapsulates the data structure and database operations for favorites.
- */
-
 import {
   collection,
   addDoc,
@@ -18,12 +11,6 @@ import {
 import { db } from '../services/firebase';
 import { getMidiFileById } from './MidiFileModel';
 
-/**
- * Add a MIDI file to user's favorites collection
- * @param {string} userId - The user ID
- * @param {string} fileId - The MIDI file ID
- * @returns {Promise<string>} - The ID of the favorite document
- */
 export const addToFavorites = async (userId, fileId) => {
   try {
     // Check if the file exists
@@ -59,12 +46,6 @@ export const addToFavorites = async (userId, fileId) => {
   }
 };
 
-/**
- * Remove a MIDI file from user's favorites
- * @param {string} userId - The user ID
- * @param {string} fileId - The MIDI file ID
- * @returns {Promise<boolean>} - Whether the removal was successful
- */
 export const removeFromFavorites = async (userId, fileId) => {
   try {
     const q = query(
@@ -89,11 +70,6 @@ export const removeFromFavorites = async (userId, fileId) => {
   }
 };
 
-/**
- * Get all favorites for a user with file data
- * @param {string} userId - The user ID
- * @returns {Promise<Array>} - Array of favorite MIDI files with metadata
- */
 export const getUserFavorites = async userId => {
   try {
     const q = query(collection(db, 'favorites'), where('userId', '==', userId));
@@ -123,12 +99,6 @@ export const getUserFavorites = async userId => {
   }
 };
 
-/**
- * Check if a file is favorited by a user
- * @param {string} userId - The user ID
- * @param {string} fileId - The MIDI file ID
- * @returns {Promise<boolean>} - Whether the file is favorited
- */
 export const isFileFavorited = async (userId, fileId) => {
   try {
     const q = query(

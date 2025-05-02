@@ -38,7 +38,6 @@ import {
 } from '@chakra-ui/react';
 import { AccordionButton } from '@chakra-ui/react';
 
-// Import utility functions
 import { defaultScales } from '../utils/scales';
 import {
   rhythmPatterns,
@@ -47,19 +46,9 @@ import {
   applyMotifVariation,
 } from '../utils/patterns';
 import { humanizeNotes, applyArticulation, applyDynamics } from '../utils/humanize';
+import { getAvailableInstruments } from '../utils/soundfontUtils';
 
-// Import SoundFont utility functions
-import {
-  // These functions are not currently used as playback has been moved to PlaybackContext
-  // loadInstrument,
-  getAvailableInstruments,
-  // playMelodyWithSoundFont,
-  // stopAllSounds,
-} from '../utils/soundfontUtils';
-
-// Define available instruments
 const availableInstruments = getAvailableInstruments();
-
 const scales = defaultScales;
 
 function MelodyGenerator({ onMelodyGenerated }) {

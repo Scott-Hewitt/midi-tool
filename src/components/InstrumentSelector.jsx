@@ -1,5 +1,4 @@
-// useState is not currently used in this component
-// import { useState } from 'react';
+
 import {
   Box,
   Button,
@@ -22,20 +21,6 @@ import {
 } from '@chakra-ui/react';
 import { getAvailableInstruments } from '../utils/soundfontUtils';
 
-/**
- * InstrumentSelector component
- * Allows selecting instruments for playback
- *
- * @param {Object} props - Component props
- * @param {string} props.type - Type of data (melody, chord, composition)
- * @param {boolean} props.useSoundFont - Whether to use SoundFont for playback
- * @param {Function} props.setUseSoundFont - Function to set useSoundFont state
- * @param {string} props.melodyInstrument - Selected melody instrument
- * @param {string} props.chordInstrument - Selected chord instrument
- * @param {string} props.bassInstrument - Selected bass instrument
- * @param {Function} props.onInstrumentChange - Function to handle instrument change
- * @param {boolean} props.isLoading - Whether instruments are loading
- */
 function InstrumentSelector({
   type,
   useSoundFont,

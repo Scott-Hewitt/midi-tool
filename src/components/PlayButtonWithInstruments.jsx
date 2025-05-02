@@ -24,13 +24,6 @@ import {
 import { usePlayback } from '../utils/PlaybackContext';
 import { getAvailableInstruments } from '../utils/soundfontUtils';
 
-/**
- * PlayButtonWithInstruments component
- * Enhanced play button with instrument selection options
- *
- * @param {Object} data - MIDI data to play
- * @param {string} type - Type of data (melody, chord, composition)
- */
 function PlayButtonWithInstruments({ data, type }) {
   const {
     isPlaying,

@@ -1,14 +1,9 @@
-// Tone.js Context Manager
 import * as Tone from 'tone';
 import { hasHadUserInteraction, getAudioContext } from './audioContext';
 
-// Track if Tone.js is initialized
 let isToneInitialized = false;
-
-// We'll use a dynamic import approach to reload Tone.js if needed
 let toneModule = Tone;
 
-// Function to reload the Tone.js module if needed
 async function reloadToneModule() {
   try {
     // Dynamic import to get a fresh copy of Tone.js
@@ -22,26 +17,19 @@ async function reloadToneModule() {
   }
 }
 
-/**
- * Initialize Tone.js context on user interaction
- * This must be called in response to a genuine user gesture
- * @returns {Promise<boolean>} - Whether initialization was successful
- */
+// This must be called in response to a genuine user gesture
 export const initializeTone = async () => {
-  // Check if we've had user interaction before trying to initialize
   if (!hasHadUserInteraction()) {
     console.warn('Cannot initialize Tone.js without user interaction');
     return false;
   }
 
-  // Get the current AudioContext
   const audioContext = getAudioContext();
   if (!audioContext) {
     console.error('No AudioContext available');
     return false;
   }
 
-  // Check if we need to reload Tone.js
   let needsReload = false;
 
   if (toneModule.context) {
@@ -101,16 +89,8 @@ export const initializeTone = async () => {
   }
 };
 
-/**
- * Check if Tone.js is initialized
- * @returns {boolean} - Whether Tone.js is initialized
- */
 export const isToneInitializedStatus = () => isToneInitialized;
 
-/**
- * Create a synth safely (only when needed)
- * @returns {Tone.PolySynth} - A new polyphonic synth
- */
 export const createSynth = () =>
   // This should only be called after Tone has been initialized
   new toneModule.PolySynth(toneModule.Synth).toDestination();

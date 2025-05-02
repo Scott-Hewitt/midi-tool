@@ -1,21 +1,9 @@
-/**
- * Backup and Export Utilities
- *
- * This module provides utilities for backing up and exporting user data.
- */
-
 import { getUserMidiFiles } from '../models/MidiFileModel';
 import { getUserFavorites } from '../models/FavoriteModel';
 import { getUserById } from '../models/UserModel';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
-/**
- * Export all user MIDI files as a zip archive
- * @param {string} userId - User ID
- * @param {Object} options - Export options
- * @returns {Promise<void>}
- */
 export const exportAllMidiFiles = async (userId, options = {}) => {
   try {
     const { includeMetadata = true } = options;
